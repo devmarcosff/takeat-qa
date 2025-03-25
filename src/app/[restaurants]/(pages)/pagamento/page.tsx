@@ -1,17 +1,17 @@
 "use client";
-import ContinueComponents from "@/components/continue/continue.components";
 import LoadingTakeat from "@/components/theme/loading.component";
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Drawer, DrawerClose, DrawerContent, DrawerFooter, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
-import InformationButton from "@/components/uiComponents/Buttons/informationButton.component";
 import InternalPages from "@/components/uiComponents/InternalPageHeader/internal_pages.header";
 import { api_delivery, api_token_card } from "@/utils/apis";
 import { LoaderCircle } from "lucide-react";
 import dynamic from "next/dynamic";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
 import Cards from "react-credit-cards-2";
 import "react-credit-cards-2/dist/es/styles-compiled.css";
+import { IconCardFront, IconMoney, IconPix } from "takeat-design-system-ui-kit";
 import errorAnimation from "../../../../../public/assets/erroranimation.json";
 import successAnimation from "../../../../../public/assets/succesanimation.json";
 const Lottie = dynamic(() => import("lottie-react"), { ssr: false });
@@ -42,22 +42,29 @@ interface ICardProps {
   focus: string,
 }
 
+interface IPaymentInfo {
+  has_credit_card?: boolean,
+  has_pix?: boolean
+}
+
 export default function PagamentoPage({ params }: Props) {
   const restaurant = React.use(params)?.restaurants;
   const { back, push } = useRouter();
   const tokenClient = `@tokenUserTakeat:${restaurant}`;
   const clientCard = `@clientCardTakeat:${restaurant}`;
   const tokenCard = `@tokenCardUserTakeat:${restaurant}`;
+  const deliveryTakeat = `@deliveryTakeat:${restaurant}`;
   const MethodPaymentTakeat = `@methodPaymentTakeat:${restaurant}`;
 
   const [isDisabled, setIsDisabled] = useState(true);
   const [methodPayment, setMethodPayment] = useState<IPaymentsProps[]>([]);
-  const [parseAddress, setParseAddress] = useState<number>(0);
+  const [infoPayment, setInfoPayment] = useState<IPaymentInfo>();
   const [openDrawer, setOpenDrawer] = useState(false);
   const [openDialog, setOpenDialog] = useState(false);
   const [openResultDialog, setOpenResultDialog] = useState(false);
   const [acceptTerms, setAcceptTerms] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [methodDelivery, setMethodDelivery] = useState<string>('');
   const [paymentStatus, setPaymentStatus] = useState<"success" | "error" | null>(null);
 
   const [state, setState] = useState<ICardProps>({
@@ -71,10 +78,6 @@ export default function PagamentoPage({ params }: Props) {
 
   useEffect(() => {
     const fetchRestaurant = async () => {
-      const address = localStorage.getItem(`@addressClientDeliveryTakeat:${restaurant}`);
-      const parseAddress = JSON.parse(`${address}`);
-      setParseAddress(Number(parseAddress.delivery_tax_price));
-
       const storageClientCard = localStorage.getItem(clientCard)
       const parsedCardClient = JSON.parse(`${storageClientCard}`)
       if (storageClientCard) setState(parsedCardClient)
@@ -94,12 +97,21 @@ export default function PagamentoPage({ params }: Props) {
       setAcceptTerms(JSON.parse(storedAcceptTerms));
     }
 
+    const getMethodDeliveryTakeat = localStorage.getItem(`@methodDeliveryTakeat:${restaurant}`);
+    if (getMethodDeliveryTakeat) {
+      setMethodDelivery(getMethodDeliveryTakeat);
+    }
+
+    const getDeliveryTakeat = localStorage.getItem(deliveryTakeat);
+    if (getDeliveryTakeat) {
+      setInfoPayment(JSON.parse(getDeliveryTakeat));
+    }
+
     fetchRestaurant();
   }, [MethodPaymentTakeat, back, clientCard, restaurant]);
 
   if (isDisabled) return <LoadingTakeat />;
 
-  // Ordenar métodos de pagamento garantindo que um item prioritário fique em primeiro
   const sortPaymentMethods = (methods: IPaymentsProps[], priority: string) => {
     return methods.sort((a, b) => {
       if (a.keyword === priority) return -1;
@@ -108,17 +120,22 @@ export default function PagamentoPage({ params }: Props) {
     });
   };
 
-  // Filtrar métodos para "Pagar Online" (PIX_AUTO primeiro)
+  const allowedOnlineMethods: string[] = [];
+  if (infoPayment?.has_pix) allowedOnlineMethods.push("pix_auto");
+  if (infoPayment?.has_credit_card) allowedOnlineMethods.push("credit_card_auto");
+
   const onlinePayments = sortPaymentMethods(
     methodPayment.filter((method) =>
+      allowedOnlineMethods.includes(method.keyword) &&
       method.restaurant_method.some((restaurantMethod) => restaurantMethod.delivery_accepts === true)
     ),
     "pix_auto"
   );
 
-  // Filtrar métodos para "Pagar na Entrega" (Dinheiro primeiro)
+  const ignoredKeys = ["prazo", "pontos_banestes", "online_ifood", "clube", "cupom_ifood"];
   const offlinePayments = sortPaymentMethods(
     methodPayment.filter((method) =>
+      !ignoredKeys.includes(method.keyword) &&
       method.restaurant_method.some((restaurantMethod) => restaurantMethod.withdrawal_accepts === true)
     ),
     "dinheiro"
@@ -138,10 +155,8 @@ export default function PagamentoPage({ params }: Props) {
     if (method.keyword === "credit_card_auto") {
       localStorage.setItem(MethodPaymentTakeat, JSON.stringify(methodPayload));
       setOpenDrawer(true);
-      console.log("Selecionando método:", method);
     } else {
       localStorage.setItem(MethodPaymentTakeat, JSON.stringify(methodPayload));
-      console.log("Selecionando método:", method);
     }
   };
 
@@ -187,15 +202,39 @@ export default function PagamentoPage({ params }: Props) {
 
   return (
     <InternalPages title="Pagamento" button>
-      <div className="pt-3 mt-3 pb-[250px]">
+      <div className="pt-3 mt-3">
+        {/* {infoPayment?.has_pix == true && (
+          <> */}
         <h2 className="font-semibold text-lg">Pagar Online</h2>
         {onlinePayments.map((method) => (
-          <InformationButton key={method.id} onClick={() => handlePaymentClick(method)} title={method.name} icon="IconMoney" fill="#27a84c" />
+          <Link href={method.keyword === "pix_auto" ? `/${restaurant}/confirmar-pedido` : ''} key={method.id} onClick={() => handlePaymentClick(method)}
+            className="flex items-center justify-between w-full h-[60px] border border-takeat-neutral-light rounded-xl px-4 my-3">
+            <div className="flex items-center gap-3">
+              {
+                method.keyword === "pix_auto"
+                  ? <IconPix className="fill-takeat-green-default text-3xl" />
+                  : <IconCardFront className="fill-takeat-primary-default text-3xl" />
+              }
+              <span>{method.keyword == "pix_auto" ? "Pix" : "Cartão de Crédito"}</span>
+            </div>
+          </Link>
         ))}
+        {/* </>
+        )} */}
 
-        <h2 className="font-semibold text-lg mt-4">Pagar na Entrega</h2>
+        <h2 className="font-semibold text-lg mt-4">{methodDelivery === "delivery" || methodDelivery === "agendamentoDelivery" ? 'Pagar na Entrega' : 'Pagar na retirada'}</h2>
         {offlinePayments.map((method) => (
-          <InformationButton key={method.id} onClick={() => handlePaymentClick(method)} title={method.name} icon="IconMoney" fill="#27a84c" />
+          <Link href={`/${restaurant}/confirmar-pedido`} key={method.id} onClick={() => handlePaymentClick(method)}
+            className="flex items-center justify-between w-full h-[60px] border border-takeat-neutral-light rounded-xl px-4 my-3">
+            <div className="flex items-center gap-3">
+              {
+                method.keyword === "dinheiro"
+                  ? <IconMoney className="fill-takeat-second_green-default text-3xl" />
+                  : <IconCardFront className="fill-takeat-primary-default text-3xl" />
+              }
+              <span>{method.name}</span>
+            </div>
+          </Link>
         ))}
       </div>
 
@@ -217,28 +256,29 @@ export default function PagamentoPage({ params }: Props) {
             {/* Inputs do cartão */}
             <div className="flex flex-col gap-3 w-full mt-3">
               <label htmlFor="number" className="font-medium">Número do cartão</label>
-              <input id="number" className="border rounded-lg p-2 w-full" type="text" value={state.number} onChange={(e) => setState({ ...state, number: e.target.value })} onFocus={handleInputFocus} />
+              <input id="number" placeholder="Número do cartão" className="border rounded-lg p-2 w-full" type="text" value={state.number} onChange={(e) => setState({ ...state, number: e.target.value })} onFocus={handleInputFocus} />
 
               <div className="flex gap-3">
                 <div className="w-1/3">
                   <label htmlFor="expiryM" className="font-medium">Mês</label>
-                  <input id="expiryM" className="border rounded-lg p-2 w-full" type="text" value={state.expiryM} onChange={(e) => setState({ ...state, expiryM: e.target.value })} onFocus={handleInputFocus} />
+                  <input id="expiryM" placeholder="12" className="border rounded-lg p-2 w-full" type="text" value={state.expiryM} onChange={(e) => setState({ ...state, expiryM: e.target.value })} onFocus={handleInputFocus} />
                 </div>
                 <div className="w-1/3">
                   <label htmlFor="expiryA" className="font-medium">Ano</label>
-                  <input id="expiryA" className="border rounded-lg p-2 w-full" type="text" value={state.expiryA} onChange={(e) => setState({ ...state, expiryA: e.target.value })} onFocus={handleInputFocus} />
+                  <input id="expiryA" placeholder="25" className="border rounded-lg p-2 w-full" type="text" value={state.expiryA} onChange={(e) => setState({ ...state, expiryA: e.target.value })} onFocus={handleInputFocus} />
                 </div>
                 <div className="w-1/3">
                   <label htmlFor="cvc" className="font-medium">CVC</label>
-                  <input id="cvc" className="border rounded-lg p-2 w-full" type="text" value={state.cvc} onChange={(e) => setState({ ...state, cvc: e.target.value })} onFocus={handleInputFocus} />
+                  <input id="cvc" placeholder="591" className="border rounded-lg p-2 w-full" type="text" value={state.cvc} onChange={(e) => setState({ ...state, cvc: e.target.value })} onFocus={handleInputFocus} />
                 </div>
               </div>
 
               <label htmlFor="name" className="font-medium">Nome do titular</label>
-              <input id="name" className="border rounded-lg p-2 w-full uppercase" type="text" value={state.name} onChange={(e) => setState({ ...state, name: e.target.value })} onFocus={handleInputFocus} />
+              <input id="name" placeholder="Nome do titular" className="border rounded-lg p-2 w-full uppercase" type="text" value={state.name} onChange={(e) => setState({ ...state, name: e.target.value })} onFocus={handleInputFocus} />
             </div>
           </div>
 
+          {/* Aceite do termo de uso */}
           <DrawerFooter>
             <DrawerClose className="w-full border rounded-lg p-2">Cancelar</DrawerClose>
             {acceptTerms ? (
@@ -254,7 +294,7 @@ export default function PagamentoPage({ params }: Props) {
                     <DialogDescription>Os dados salvos são de total responsabilidade do titular.</DialogDescription>
                   </DialogHeader>
                   <DialogFooter>
-                    <button onClick={handleSaveAndProceed} className="bg-green-500 text-white rounded-lg p-2 w-full">Salvar e Prosseguir</button>
+                    <button onClick={handleSaveAndProceed} className="bg-takeat-primary-default text-white rounded-lg p-2 w-full mt-3">Salvar e Prosseguir</button>
                     <DialogClose asChild>
                       <button onClick={handleSubmit} className="border rounded-lg p-2 w-full">Usar desta vez</button>
                     </DialogClose>
@@ -276,7 +316,7 @@ export default function PagamentoPage({ params }: Props) {
         </DialogContent>
       </Dialog>
 
-      <ContinueComponents taxservice={parseAddress} desconto params={restaurant} route="confirmar-pedido" />
+      {/* <ContinueComponents params={restaurant} /> */}
     </InternalPages>
   );
 }

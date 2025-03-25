@@ -1,8 +1,8 @@
 "use client";
-import InformationButton from "@/components/uiComponents/Buttons/informationButton.component";
 import InternalPages from "@/components/uiComponents/InternalPageHeader/internal_pages.header";
-import { useRouter } from "next/navigation";
+import Link from "next/link";
 import React from "react";
+import { IconClock, IconDeliveryBag, IconDeliveryBagSchedule, IconDeliverySchedule, IconMotorcycle } from "takeat-design-system-ui-kit";
 
 interface Props {
   params: Promise<{ restaurants: string }>;
@@ -17,18 +17,40 @@ interface Props {
 export default function EntregaPage({ params }: Props) {
   const restaurant = React.use(params)?.restaurants;
   const methodDeliveryTakeat = `@methodDeliveryTakeat:${restaurant}`;
-  const { push } = useRouter();
-
   const add = (e: string) => {
     localStorage.setItem(methodDeliveryTakeat, e)
-    push(`/${restaurant}/endereco`)
   }
 
   return (
     <InternalPages title="Entrega" button description="Escolha uma opção de entrega">
       <div style={{ display: 'flex', alignItems: 'center', flexDirection: 'column', gap: 12, marginTop: 20 }}>
-        <InformationButton onClick={() => add('delivery')} title="Delivery" icon="IconMotorcycle" fill="#C8131B" time={12} />
-        <InformationButton onClick={() => add('retirarBalcao')} title="Retirar no Balcão" icon="IconDeliveryBag" fill="#C8131B" time={44} />
+        <Link href={`/${restaurant}/endereco`} onClick={() => add('delivery')}
+          className="
+          flex items-center justify-between w-full h-[60px]
+          border border-takeat-neutral-light rounded-xl px-4
+          ">
+          <div className="flex items-center gap-3">
+            <IconMotorcycle className="fill-takeat-primary-default text-2xl" />
+            <span>Delivery</span>
+          </div>
+          <div className="flex items-center gap-3">
+            <IconClock />
+            <span>13 min.</span>
+          </div>
+        </Link>
+        <Link href={`/${restaurant}/pagamento`} onClick={() => add('retirarBalcao')}
+          className="
+          flex items-center justify-between w-full h-[60px]
+          border border-takeat-neutral-light rounded-xl px-4">
+          <div className="flex items-center gap-3">
+            <IconDeliveryBag className="fill-takeat-primary-default text-2xl" />
+            <span>Retirar no Balcão</span>
+          </div>
+          <div className="flex items-center gap-3">
+            <IconClock />
+            <span>13 min.</span>
+          </div>
+        </Link>
         <div
           style={{
             display: 'flex',
@@ -52,8 +74,34 @@ export default function EntregaPage({ params }: Props) {
             borderRadius: '50px'
           }} />
         </div>
-        <InformationButton onClick={() => add('agendamentoDelivery')} title="Agendamento Delivery" icon="IconDeliverySchedule" fill="#C8131B" />
-        <InformationButton onClick={() => add('agendamentoRetirada')} title="Agendamento Retirada" icon="IconDeliveryBagSchedule" fill="#C8131B" />
+        <Link href={''} onClick={() => add('agendamentoDelivery')}
+          className="
+          flex items-center justify-between w-full h-[60px]
+          border border-takeat-neutral-light rounded-xl px-4
+          ">
+          <div className="flex items-center gap-3">
+            <IconDeliverySchedule className="fill-takeat-primary-default text-2xl" />
+            <span>Agendamento Delivery</span>
+          </div>
+          <div className="flex items-center gap-3">
+            <IconClock />
+            <span>13 min.</span>
+          </div>
+        </Link>
+        <Link href={''} onClick={() => add('agendamentoRetirada')}
+          className="
+          flex items-center justify-between w-full h-[60px]
+          border border-takeat-neutral-light rounded-xl px-4
+          ">
+          <div className="flex items-center gap-3">
+            <IconDeliveryBagSchedule className="fill-takeat-primary-default text-2xl" />
+            <span>Agendamento Retirada</span>
+          </div>
+          <div className="flex items-center gap-3">
+            <IconClock />
+            <span>13 min.</span>
+          </div>
+        </Link>
       </div>
     </InternalPages>
   );

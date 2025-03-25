@@ -27,7 +27,6 @@ export const InfoContainerButton = styled.div`
   display: flex;
   align-items: center;
   gap: 12px;
-  /* font-weight: 600; */
   color: ${theme.colors.neutral.dark}
 `}`;
 

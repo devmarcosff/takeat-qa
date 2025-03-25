@@ -1,14 +1,13 @@
 "use client";
 import { ICart } from "@/components/addProducts/addProducts.types";
-import ContinueComponents from "@/components/continue/continue.components";
-import LoadingTakeat from "@/components/theme/loading.component";
+import ConfirmarPedidoButton from "@/components/confirmar-pedido/continue.components";
 import { TakeatApp } from "@/components/theme/ThemeProviderWrapper";
 import InternalPages from "@/components/uiComponents/InternalPageHeader/internal_pages.header";
 import { AnimatePresence, motion } from "framer-motion";
 import Image from "next/image";
 import React, { useEffect, useState } from "react";
 import { RiSubtractLine } from "react-icons/ri";
-import { formatPrice, IconAddCircleFilled, IconPencilFilled, IconRoundChat, IconTrashFilled } from "takeat-design-system-ui-kit";
+import { formatPrice, IconAddCircleFilled, IconRoundChat, IconTrashFilled } from "takeat-design-system-ui-kit";
 
 interface Props {
   params: Promise<{ restaurants: string }>;
@@ -16,7 +15,6 @@ interface Props {
 
 export default function ProductPage({ params }: Props) {
   const restaurant = React.use(params).restaurants;
-  const [loading, setLoading] = useState(true);
   const [bag, setBag] = useState<ICart[]>([]);
   const [lastQuantities, setLastQuantities] = useState<Record<string, number>>({});
   const burger = "/assets/burger.svg";
@@ -34,7 +32,6 @@ export default function ProductPage({ params }: Props) {
           }
           return prevBag;
         });
-        setLoading(false);
       };
 
       const interval = setInterval(checkStorage, 1000);
@@ -69,8 +66,6 @@ export default function ProductPage({ params }: Props) {
     });
   };
 
-  if (loading) return <LoadingTakeat />
-
   return (
     <InternalPages title="Carrinho" button>
       <div>
@@ -93,7 +88,7 @@ export default function ProductPage({ params }: Props) {
                                 <div className="w-28">
                                   <Image src={burger} width={112} height={112} alt="test" className="w-full rounded-lg shadow-md" />
                                 </div>
-                                <span className="text-takeat-primary-default font-semibold flex items-center justify-center gap-1 w-full"><IconPencilFilled className="fill-takeat-primary-default text-lg" /> Editar</span>
+                                {/* <span className="text-takeat-primary-default font-semibold flex items-center justify-center gap-1 w-full"><IconPencilFilled className="fill-takeat-primary-default text-lg" /> Editar</span> */}
                               </div>
 
                               <div className="flex-initial w-full">
@@ -140,7 +135,6 @@ export default function ProductPage({ params }: Props) {
                                       className={`w-7 h-7 flex items-center justify-center text-white rounded-full font-bold text-lg`}
                                       onClick={() => updateQuantity({ index, newQuantity: 1 })}
                                     >
-                                      {/* <FiPlus className="text-xs" /> */}
                                       <IconAddCircleFilled className="fill-takeat-primary-default w-full h-full" />
                                     </button>
                                   </div>
@@ -158,7 +152,7 @@ export default function ProductPage({ params }: Props) {
                                   {
                                     item.complements.map((item, index) => {
                                       return (
-                                        <span key={index} className="px-2 bg-takeat-neutral-lighter rounded-full font-medium">{item.name}</span>
+                                        <span key={index} className="px-2 bg-takeat-neutral-lighter rounded-full font-medium text-sm">{item.name}</span>
                                       )
                                     })
                                   }
@@ -178,7 +172,7 @@ export default function ProductPage({ params }: Props) {
             : <div className="flex items-center justify-center w-full pt-8"><h2>Carrinho vazio</h2></div>
         }
 
-        <ContinueComponents params={restaurant} clear route="informacao" />
+        <ConfirmarPedidoButton params={restaurant} />
       </div>
     </InternalPages>
   );

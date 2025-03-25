@@ -4,14 +4,14 @@ import { ICart } from "@/components/addProducts/addProducts.types";
 import {
   ImageInternalContainer,
   ProductInternalContainer,
-  ProductInternalWrapper,
+  ProductInternalWrapper
 } from "@/components/restaurants/product/products.style";
-import LoadingTakeat from "@/components/theme/loading.component";
 import { Complement, ComplementCategory, Product } from "@/types/categories.types";
 import { AnimatePresence, motion } from "framer-motion";
+import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
 import { RiSubtractLine } from "react-icons/ri";
-import { formatPrice, IconAddCircleFilled, IconRoundChat, IconTrashFilled } from "takeat-design-system-ui-kit";
+import { formatPrice, IconAddCircleFilled, IconChevronLeft, IconRoundChat, IconTrashFilled } from "takeat-design-system-ui-kit";
 
 interface Props {
   params: Promise<{ restaurants: string }>;
@@ -19,16 +19,14 @@ interface Props {
 
 export default function ProductPage({ params }: Props) {
   const restaurant = React.use(params).restaurants;
-  const [loading, setLoading] = useState(true);
   const [storage, setStorage] = useState<Product>();
   const [selectedComplements, setSelectedComplements] = useState<{ [key: string]: string }>({});
   const [selectedQuantities, setSelectedQuantities] = useState<Record<string, { qtd: number; categoryId: string; complementId: string; price: string, limit: number, name: string }>>({});
   const [lastQuantities, setLastQuantities] = useState<{ [key: string]: number }>({});
   const [observation, setObservation] = useState<string>('');
   const [isAddButtonEnabled, setIsAddButtonEnabled] = useState(false);
-
-  const burger = "/assets/burger.svg";
-
+  const { back } = useRouter()
+  const [showStickyHeader, setShowStickyHeader] = useState(false);
 
   const getCategoryCounts = (
     selectedQuantities: Record<string, { qtd: number; categoryId: string; complementId: string; price: string }>,
@@ -122,13 +120,22 @@ export default function ProductPage({ params }: Props) {
   };
 
   useEffect(() => {
+    const handleScroll = () => {
+      const threshold = 250;
+      setShowStickyHeader(window.scrollY > threshold);
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  useEffect(() => {
     if (!restaurant) return;
 
     if (typeof window !== "undefined") {
       const getItemStorage = localStorage.getItem(`@deliveryTakeat:${restaurant}ProductRestaurant`);
       if (getItemStorage) {
         setStorage(JSON.parse(getItemStorage));
-        setLoading(false);
       }
 
       const storedData = localStorage.getItem("quantityComplements");
@@ -178,7 +185,6 @@ export default function ProductPage({ params }: Props) {
     {}
   );
 
-
   useEffect(() => {
     if (storage?.complement_categories) {
       const allCategoriesValid = storage.complement_categories.every((category: ComplementCategory) => {
@@ -195,12 +201,25 @@ export default function ProductPage({ params }: Props) {
     }
   }, [selectedQuantities, storage?.complement_categories]);
 
-
-  if (loading) return <LoadingTakeat />
-
   return (
     <ProductInternalContainer>
-      <ImageInternalContainer img={burger} />
+      {showStickyHeader ? (
+        <div
+          className={`sticky top-0 z-30 bg-white shadow px-4 py-3 flex items-center gap-3 transition-all duration-300 ${showStickyHeader ? "opacity-100" : "opacity-0 pointer-events-none"
+            }`}
+        >
+          <button onClick={back} className="flex items-center justify-center bg-white rounded-lg p-2">
+            <IconChevronLeft />
+          </button>
+          <h2 className="text-base font-semibold truncate">{storage?.name}</h2>
+        </div>
+      ) : <div>
+        <div className="fixed top-6 left-6 z-20">
+          <button onClick={back} className="w-full flex items-center justify-center bg-white rounded-lg p-3"><IconChevronLeft /></button>
+        </div>
+        <ImageInternalContainer img={`${storage?.image.url_thumb}`} />
+      </div>}
+
       <ProductInternalWrapper>
         <div className="flex flex-col gap-3 mb-3">
           <div className="flex items-center justify-between">
@@ -219,11 +238,6 @@ export default function ProductPage({ params }: Props) {
             <p className="text-takeat-green-dark font-semibold">{storage?.price}</p>
             <p className="text-takeat-neutral-dark line-through">{storage?.price_promotion}</p>
           </div>
-        </div>
-
-        <div className="flex flex-col items-start my-2 gap-2">
-          <span className="flex gap-1"><IconRoundChat className="fill-takeat-primary-default text-xl" /> Quer fazer alguma observação?</span>
-          <textarea name="observation" onChange={(e) => setObservation(e.target.value)} id="observation" className="border shadow-md rounded-md border-takeat-primary-default w-full pt-3 px-3 focus:bg-takeat-neutral-lightest" placeholder="Ex: Retirar item X" />
         </div>
 
         {storage?.complement_categories?.map((category: ComplementCategory) => {
@@ -339,6 +353,11 @@ export default function ProductPage({ params }: Props) {
             </div>
           );
         })}
+
+        <div className="flex flex-col items-start my-2 gap-2">
+          <span className="flex gap-1"><IconRoundChat className="fill-takeat-primary-default text-xl" /> Quer fazer alguma observação?</span>
+          <textarea name="observation" onChange={(e) => setObservation(e.target.value)} id="observation" className="border shadow-md rounded-md border-takeat-primary-default w-full pt-3 px-3 focus:bg-takeat-neutral-lightest" placeholder="Ex: Retirar item X" />
+        </div>
 
       </ProductInternalWrapper>
       <AddProductsComponents disabled={!isAddButtonEnabled} product={storage} params={restaurant} cart={cart} observation={observation} />

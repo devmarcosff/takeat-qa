@@ -6,7 +6,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { formatPrice, IconChevronRight, IconTicketFilled, Modal } from 'takeat-design-system-ui-kit';
 import { ActionProducts, AddProductsContainer, AddProductsPriceInfoItem, AddProductsPriceItem, AddProductsQuantity, ButtonProductsDiscount, ProductsDiscount, ProductsDiscountContainer, ProductsDiscountText, SelectAddProducts, TextAddProductsQuantity } from '../addProducts/addProducts.style';
 import { ICart } from '../addProducts/addProducts.types';
-import { ComplementCategory, OrderItem, Product } from './continue.types';
+import { ComplementCategory, OrderItem, Product } from '../continue/continue.types';
 
 interface Props {
   params: string,
@@ -23,7 +23,6 @@ export default function ContinueComponents({ params, route, clear, textButon, ta
   const takeatBagKey = `@deliveryTakeat:${params}TakeatBag`;
   const storageTakeat = `@deliveryTakeat:${params}`;
   const tokenClient = `@tokenUserTakeat:${params}`
-  const methodDelivery = `@methodDeliveryTakeat:${params}`
   const tokenCard = `@tokenCardUserTakeat:${params}`;
   const addressClientDelivery = `@addressClientDeliveryTakeat:${params}`;
   const [totalPrice, setTotalPrice] = useState<number>(0);
@@ -32,8 +31,7 @@ export default function ContinueComponents({ params, route, clear, textButon, ta
   const [confirmPix, setConfirmPix] = useState(false)
   const [modalGen, setModalGen] = useState<{ qrcode: string, zoop_id: string }>()
   const [taxService, setTaxService] = useState<number>()
-  const [parseAddress, setParseAddress] = useState<number>(0)
-  const [isMethodDelivery, setIsMethodDelivery] = useState<string>('')
+  const [parseAddress, setParseAddress] = useState<number>()
   const { push } = useRouter();
 
   const updateStorageData = useCallback(() => {
@@ -107,8 +105,8 @@ export default function ContinueComponents({ params, route, clear, textButon, ta
       payment_token: JSON.parse(`${storageCardToken}`) ? `${JSON.parse(`${storageCardToken}`)}` : null,
       payment_method_id: parsedMethodPaymentTakeat.id ? parsedMethodPaymentTakeat.id : null,
       restaurant_id: parsedRestaurantId.restaurantId,
-      buyer_address_id: parsedAddressClientDelivery ? parsedAddressClientDelivery.id : null,
-      with_withdrawal: isMethodDelivery === 'agendamentoRetirada' || isMethodDelivery === 'retirarBalcao' ? true : false,
+      buyer_address_id: parsedAddressClientDelivery.id,
+      with_withdrawal: false,
       details: "",
       coupon_code: "",
       rescue: 0,
@@ -122,6 +120,7 @@ export default function ContinueComponents({ params, route, clear, textButon, ta
     };
 
     api_create_order.post('/orders', payload, config).then(res => {
+      console.log(res)
       setModalGen(res.data.pix_info)
       if (res.data.pix_info) {
         setOpenModal(true)
@@ -141,11 +140,6 @@ export default function ContinueComponents({ params, route, clear, textButon, ta
       if (parsedStorage) {
         const minimum_price = JSON.parse(parsedStorage).delivery_minimum_price;
         setActive(minimum_price);
-      }
-
-      const parsedMethodDelivery = localStorage.getItem(methodDelivery);
-      if (parsedMethodDelivery) {
-        setIsMethodDelivery(parsedMethodDelivery);
       }
 
       const address = localStorage.getItem(addressClientDelivery);
@@ -185,11 +179,9 @@ export default function ContinueComponents({ params, route, clear, textButon, ta
 
 
   const HeightCheckout = () => {
-    if (isMethodDelivery === "delivery") {
-      return 170
-    } else {
-      return 120
-    }
+    if (!parseAddress) return 120
+    else if (desconto) return 230
+    else return 170
   }
 
   const handleConfirmPix = () => {
@@ -212,19 +204,20 @@ export default function ContinueComponents({ params, route, clear, textButon, ta
   return (
     <AddProductsContainer flex_direction={"column"} height={HeightCheckout()}>
       <AddProductsPriceItem>
-        {isMethodDelivery === "delivery" && (
-          <>
-            <AddProductsPriceInfoItem textsize={16}>
-              <span>Subtotal:</span>
-              <span>{formatPrice(totalPrice)}</span>
-            </AddProductsPriceInfoItem>
-            <AddProductsPriceInfoItem textsize={16}>
-              <span>Taxa de entrega:</span>
-              {/* <span>{formatPrice(String(taxService)) || formatPrice(String(parseAddress))}</span> */}
-              <span>R$ {taxService || parseAddress}</span>
-            </AddProductsPriceInfoItem>
-          </>
-        )}
+        {
+          parseAddress && (
+            <>
+              <AddProductsPriceInfoItem textsize={16}>
+                <span>Subtotal:</span>
+                <span>{formatPrice(totalPrice)}</span>
+              </AddProductsPriceInfoItem>
+              <AddProductsPriceInfoItem textsize={16}>
+                <span>Taxa de entrega:</span>
+                {/* <span>{formatPrice(String(taxService)) || formatPrice(String(parseAddress))}</span> */}
+                <span>R$ {taxService || parseAddress}</span>
+              </AddProductsPriceInfoItem>
+            </>
+          )}
         <AddProductsPriceInfoItem weight={"600"}>
           <span>Total:</span>
           <AnimatePresence mode="popLayout">
@@ -235,45 +228,49 @@ export default function ContinueComponents({ params, route, clear, textButon, ta
               exit={{ x: -20, opacity: 0 }}
               transition={{ duration: 0.3, ease: "backInOut" }}
             >
-              {isMethodDelivery === "delivery" ? formatPrice(totalPrice + parseAddress) : formatPrice(totalPrice)}
+              {parseAddress ? formatPrice(totalPrice + parseAddress) : formatPrice(totalPrice)}
             </motion.span>
           </AnimatePresence>
         </AddProductsPriceInfoItem>
       </AddProductsPriceItem>
 
-      {!!desconto ? (
-        <ProductsDiscount>
-          <ButtonProductsDiscount onClick={() => alert("Desconto inesistente!!!")}>
-            <ProductsDiscountContainer>
-              <IconTicketFilled className="fill-takeat-neutral-dark text-2xl" />
-              <ProductsDiscountText>Adicionar desconto</ProductsDiscountText>
-            </ProductsDiscountContainer>
-            <IconChevronRight className="fill-takeat-neutral-dark text-lg" />
-          </ButtonProductsDiscount>
-        </ProductsDiscount>
-      ) : ''}
+      {
+        desconto ? (
+          <ProductsDiscount>
+            <ButtonProductsDiscount onClick={() => alert("Desconto inesistente!!!")}>
+              <ProductsDiscountContainer>
+                <IconTicketFilled className="fill-takeat-neutral-dark text-2xl" />
+                <ProductsDiscountText>Adicionar desconto</ProductsDiscountText>
+              </ProductsDiscountContainer>
+              <IconChevronRight className="fill-takeat-neutral-dark text-lg" />
+            </ButtonProductsDiscount>
+          </ProductsDiscount>
+        ) : ''}
 
       <ActionProducts>
-        {!!clear && (
-          <SelectAddProducts style={{ height: 48 }}>
-            <button onClick={() => localStorage.removeItem(takeatBagKey)}>
-              <span className='text-takeat-primary-default font-semibold'>Limpar</span>
-            </button>
-          </SelectAddProducts>
-        )}
-        {!!finishOrder ? (
-          <AddProductsQuantity disabled={!(totalPrice > Number(active))} style={{ height: 48 }}>
-            <TextAddProductsQuantity disabled={!(totalPrice > Number(active))} onClick={handleCreateOrder}>
-              {!(totalPrice > Number(active)) ? `Pedido mín: ${formatPrice(`${active}`)}` : `${textButon || 'Continuar Pedido'}`}
-            </TextAddProductsQuantity>
-          </AddProductsQuantity>
-        ) : (
-          <AddProductsQuantity disabled={!(totalPrice > Number(active))} style={{ height: 48 }}>
-            <TextAddProductsQuantity disabled={!(totalPrice > Number(active))} onClick={() => push(`/${params}/${route}`)}>
-              {!(totalPrice > Number(active)) ? `Pedido mín: ${formatPrice(`${active}`)}` : `${textButon || 'Continuar Pedido'}`}
-            </TextAddProductsQuantity>
-          </AddProductsQuantity>
-        )
+        {
+          clear && (
+            <SelectAddProducts style={{ height: 48 }}>
+              <button onClick={() => localStorage.removeItem(takeatBagKey)}>
+                <span className='text-takeat-primary-default font-semibold'>Limpar</span>
+              </button>
+            </SelectAddProducts>
+          )
+        }
+        {
+          finishOrder ? (
+            <AddProductsQuantity disabled={!(totalPrice > Number(active))} style={{ height: 48 }}>
+              <TextAddProductsQuantity disabled={!(totalPrice > Number(active))} onClick={handleCreateOrder}>
+                {!(totalPrice > Number(active)) ? `Pedido mín: ${formatPrice(`${active}`)}` : `${textButon || 'Continuar Pedido'}`}
+              </TextAddProductsQuantity>
+            </AddProductsQuantity>
+          ) : (
+            <AddProductsQuantity disabled={!(totalPrice > Number(active))} style={{ height: 48 }}>
+              <TextAddProductsQuantity disabled={!(totalPrice > Number(active))} onClick={() => push(`/${params}/${route}`)}>
+                {!(totalPrice > Number(active)) ? `Pedido mín: ${formatPrice(`${active}`)}` : `${textButon || 'Continuar Pedido'}`}
+              </TextAddProductsQuantity>
+            </AddProductsQuantity>
+          )
         }
       </ActionProducts>
 
@@ -284,28 +281,28 @@ export default function ContinueComponents({ params, route, clear, textButon, ta
           <h2>Copie e cole o código pix</h2>
         </Modal.Header>
         <Modal.Body>
-          <div className="flex items-center w-full">
+          <div className="flex items-center space-x-2">
             <div className="flex items-center justify-center w-full gap-2">
               <input
-                className='w-full border p-3 rounded-lg cursor-pointer hover:bg-takeat-neutral-lightest'
+                className='w-3/4 border p-3 rounded-lg cursor-pointer hover:bg-takeat-neutral-lightest'
                 id="link"
-                defaultValue={modalGen?.qrcode}
+                defaultValue={modalGen?.zoop_id}
                 readOnly
                 onClick={() => {
-                  navigator.clipboard.writeText(modalGen?.qrcode || "");
+                  navigator.clipboard.writeText(modalGen?.zoop_id || "");
                   alert("Código copiado com sucesso!");
                 }}
               />
 
               <button className='border p-3 rounded-lg hover:bg-takeat-neutral-lightest'
                 onClick={() => {
-                  navigator.clipboard.writeText(modalGen?.qrcode || "");
+                  navigator.clipboard.writeText(modalGen?.zoop_id || "");
                   alert("Código copiado com sucesso!");
                 }}><Copy /></button>
             </div>
           </div>
 
-          <div className="flex w-full gap-3 pt-6">
+          <div className="flex w-full gap-3 px-6 pt-6">
             <button onClick={() => handleConfirmPix()} className='px-3 py-2 w-full border rounded-lg font-semibold text-white bg-takeat-primary-default hover:bg-takeat-primary-default/80 text-center flex items-center justify-center'>{!confirmPix ? "Confirmar pagamento" : <Loader2 className='animate-spin' />}</button>
           </div>
         </Modal.Body>

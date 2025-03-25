@@ -39,6 +39,7 @@ export default function AddressClientComponent({ params, methodDelivery }: Props
   const [getInfoBairro, setGetInfoBairro] = useState('');
   const [getInfoComplemento, setGetInfoComplemento] = useState('');
   const [getInfoReferencia, setGetInfoReferencia] = useState('');
+  const [InfoClient, setInfoClient] = useState<{ tel: string, name?: string }>({ tel: '', name: '' });
 
   const { push } = useRouter();
   const addressMethodDelivery = methodDelivery.delimit_by_area || methodDelivery.is_delivery_by_distance;
@@ -59,7 +60,7 @@ export default function AddressClientComponent({ params, methodDelivery }: Props
     }
 
     api_public.post(`/sessions`, {
-      "phone": "(22) 99881-8553"
+      "phone": `${InfoClient.tel}`
     }).then(res => {
       const token = res.data.token;
       localStorage.setItem(`@tokenUserTakeat:${restaurant}`, token);
@@ -101,6 +102,12 @@ export default function AddressClientComponent({ params, methodDelivery }: Props
       })
     } catch (err) { return err }
   };
+
+  useEffect(() => {
+    const getInfoClient = localStorage.getItem(`@clienteTakeat:${restaurant}`);
+    const parsedGetInfoClient = JSON.parse(getInfoClient || '');
+    setInfoClient(parsedGetInfoClient)
+  }, [])
 
   useEffect(() => {
     const fetchRestaurant = async () => {
@@ -208,7 +215,7 @@ export default function AddressClientComponent({ params, methodDelivery }: Props
                 placeholder="Digite o bairro"
                 className="
                   peer w-full h-12 bg-transparent placeholder:text-slate-400 text-md
-                  text-slate-700 text-sm border border-takeat-neutral-default rounded-xl
+                  text-slate-700 border border-takeat-neutral-default rounded-xl
                   px-3 py-2transition duration-300 ease shadow-sm
                   focus:outline-none focus:border-takeat-blue-darker hover:border-takeat-blue-darker focus:shadow"
               />
@@ -224,7 +231,7 @@ export default function AddressClientComponent({ params, methodDelivery }: Props
                   onChange={e => setGetInfoLogradouro(e.target.value)}
                   className="
                   peer w-full h-12 bg-transparent placeholder:text-slate-400 text-md
-                  text-slate-700 text-sm border border-takeat-neutral-default rounded-xl
+                  text-slate-700 border border-takeat-neutral-default rounded-xl
                   px-3 py-2transition duration-300 ease shadow-sm
                   focus:outline-none focus:border-takeat-blue-darker hover:border-takeat-blue-darker focus:shadow"
                 />
@@ -239,7 +246,7 @@ export default function AddressClientComponent({ params, methodDelivery }: Props
                   onChange={e => setGetInfoNum(e.target.value)}
                   className="
                   peer w-full h-12 bg-transparent placeholder:text-slate-400 text-md
-                  text-slate-700 text-sm border border-takeat-neutral-default rounded-xl
+                  text-slate-700 border border-takeat-neutral-default rounded-xl
                   px-3 py-2transition duration-300 ease shadow-sm
                   focus:outline-none focus:border-takeat-blue-darker hover:border-takeat-blue-darker focus:shadow"
                 />
@@ -255,7 +262,7 @@ export default function AddressClientComponent({ params, methodDelivery }: Props
                 placeholder="Ex: Casa 3, fundos"
                 className="
                   peer w-full h-12 bg-transparent placeholder:text-slate-400 text-md
-                  text-slate-700 text-sm border border-takeat-neutral-default rounded-xl
+                  text-slate-700 border border-takeat-neutral-default rounded-xl
                   px-3 py-2transition duration-300 ease shadow-sm
                   focus:outline-none focus:border-takeat-blue-darker hover:border-takeat-blue-darker focus:shadow"
               />
@@ -270,7 +277,7 @@ export default function AddressClientComponent({ params, methodDelivery }: Props
                 placeholder="Digite a referência"
                 className="
                   peer w-full h-12 bg-transparent placeholder:text-slate-400 text-md
-                  text-slate-700 text-sm border border-takeat-neutral-default rounded-xl
+                  text-slate-700 border border-takeat-neutral-default rounded-xl
                   px-3 py-2transition duration-300 ease shadow-sm
                   focus:outline-none focus:border-takeat-blue-darker hover:border-takeat-blue-darker focus:shadow"
               />
@@ -294,7 +301,7 @@ export default function AddressClientComponent({ params, methodDelivery }: Props
                     className={`
                     ${!getInfoCity ? '' : 'border-takeat-green-default'}
                       transition-all peer w-full h-12 bg-transparent placeholder:text-slate-400
-                      text-slate-700 text-sm border border-takeat-neutral-default rounded-xl
+                      text-slate-700 border border-takeat-neutral-default rounded-xl
                       px-3 py-2 duration-300 ease shadow-sm
                       focus:outline-none focus:border-takeat-blue-darker hover:border-takeat-blue-darker focus:shadow
                     `}
@@ -319,7 +326,7 @@ export default function AddressClientComponent({ params, methodDelivery }: Props
                 readOnly={!!isNotZipCode}
                 className="
                   peer w-full h-12 bg-transparent placeholder:text-slate-400
-                  text-slate-700 text-sm border border-takeat-neutral-default rounded-xl
+                  text-slate-700 border border-takeat-neutral-default rounded-xl
                   px-3 py-2 transition duration-300 ease shadow-sm
                   focus:outline-none focus:border-takeat-blue-darker hover:border-takeat-blue-darker focus:shadow"
               />
@@ -335,7 +342,7 @@ export default function AddressClientComponent({ params, methodDelivery }: Props
                 readOnly={!!isNotZipCode}
                 className="
                   peer w-full h-12 bg-transparent placeholder:text-slate-400
-                  text-slate-700 text-sm border border-takeat-neutral-default rounded-xl
+                  text-slate-700 border border-takeat-neutral-default rounded-xl
                   px-3 py-2 transition duration-300 ease shadow-sm
                   focus:outline-none focus:border-takeat-blue-darker hover:border-takeat-blue-darker focus:shadow"
               />
@@ -351,7 +358,7 @@ export default function AddressClientComponent({ params, methodDelivery }: Props
                   onChange={e => setGetInfoLogradouro(e.target.value)}
                   className="
                     peer w-full h-12 bg-transparent placeholder:text-slate-400
-                    text-slate-700 text-sm border border-takeat-neutral-default rounded-xl
+                    text-slate-700 border border-takeat-neutral-default rounded-xl
                     px-3 py-2transition duration-300 ease shadow-sm
                     focus:outline-none focus:border-takeat-blue-darker hover:border-takeat-blue-darker focus:shadow"
                 />
@@ -366,7 +373,7 @@ export default function AddressClientComponent({ params, methodDelivery }: Props
                   placeholder="N°"
                   className="
                     peer w-full h-12 bg-transparent placeholder:text-slate-400
-                    text-slate-700 text-sm border border-takeat-neutral-default rounded-xl
+                    text-slate-700 border border-takeat-neutral-default rounded-xl
                     px-3 py-2transition duration-300 ease shadow-sm
                     focus:outline-none focus:border-takeat-blue-darker hover:border-takeat-blue-darker focus:shadow"
                 />
@@ -382,7 +389,7 @@ export default function AddressClientComponent({ params, methodDelivery }: Props
                 placeholder="Informe seu bairro"
                 className="
                   peer w-full h-12 bg-transparent placeholder:text-slate-400
-                  text-slate-700 text-sm border border-takeat-neutral-default rounded-xl
+                  text-slate-700 border border-takeat-neutral-default rounded-xl
                   px-3 py-2transition duration-300 ease shadow-sm
                   focus:outline-none focus:border-takeat-blue-darker hover:border-takeat-blue-darker focus:shadow"
               />
@@ -397,7 +404,7 @@ export default function AddressClientComponent({ params, methodDelivery }: Props
                 placeholder="Ex: Casa 3, fundos"
                 className="
                   peer w-full h-12 bg-transparent placeholder:text-slate-400
-                  text-slate-700 text-sm border border-takeat-neutral-default rounded-xl
+                  text-slate-700 border border-takeat-neutral-default rounded-xl
                   px-3 py-2transition duration-300 ease shadow-sm
                   focus:outline-none focus:border-takeat-blue-darker hover:border-takeat-blue-darker focus:shadow"
               />
@@ -412,7 +419,7 @@ export default function AddressClientComponent({ params, methodDelivery }: Props
                 placeholder="Informe sua referência"
                 className="
                   peer w-full h-12 bg-transparent placeholder:text-slate-400
-                  text-slate-700 text-sm border border-takeat-neutral-default rounded-xl
+                  text-slate-700 border border-takeat-neutral-default rounded-xl
                   px-3 py-2transition duration-300 ease shadow-sm
                   focus:outline-none focus:border-takeat-blue-darker hover:border-takeat-blue-darker focus:shadow"
               />

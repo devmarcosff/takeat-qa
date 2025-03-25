@@ -1,7 +1,6 @@
 "use client";
 import { ICart } from "@/components/addProducts/addProducts.types";
 import ContinueComponents from "@/components/continue/continue.components";
-import LoadingTakeat from "@/components/theme/loading.component";
 import { TakeatApp } from "@/components/theme/ThemeProviderWrapper";
 import InformationButton from "@/components/uiComponents/Buttons/informationButton.component";
 import InternalPages from "@/components/uiComponents/InternalPageHeader/internal_pages.header";
@@ -39,10 +38,11 @@ export default function ConfirmarPedidoPage({ params }: Props) {
   const MethodPaymentTakeat = `@methodPaymentTakeat:${restaurant}`;
   const clienteTakeat = `@clienteTakeat:${restaurant}`;
   const deliveryTakeat = `@deliveryTakeat:${restaurant}`;
-  const [loading, setLoading] = useState(true);
+  const methodDeliveryTakeat = `@methodDeliveryTakeat:${restaurant}`;
   const [resumeCart, setResumeCart] = useState<ICart[]>();
   const [isClienteTakeat, setIsClienteTakeat] = useState<IClienteTakeat>();
   const [parsedMethodPayment, setParsedMethodPayment] = useState<IPaymentsProps>();
+  const [methodDelivery, setMethodDelivery] = useState<string>();
   const [addressDelivery, setAddressDelivery] = useState<IAddress>({
     state: ``,
     city: ``,
@@ -61,19 +61,31 @@ export default function ConfirmarPedidoPage({ params }: Props) {
       const getTakeatBag = localStorage.getItem(takeatBagKey);
       const getAddressDelivery = localStorage.getItem(addressClientDeliveryTakeat);
       const getClienteTakeat = localStorage.getItem(clienteTakeat);
-      const getDeliveryTakeat = localStorage.getItem(deliveryTakeat);
+      const getMethodDeliveryTakeat = localStorage.getItem(methodDeliveryTakeat);
       const getMethodPaymentTakeat = localStorage.getItem(MethodPaymentTakeat);
 
-      if (getTakeatBag && getAddressDelivery && getClienteTakeat && getDeliveryTakeat && getMethodPaymentTakeat) {
+      if (getTakeatBag) {
         const parsedGetTakeatBag = JSON.parse(getTakeatBag);
-        const parsedGetAddressDelivery = JSON.parse(getAddressDelivery);
-        const parsedGetClienteTakeat = JSON.parse(getClienteTakeat);
-        const parsedGetMethodPaymentTakeat = JSON.parse(getMethodPaymentTakeat);
         setResumeCart(parsedGetTakeatBag.products);
-        setAddressDelivery(parsedGetAddressDelivery);
+      }
+
+      if (getMethodDeliveryTakeat) {
+        setMethodDelivery(getMethodDeliveryTakeat);
+      }
+
+      if (getClienteTakeat) {
+        const parsedGetClienteTakeat = JSON.parse(getClienteTakeat);
         setIsClienteTakeat(parsedGetClienteTakeat);
+      }
+
+      if (getAddressDelivery) {
+        const parsedGetAddressDelivery = JSON.parse(getAddressDelivery);
+        setAddressDelivery(parsedGetAddressDelivery);
+      }
+
+      if (getMethodPaymentTakeat) {
+        const parsedGetMethodPaymentTakeat = JSON.parse(getMethodPaymentTakeat);
         setParsedMethodPayment(parsedGetMethodPaymentTakeat);
-        setLoading(false);
       }
     }
   }, [
@@ -92,8 +104,6 @@ export default function ConfirmarPedidoPage({ params }: Props) {
       </div>
     )
   }
-
-  if (loading) return <LoadingTakeat />
 
   return (
     <InternalPages title="Confirmar Pedido" button>
@@ -175,22 +185,33 @@ export default function ConfirmarPedidoPage({ params }: Props) {
           </div>
         </div>
 
-        {!!addressDelivery && (
-          <div className="pt-3">
-            {TitleMethodPayment('Delivery', 'entrega')}
+        <div className="pt-3">
+          {TitleMethodPayment('Delivery', 'entrega')}
+          {methodDelivery === 'delivery' ? (
             <div className="border-b pb-3">
-              <div className="flex items-center gap-2 font-semibold">
-                <IconLocationFilled className="text-2xl fill-takeat-neutral-dark" />
-                <span>{`${addressDelivery?.street}, ${addressDelivery?.number}`}</span>
-              </div>
+              {!!addressDelivery.city && (
+                <div className="flex items-center gap-2 font-semibold">
+                  <IconLocationFilled className="text-2xl fill-takeat-neutral-dark" />
+                  <span>{`${addressDelivery?.street}, ${addressDelivery?.number}`}</span>
+                </div>
+              )}
               <div className="flex flex-col font-medium text-takeat-neutral-default">
-                <span>{`${addressDelivery?.neighborhood} ${addressDelivery?.city && `, ${addressDelivery?.city}`} - ${addressDelivery?.state}`}</span>
+                <span>{`${addressDelivery?.neighborhood || 'Nenhuma informação adicionada'} ${addressDelivery?.city && `, ${addressDelivery?.city || 'Não informado'} -`} ${addressDelivery?.state}`}</span>
                 <span>{`${addressDelivery?.complement}${addressDelivery?.reference && `, ${addressDelivery?.reference}`}`}</span>
                 <span>{addressDelivery?.zip_code}</span>
               </div>
             </div>
-          </div>
-        )}
+          ) : (
+            <div className="border-b pb-3">
+              <div className="flex items-center gap-2 font-semibold">
+                <IconLocationFilled className="text-2xl fill-takeat-neutral-dark" />
+                <span>
+                  {`${methodDelivery == 'retirarBalcao' ? 'Retirar no balcão' : methodDelivery == 'agendamentoDelivery' ? 'Agendamento de entrega' : methodDelivery == 'agendamentoRetirada' ? 'Agendamento de retirada' : 'Delivery'}`}
+                </span>
+              </div>
+            </div>
+          )}
+        </div>
 
         {!!isClienteTakeat && (
           <div className="pt-3">

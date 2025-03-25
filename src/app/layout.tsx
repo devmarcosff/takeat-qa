@@ -1,6 +1,5 @@
-import GTM from "@/analytics/analytics";
+import Analytics from "@/analytics/analytics";
 import ThemeProviderWrapper from "@/components/theme/ThemeProviderWrapper";
-import { Analytics } from "@vercel/analytics/react";
 import type { Metadata } from "next";
 import { Poppins } from "next/font/google";
 import "./globals.css";
@@ -24,7 +23,6 @@ export default function RootLayout({
   return (
     <html lang="pt-br">
       <body className={`${poppins.className} md:hidden`}>
-        <GTM />
         <Analytics />
         <ThemeProviderWrapper>
           {children}

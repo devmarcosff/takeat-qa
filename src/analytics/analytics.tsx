@@ -1,4 +1,4 @@
-export default function GTM() {
+export default function Analytics() {
   return (
     <>
       <script async src={`https://www.googletagmanager.com/gtag/js?id=${process.env.NEXT_PUBLIC_GA_TRACKING}`}></script>

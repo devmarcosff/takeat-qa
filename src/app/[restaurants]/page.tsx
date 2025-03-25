@@ -3,7 +3,6 @@ import MenuComponent from "@/components/menu/menu.component";
 import HeaderComponent from "@/components/restaurants/header/header.components";
 import HighlightsRestaurant from "@/components/restaurants/highlights/highlights.component";
 import ProductsRestaurant from "@/components/restaurants/product/products.component";
-import LoadingTakeat from "@/components/theme/loading.component";
 import { TakeatApp, TakeatPage } from "@/components/theme/ThemeProviderWrapper";
 import { api_categories_delivery, api_delivery } from "@/utils/apis";
 import { useRouter } from "next/navigation";
@@ -17,7 +16,6 @@ export default function Restaurant({ params }: Props) {
   const restaurant = React.use(params)?.restaurants;
   const [getRestaurants, setGetRestaurants] = useState(null);
   const [getCategories, setGetCategories] = useState([]);
-  const [loading, setLoading] = useState(true);
   const { push } = useRouter();
 
   useEffect(() => {
@@ -30,7 +28,9 @@ export default function Restaurant({ params }: Props) {
           delivery_minimum_price: res.data.delivery_info.delivery_minimum_price,
           is_delivery_by_distance: res.data.delivery_info.is_delivery_by_distance,
           delimit_by_area: res.data.delivery_info.delimit_by_area,
-          restaurantId: res.data.delivery_info.id
+          restaurantId: res.data.delivery_info.id,
+          has_credit_card: res.data.has_credit_card,
+          has_pix: res.data.has_pix
         }
 
         localStorage.setItem(`@deliveryTakeat:${restaurant}`, JSON.stringify(deliveryInfos))
@@ -41,20 +41,15 @@ export default function Restaurant({ params }: Props) {
         api_categories_delivery.get(`/${res.data.id}?gd=true`)
           .then((res) => {
             setGetCategories(res.data);
-            setLoading(false);
           })
           .catch(() => console.error('Restaurante não encontrado'));
       } catch {
         alert('Restaurante não encontrado');
-        setTimeout(() => {
-          push('/');
-        }, 1500);
+        push('/');
       }
     };
     fetchRestaurant();
   }, [restaurant, push]);
-
-  if (loading) return <LoadingTakeat />
 
   return (
     <>
