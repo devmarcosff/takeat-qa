@@ -2,7 +2,7 @@
 
 import { SelectAddProducts } from "@/components/addProducts/addProducts.style";
 import InternalPages from "@/components/uiComponents/InternalPageHeader/internal_pages.header";
-import { phoneMask } from '@/hook/phone.mask';
+import { usePhoneMask } from '@/hook/usePhoneMask';
 import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -24,7 +24,7 @@ export default function ProductPage({ params }: Props) {
   const clientTakeat = `@clienteTakeat:${restaurant}`;
   const { push } = useRouter();
   const { register, handleSubmit, setValue, reset, formState: { errors } } = useForm<FormData>();
-  const phone = phoneMask<FormData>(setValue, 'tel');
+  const phone = usePhoneMask<FormData>(setValue, 'tel');
 
   useEffect(() => {
     if (typeof window !== "undefined") {

@@ -1,7 +1,7 @@
 import { useCallback } from 'react';
-import { Path, UseFormSetValue } from 'react-hook-form';
+import { Path, PathValue, UseFormSetValue } from 'react-hook-form';
 
-export function phoneMask<T extends Record<string, any>>(
+export function usePhoneMask<T extends Record<string, unknown>>(
   setValue: UseFormSetValue<T>,
   fieldName: Path<T>
 ) {
@@ -18,7 +18,7 @@ export function phoneMask<T extends Record<string, any>>(
         input = input.replace(/(\d{0,2})/, '($1');
       }
 
-      setValue(fieldName, input as any);
+      setValue(fieldName, input as PathValue<T, typeof fieldName>);
     },
     [setValue, fieldName]
   );
