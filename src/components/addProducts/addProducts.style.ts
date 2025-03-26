@@ -30,7 +30,7 @@ export const AddProductsContainer = styled.div<AddProductsContainerProps>`
     border-top: 1px solid ${theme.colors.neutral.lighter};
     box-shadow: 5px 5px 10px 2px ${theme.colors.neutral.lighter};
 
-    animation: ${CartFadeUp} ease-in-out .35s;
+    /* animation: ${CartFadeUp} ease-in-out .35s; */
   `}
 `;
 
@@ -43,7 +43,7 @@ export const AddProductsPriceItem = styled.div<AddProductsContainerProps>`
     justify-content: space-between;
     align-items: center;
     gap: 4px;
-    animation: ${CartFadeUp} ease-in-out .35s;
+    /* animation: ${CartFadeUp} ease-in-out .35s; */
   `}
 `;
 
@@ -115,14 +115,14 @@ export const CleanAddProducts = styled.div`
 
 export const AddProductsQuantity = styled.div<TextAddProductsQuantityProps>`
   ${({ theme, disabled }) => css`
-    border: solid 1px ${disabled ? `${theme.colors.neutral.lighter}` : `${theme.colors.primary.default}`};
+    border: solid 1px ${disabled ? `${theme.colors.neutral.lightest}` : `${theme.colors.primary.default}`};
     border-radius: 12px;
     display: flex;
     align-items: center;
     justify-content: center;
     width: 100%;
     height: 100%;
-    background-color: ${disabled ? `${theme.colors.neutral.lighter}` : `${theme.colors.primary.default}`};
+    background-color: ${disabled ? `${theme.colors.neutral.lightest}` : `${theme.colors.primary.default}`};
     color: ${disabled ? `${theme.colors.neutral.light}` : `${theme.colors.neutral.white}`};
   `}
 `;
@@ -142,7 +142,7 @@ export const SelectAddProducts = styled.div`
     border-radius: 12px;
     display: flex;
     height: 100%;
-    /* width: 130px; */
+    width: 130px;
     align-items: center;
     justify-content: center;
     padding: 12px 24px;

@@ -2,6 +2,7 @@
 
 import { SelectAddProducts } from "@/components/addProducts/addProducts.style";
 import InternalPages from "@/components/uiComponents/InternalPageHeader/internal_pages.header";
+import { phoneMask } from '@/hook/phone.mask';
 import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -13,18 +14,17 @@ interface Props {
 }
 
 type FormData = {
-  tel: string;
+  tel: string | number;
   name: string;
 };
 
 export default function ProductPage({ params }: Props) {
+  const [isDisabled, setIsDisabled] = useState(false);
   const restaurant = React.use(params)?.restaurants;
   const clientTakeat = `@clienteTakeat:${restaurant}`;
-
   const { push } = useRouter();
   const { register, handleSubmit, setValue, reset, formState: { errors } } = useForm<FormData>();
-
-  const [isDisabled, setIsDisabled] = useState(false);
+  const phone = phoneMask<FormData>(setValue, 'tel');
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -66,6 +66,7 @@ export default function ProductPage({ params }: Props) {
                   id="tel"
                   className="w-full bg-transparent"
                   placeholder="DDD + seu número"
+                  {...phone}
                   disabled={isDisabled}
                 />
                 {errors.tel && <IconError className="fill-takeat-primary-default text-2xl" />}

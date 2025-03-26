@@ -6,7 +6,7 @@ export const HighlightsContainer = styled.section`
   flex-direction: column;
   gap: 12px;
   padding: 20px 0;
-  background-color: ${({ theme }) => theme.colors.neutral.lighter};
+  background-color: ${({ theme }) => theme.colors.neutral.lightest};
 `;
 
 export const HighlightsTitle = styled.h2`

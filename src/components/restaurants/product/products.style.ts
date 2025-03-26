@@ -1,4 +1,4 @@
-import { fadeZoomIn } from "@/components/theme/ThemeProviderWrapper";
+import { CartFadeUp } from "@/components/theme/ThemeProviderWrapper";
 import styled, { css } from "styled-components";
 import { Image } from "takeat-design-system-ui-kit";
 
@@ -9,7 +9,7 @@ interface ImageInternalContainerProps {
 export const ProductsContainer = styled.section`
   padding: 0 20px 40px 20px;
   padding-bottom: 64px;
-  background-color: ${({ theme }) => theme.colors.neutral.lighter};
+  background-color: ${({ theme }) => theme.colors.neutral.lightest};
 `;
 
 export const CategoryContainer = styled.div`
@@ -166,6 +166,6 @@ export const ProductInternalWrapper = styled.div`
     margin-bottom: 75px;
     border-radius: 20px 20px 0 0;
 
-    animation: ${fadeZoomIn} .3s ease-in-out;
+    animation: ${CartFadeUp} .3s ease-in-out;
   `}
 `

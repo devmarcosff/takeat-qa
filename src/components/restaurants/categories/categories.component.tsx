@@ -3,7 +3,7 @@ import { EmblaOptionsType } from "embla-carousel";
 import Autoplay from "embla-carousel-autoplay";
 import useEmblaCarousel from "embla-carousel-react";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { IconClose, IconSearch } from "takeat-design-system-ui-kit";
 import { Logo } from "../header/header.components";
 import { RestaurantDetails } from "../header/header.style";
@@ -35,19 +35,32 @@ export default function CategoriesRestaurant({ categories, scrolling }: Props) {
     containScroll: "trimSnaps",
   };
   const [emblaRef] = useEmblaCarousel(OPTIONS, [Autoplay()]);
+  const [categoriesHeight, setCategoriesHeight] = useState(0);
 
   const router = useRouter();
   const [checkCategorie, setCheckCategorie] = useState<string>()
   const height = scrolling * 30;
   const heightSearch = scrolling * 50;
 
+  const HEADER_HEIGHT = 200;
+
+  const categoriesRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (categoriesRef.current) {
+      setCategoriesHeight(categoriesRef.current.offsetHeight);
+    }
+  }, []);
+
   const handleCategoryClick = (categoryName: string) => {
-    router.push(`#${categoryName}`);
-    setCheckCategorie(categoryName)
+    setCheckCategorie(categoryName);
 
     const element = document.getElementById(categoryName);
     if (element) {
-      element.scrollIntoView({ behavior: "smooth", block: "start" });
+      const yOffset = -(HEADER_HEIGHT);
+      const y = element.getBoundingClientRect().top + window.pageYOffset + yOffset;
+
+      window.scrollTo({ top: y, behavior: "smooth" });
 
       setTimeout(() => {
         window.dispatchEvent(new CustomEvent("toggleAccordion", { detail: categoryName }));
@@ -56,7 +69,7 @@ export default function CategoriesRestaurant({ categories, scrolling }: Props) {
   };
 
   return (
-    <CategoriesContainer>
+    <CategoriesContainer >
       <RestaurantDetails scrolling={scrolling} height={heightSearch}>
         <SearchContainer>
           <IconSearch style={{ fontSize: "22px", fill: "#545454" }} />
@@ -69,7 +82,7 @@ export default function CategoriesRestaurant({ categories, scrolling }: Props) {
         <CategoriesTitle>Categorias</CategoriesTitle>
       </RestaurantDetails>
 
-      <CarouselWrapper>
+      <CarouselWrapper ref={categoriesRef}>
         <CarouselViewport ref={emblaRef}>
           <CarouselContainer>
             {categories?.map((item, index) => (

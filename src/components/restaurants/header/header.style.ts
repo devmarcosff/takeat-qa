@@ -63,7 +63,7 @@ export const HeaderContainer = styled.header<HeaderStickyProps>`
     color: ${theme};
     position: relative;
     width: 100%;
-    background: ${scrolling ? theme.colors.neutral.lighter : 'white'};
+    background: ${scrolling ? theme.colors.neutral.lightest : 'white'};
     transition: all 0.3s ease-in-out;
     transform: translateY(0);
     overflow: hidden;

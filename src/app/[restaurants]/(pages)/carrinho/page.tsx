@@ -3,6 +3,7 @@ import { ICart } from "@/components/addProducts/addProducts.types";
 import ConfirmarPedidoButton from "@/components/confirmar-pedido/continue.components";
 import { TakeatApp } from "@/components/theme/ThemeProviderWrapper";
 import InternalPages from "@/components/uiComponents/InternalPageHeader/internal_pages.header";
+import PageWrapper from "@/hook/pageWrapper";
 import { AnimatePresence, motion } from "framer-motion";
 import Image from "next/image";
 import React, { useEffect, useState } from "react";
@@ -68,7 +69,7 @@ export default function ProductPage({ params }: Props) {
 
   return (
     <InternalPages title="Carrinho" button>
-      <div>
+      <PageWrapper>
         {
           bag.length > 0 ? (
             <div>
@@ -171,9 +172,8 @@ export default function ProductPage({ params }: Props) {
           )
             : <div className="flex items-center justify-center w-full pt-8"><h2>Carrinho vazio</h2></div>
         }
-
-        <ConfirmarPedidoButton params={restaurant} />
-      </div>
-    </InternalPages>
+      </PageWrapper>
+      <ConfirmarPedidoButton params={restaurant} />
+    </InternalPages >
   );
 }

@@ -90,18 +90,18 @@ export const TakeatApp = styled.div`
   position: relative;
   /* height: 100vh; */
   z-index: 30;
-  animation: ${fadeZoomIn} .3s ease-out;
+  /* animation: ${fadeZoomIn} .3s ease-out; */
 `;
 
 export const TakeatPage = styled.div`
   position: absolute;
   z-index: 100;
-  animation: ${CartFadeUp} .3s ease-in-out;
+  /* animation: ${CartFadeUp} .3s ease-in-out; */
 `;
 
 export const LoadingWrapper = styled.div`
   ${({ }) => css`
     opacity: 0;
-    animation: ${fadeZoomOut} .6s ease-in-out;
+    /* animation: ${fadeZoomOut} .6s ease-in-out; */
   `}
 `;

@@ -6,12 +6,14 @@ import {
   ProductInternalContainer,
   ProductInternalWrapper
 } from "@/components/restaurants/product/products.style";
+import LoadingTakeat from "@/components/theme/loading.component";
 import { Complement, ComplementCategory, Product } from "@/types/categories.types";
 import { AnimatePresence, motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
 import { RiSubtractLine } from "react-icons/ri";
 import { formatPrice, IconAddCircleFilled, IconChevronLeft, IconRoundChat, IconTrashFilled } from "takeat-design-system-ui-kit";
+import Placeholder from '../../../../../../public/assets/placeholder.svg';
 
 interface Props {
   params: Promise<{ restaurants: string }>;
@@ -25,6 +27,7 @@ export default function ProductPage({ params }: Props) {
   const [lastQuantities, setLastQuantities] = useState<{ [key: string]: number }>({});
   const [observation, setObservation] = useState<string>('');
   const [isAddButtonEnabled, setIsAddButtonEnabled] = useState(false);
+  const [loading, setLoading] = useState(true);
   const { back } = useRouter()
   const [showStickyHeader, setShowStickyHeader] = useState(false);
 
@@ -136,6 +139,7 @@ export default function ProductPage({ params }: Props) {
       const getItemStorage = localStorage.getItem(`@deliveryTakeat:${restaurant}ProductRestaurant`);
       if (getItemStorage) {
         setStorage(JSON.parse(getItemStorage));
+        setLoading(false);
       }
 
       const storedData = localStorage.getItem("quantityComplements");
@@ -160,7 +164,6 @@ export default function ProductPage({ params }: Props) {
             }
           });
         });
-
 
         setSelectedQuantities(restoredQuantities);
       }
@@ -201,6 +204,10 @@ export default function ProductPage({ params }: Props) {
     }
   }, [selectedQuantities, storage?.complement_categories]);
 
+  if (loading) return <LoadingTakeat />
+
+  // console.log(storage)
+
   return (
     <ProductInternalContainer>
       {showStickyHeader ? (
@@ -217,7 +224,7 @@ export default function ProductPage({ params }: Props) {
         <div className="fixed top-6 left-6 z-20">
           <button onClick={back} className="w-full flex items-center justify-center bg-white rounded-lg p-3"><IconChevronLeft /></button>
         </div>
-        <ImageInternalContainer img={`${storage?.image.url_thumb}`} />
+        <ImageInternalContainer img={`${storage?.image ? storage?.image.url_thumb : Placeholder}`} />
       </div>}
 
       <ProductInternalWrapper>

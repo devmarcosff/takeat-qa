@@ -56,12 +56,13 @@ export default function ProductsRestaurant({ categories = [], params }: Categori
       <div id="accordionExample">
         {categories?.map((item, index) => {
           const isOpen = openIndexes.includes(index);
+          const categoryImageUrl = item?.image?.url || item.products.find(p => p.image?.url)?.image?.url;
 
           return (
             <CategoryContainer key={index}>
               <CategoryHeader onClick={() => toggleShow(index)} id={item.name}>
                 <CategoryImageContainer>
-                  <CategoryImage src={item?.image?.url} width={"100%"} height={"100%"} alt="Categoria" />
+                  <CategoryImage src={categoryImageUrl} width={"100%"} height={"100%"} alt="Categoria" />
                   <Overlay />
                 </CategoryImageContainer>
                 <CategoryButton aria-expanded={isOpen} aria-controls={`collapse-${index}`}>

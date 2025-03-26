@@ -5,7 +5,7 @@ import { bounceDrop, CartFadeUp, cartUpdate } from "../theme/ThemeProviderWrappe
 export const CartUpdate = styled.div`
   ${({ }) => css`
     position: relative;
-    animation: ${bounceDrop} .5s ease-in-out;
+    /* animation: ${bounceDrop} .5s ease-in-out; */
   `}
 `;
 
@@ -15,9 +15,9 @@ export const MenuContainer = styled.div`
     width: 100%;
     height: 7rem;
     z-index: 1500 !important;
-    animation: ${CartFadeUp} ease-in-out .35s;
-  `}
-`;
+    /* animation: ${CartFadeUp} ease-in-out .35s; */
+    `}
+    `;
 
 export const MenuTags = styled.div`
   ${({ theme }) => css`
@@ -28,9 +28,8 @@ export const MenuTags = styled.div`
   height: 64px;
   color: ${theme.colors.neutral.darker} !important;
   background-color: ${theme.colors.neutral.white};
+  animation: ${CartFadeUp} ease-in-out .35s;
   font-weight: 600;
-  animation: ${CartFadeUp} ease-in-out .15s;
-  /* border-top: 1px solid ${theme.colors.neutral.lighter}; */
   `}
 `;
 
@@ -47,7 +46,7 @@ export const CircleNotificationMenu = styled.div`
     font-size: 12px;
     align-items: center;
     justify-content: center;
-    animation: ${cartUpdate} .8s ease-in-out;
+    /* animation: ${cartUpdate} .8s ease-in-out; */
   `}
 `;
 
@@ -68,7 +67,7 @@ export const AnimationMenu = styled.div`
 
 export const NotificationMenuContainer = styled.div`
   ${({ }) => css`
-    animation: ${bounceDrop} .5s ease-in-out;
+    /* animation: ${bounceDrop} .5s ease-in-out; */
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -82,7 +81,7 @@ export const NotificationMenuContainer = styled.div`
 
 export const NotificationMenuInfo = styled.div`
   ${({ }) => css`
-    animation: ${bounceDrop} .5s ease-in-out;
+    /* animation: ${bounceDrop} .5s ease-in-out; */
     display: flex;
     gap: 1rem;
     align-items: center;
@@ -91,7 +90,7 @@ export const NotificationMenuInfo = styled.div`
 
 export const NotificationIconMenu = styled(IconTakeatCart)`
   ${({ theme }) => css`
-    animation: ${bounceDrop} .5s ease-in-out;
+    /* animation: ${bounceDrop} .5s ease-in-out; */
     font-size: 1.875rem;
     fill: ${theme.colors.neutral.white};
   `}
@@ -127,7 +126,7 @@ export const IconTClipboard = styled(IconClipboardCheckFilled) <{ $active: boole
   `}
 `;
 
-export const StyledLink = styled.a<{ $active: boolean }>`
+export const StyledLink = styled.div<{ $active: boolean }>`
   ${({ theme, $active }) => css`
     color: ${$active ? theme.colors.primary.default : theme.colors.neutral.dark};
     font-weight: 500;
