@@ -40,7 +40,7 @@ export const RestaurantInfo = styled.div`
 
 export const IconSearchCustom = styled(IconSearch) <IconSearchCustomProps>`
   ${({ scrolling }) => css`
-  transform: translateX(${scrolling ? '60px' : '20px'});
+  transform: translateX(${scrolling ? '60px' : '5px'});
   opacity: ${scrolling ? '0' : '1'};
   font-size: 24px;
   position: absolute;
@@ -55,8 +55,7 @@ ${({ scrolling, height }) => css`
   overflow: hidden;
   opacity: ${scrolling};
   height: ${scrolling === 1 ? height : 0}px;
-`}
-`;
+`}`;
 
 export const HeaderContainer = styled.header<HeaderStickyProps>`  
   ${({ theme, scrolling }) => css`

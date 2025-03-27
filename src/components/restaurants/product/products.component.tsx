@@ -21,7 +21,7 @@ import {
   ProductsContainer
 } from "./products.style";
 
-export default function ProductsRestaurant({ categories = [], params }: CategoriesProps) {
+export default function ProductsRestaurant({ categories = [], params, searchTerm }: CategoriesProps & { searchTerm: string }) {
   const takeatBagKey = `@deliveryTakeat:${params}TakeatBag`;
   const [openIndexes, setOpenIndexes] = useState<number[]>([]);
   const [parsedBag, setParsedBag] = useState<number>(0);
@@ -61,63 +61,130 @@ export default function ProductsRestaurant({ categories = [], params }: Categori
 
   const parsedbag = parsedBag;
 
+  const allProducts = categories.flatMap((cat) => cat.products);
+  const filteredProducts = allProducts.filter((product) =>
+    product.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   return (
     <ProductsContainer parsedbag={parsedbag}>
-      <div id="accordionExample">
-        {categories?.map((item, index) => {
-          const isOpen = openIndexes.includes(index);
-          const categoryImageUrl = item?.image?.url || item.products.find(p => p.image?.url)?.image?.url;
+      {searchTerm ? (
+        <div className="space-y-2">
+          {filteredProducts.length > 0 ? (
+            filteredProducts.map((product, index) => {
+              return (
+                <div className="flex bg-white rounded-2xl p-3 shadow" key={index} onClick={() => savedStorage(product)}>
+                  <ProductDetails className="">
+                    <h2>{product.name}</h2>
+                    <p className="line-clamp-3">{product.description}</p>
+                    <ProductPrice>
+                      {!!product.delivery_price
+                        ? formatPrice(product.delivery_price)
+                        : formatPrice(product.price)}
+                      {!!product.delivery_price_promotion && (
+                        <span>{formatPrice(product.delivery_price_promotion)}</span>
+                      )}
+                    </ProductPrice>
+                  </ProductDetails>
+                  <ProductImage
+                    src={product.image?.url}
+                    width={100}
+                    height={100}
+                    alt={product.name}
+                  />
+                </div>
+              )
+            })
+          ) : (
+            <p className="text-sm text-center text-gray-500">
+              Nenhum produto encontrado.
+            </p>
+          )}
+        </div>
+      ) : (
+        <div id="accordionExample">
+          {categories.map((item, index) => {
+            const isOpen = openIndexes.includes(index);
+            const categoryImageUrl =
+              item?.image?.url ||
+              item.products.find((p) => p.image?.url)?.image?.url;
 
-          return (
-            <CategoryContainer key={index}>
-              <CategoryHeader onClick={() => toggleShow(index)} id={item.name}>
-                <CategoryImageContainer>
-                  <CategoryImage src={categoryImageUrl} width={"100%"} height={"100%"} alt="Categoria" />
-                  <Overlay />
-                </CategoryImageContainer>
-                <CategoryButton aria-expanded={isOpen} aria-controls={`collapse-${index}`}>
-                  <CategoryTitle>
-                    <h2>{item.name}</h2>
-                    {!!item.preparation_time && (
-                      <h2>
-                        <IconClockFilled style={{ fill: "#FFF" }} /> {item.preparation_time}
-                      </h2>
-                    )}
-                  </CategoryTitle>
-                </CategoryButton>
-              </CategoryHeader>
-
-              <AnimatePresence initial={false}>
-                {isOpen && (
-                  <motion.div
-                    initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: "auto", opacity: 1 }}
-                    exit={{ height: 0, opacity: 0 }}
-                    transition={{ duration: 0.3, ease: "easeInOut" }}
+            return (
+              <CategoryContainer key={index}>
+                <CategoryHeader onClick={() => toggleShow(index)} id={item.name}>
+                  <CategoryImageContainer>
+                    <CategoryImage
+                      src={categoryImageUrl}
+                      width={"100%"}
+                      height={"100%"}
+                      alt="Categoria"
+                    />
+                    <Overlay />
+                  </CategoryImageContainer>
+                  <CategoryButton
+                    aria-expanded={isOpen}
+                    aria-controls={`collapse-${index}`}
                   >
-                    <ProductList>
-                      {item.products.map((product, index) => (
-                        <ProductItem key={index} onClick={() => savedStorage(product)}>
-                          <ProductDetails>
-                            <h2>{product.name}</h2>
-                            <p className="line-clamp-3">{product.description}</p>
-                            <ProductPrice>
-                              {!!product.delivery_price ? formatPrice(product.delivery_price) : formatPrice(product.price)}
-                              {!!product.delivery_price_promotion && <span>{formatPrice(product.delivery_price_promotion)}</span>}
-                            </ProductPrice>
-                          </ProductDetails>
+                    <CategoryTitle>
+                      <h2>{item.name}</h2>
+                      {!!item.preparation_time && (
+                        <h2>
+                          <IconClockFilled style={{ fill: "#FFF" }} />{" "}
+                          {item.preparation_time}
+                        </h2>
+                      )}
+                    </CategoryTitle>
+                  </CategoryButton>
+                </CategoryHeader>
 
-                          <ProductImage src={product.image?.url} width={1000} height={1000} alt={product.name} />
-                        </ProductItem>
-                      ))}
-                    </ProductList>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </CategoryContainer>
-          );
-        })}
-      </div>
+                <AnimatePresence initial={false}>
+                  {isOpen && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: "auto", opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={{ duration: 0.3, ease: "easeInOut" }}
+                    >
+                      <ProductList>
+                        {item.products.map((product, index) => (
+                          <ProductItem
+                            key={index}
+                            onClick={() => savedStorage(product)}
+                          >
+                            <ProductDetails>
+                              <h2>{product.name}</h2>
+                              <p className="line-clamp-3">
+                                {product.description}
+                              </p>
+                              <ProductPrice>
+                                {!!product.delivery_price
+                                  ? formatPrice(product.delivery_price)
+                                  : formatPrice(product.price)}
+                                {!!product.delivery_price_promotion && (
+                                  <span>
+                                    {formatPrice(product.delivery_price_promotion)}
+                                  </span>
+                                )}
+                              </ProductPrice>
+                            </ProductDetails>
+
+                            <ProductImage
+                              src={product.image?.url}
+                              width={1000}
+                              height={1000}
+                              alt={product.name}
+                            />
+                          </ProductItem>
+                        ))}
+                      </ProductList>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </CategoryContainer>
+            );
+          })}
+        </div>
+      )}
     </ProductsContainer>
   );
 }

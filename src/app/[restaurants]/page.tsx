@@ -4,6 +4,7 @@ import HeaderComponent from "@/components/restaurants/header/header.components";
 import ProductsRestaurant from "@/components/restaurants/product/products.component";
 import { TakeatApp, TakeatPage } from "@/components/theme/ThemeProviderWrapper";
 import PageWrapper from "@/hook/pageWrapper";
+import { useSearch } from "@/hook/useSearch";
 import { api_categories_delivery, api_delivery } from "@/utils/apis";
 import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
@@ -18,6 +19,7 @@ export default function Restaurant({ params }: Props) {
   const [getCategories, setGetCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const { push } = useRouter();
+  const [searchTerm] = useSearch();
 
   useEffect(() => {
     const fetchRestaurant = async () => {
@@ -59,10 +61,10 @@ export default function Restaurant({ params }: Props) {
   return (
     <PageWrapper>
       <TakeatApp>
-        <HeaderComponent restaurant={getRestaurants} categories={getCategories} />
+        <HeaderComponent searchTerm={searchTerm} restaurant={getRestaurants} categories={getCategories} />
         <div>
           {/* <HighlightsRestaurant /> */}
-          <ProductsRestaurant params={restaurant} categories={getCategories} />
+          <ProductsRestaurant searchTerm={searchTerm} params={restaurant} categories={getCategories} />
         </div>
       </TakeatApp>
 

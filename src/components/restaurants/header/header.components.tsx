@@ -1,10 +1,12 @@
 import useScrollProgress from "@/components/scroll/useScrollDirection";
+import { setSearchGlobal } from "@/hook/useSearch";
 import { Category } from "@/types/categories.types";
 import { Restaurant } from "@/types/restaurant.types";
 import Image from "next/image";
 import { useState } from "react";
-import { formatPrice, IconLocationFilled } from "takeat-design-system-ui-kit";
+import { formatPrice, IconClose, IconLocationFilled, IconSearch } from "takeat-design-system-ui-kit";
 import CategoriesRestaurant from "../categories/categories.component";
+import { SearchContainer, SearchInput } from "../categories/categories.style";
 import { CategoriesProps } from "../restaurants.types";
 import { DrawerHeaderComponent } from "./drawer.component";
 import {
@@ -23,7 +25,7 @@ import {
 
 export const Logo = "/assets/default_image.svg";
 
-export default function HeaderComponent({ restaurant, categories }: { restaurant: Restaurant | null, categories: CategoriesProps[] | [] }) {
+export default function HeaderComponent({ restaurant, categories, searchTerm }: { restaurant: Restaurant | null, categories: CategoriesProps[] | [], searchTerm: string }) {
   const [isSearchActive, setIsSearchActive] = useState<boolean>(false);
   const [openDrawer, setOpenDrawer] = useState<boolean>(false);
   useScrollProgress();
@@ -38,7 +40,7 @@ export default function HeaderComponent({ restaurant, categories }: { restaurant
 
   return (
     <HeaderContainer scrolling={scrolling}>
-      <HeaderWrapper scrolling={scrolling} onClick={() => setOpenDrawer(true)}>
+      <HeaderWrapper scrolling={scrolling}>
         <HeaderRow>
           <LogoContainer>
             <Image width={DENSITY} height={DENSITY} src={Logo} alt="Takeat" />
@@ -49,7 +51,7 @@ export default function HeaderComponent({ restaurant, categories }: { restaurant
               <IconSearchCustom onClick={handleSearchClick} scrolling={scrolling} />
             </div>
 
-            <RestaurantDetails scrolling={scrolling} height={height}>
+            <RestaurantDetails scrolling={scrolling} height={height} onClick={() => setOpenDrawer(true)}>
               <InfoText>
                 Pedido Mínimo: {formatPrice(`${restaurant?.delivery_info.delivery_minimum_price}`)}
               </InfoText>
@@ -65,6 +67,29 @@ export default function HeaderComponent({ restaurant, categories }: { restaurant
           </RestaurantInfo>
         </HeaderRow>
       </HeaderWrapper>
+
+      <RestaurantDetails
+        id="search-area"
+        scrolling={isSearchActive ? Number(isSearchActive) : scrolling}
+        height={60}>
+        <SearchContainer>
+          <IconSearch style={{ fontSize: "22px", fill: "#545454" }} />
+          <SearchInput
+            type="text"
+            placeholder="Buscar produto"
+            value={searchTerm}
+            onChange={(e) => setSearchGlobal(e.target.value)}
+          />
+
+          {searchTerm && (
+            <IconClose
+              onClick={() => setSearchGlobal('')}
+              style={{ fontSize: "22px", fill: "#545454", cursor: "pointer" }}
+            />
+          )}
+        </SearchContainer>
+      </RestaurantDetails>
+
       <CategoriesRestaurant categories={categories as Category[]} scrolling={isSearchActive ? Number(isSearchActive) : scrolling} />
 
       <DrawerHeaderComponent openDrawer={openDrawer} restaurant={restaurant} setOpenDrawer={setOpenDrawer} />

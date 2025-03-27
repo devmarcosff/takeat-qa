@@ -3,7 +3,6 @@ import { EmblaOptionsType } from "embla-carousel";
 import Autoplay from "embla-carousel-autoplay";
 import useEmblaCarousel from "embla-carousel-react";
 import { useRef, useState } from "react";
-import { IconClose, IconSearch } from "takeat-design-system-ui-kit";
 import { Logo } from "../header/header.components";
 import { RestaurantDetails } from "../header/header.style";
 import {
@@ -15,9 +14,7 @@ import {
   CategoryImage,
   CategoryImageContainer,
   CategoryItem,
-  CategoryName,
-  SearchContainer,
-  SearchInput
+  CategoryName
 } from "./categories.style";
 
 export interface Props {
@@ -61,14 +58,6 @@ export default function CategoriesRestaurant({ categories, scrolling }: Props) {
 
   return (
     <CategoriesContainer >
-      <RestaurantDetails scrolling={scrolling} height={heightSearch}>
-        <SearchContainer>
-          <IconSearch style={{ fontSize: "22px", fill: "#545454" }} />
-          <SearchInput type="text" placeholder="Buscar produto" />
-          <IconClose style={{ fontSize: "22px", fill: "#545454" }} />
-        </SearchContainer>
-      </RestaurantDetails>
-
       <RestaurantDetails scrolling={scrolling} height={height}>
         <CategoriesTitle>Categorias</CategoriesTitle>
       </RestaurantDetails>
@@ -81,10 +70,10 @@ export default function CategoriesRestaurant({ categories, scrolling }: Props) {
                 <CategoryItem>
                   <CategoryImageContainer border={checkCategorie === item.name ? true : undefined}>
                     <CategoryImage
-                      style={scrolling ? { width: 70, height: 70 } : { width: 60, height: 60 }}
+                      style={scrolling ? { width: 60, height: 60 } : { width: 55, height: 55 }}
                       src={item?.image?.url || Logo}
-                      width={70}
-                      height={70}
+                      width={60}
+                      height={60}
                       alt={`${item?.id}`}
                     />
                   </CategoryImageContainer>

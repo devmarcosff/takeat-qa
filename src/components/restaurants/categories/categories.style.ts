@@ -1,5 +1,5 @@
 import Image from "next/image";
-import styled from "styled-components";
+import styled, { css } from "styled-components";
 
 interface CategoryItemProps {
   border?: boolean;
@@ -30,7 +30,8 @@ export const CategoriesContainer = styled.div`
   transition: all 0.3s ease-in-out;
 `;
 
-export const SearchContainer = styled.div`
+export const SearchContainer = styled.div<{ scrolling?: boolean, height?: number }>`
+${({ theme, height }) => css`
   gap: 10px;
   transition: height 0.4s ease-in-out;
   overflow: hidden;
@@ -45,9 +46,9 @@ export const SearchContainer = styled.div`
   color: ${({ theme }) => theme.colors.neutral.dark};
   font-weight: normal;
   box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.1);
-  
   height: 50px;
-  `;
+`}`;
+
 /* height: ${({ isSearchActive }) => (isSearchActive ? "50px" : "0")};
 opacity: ${({ isSearchActive }) => (isSearchActive ? 1 : 0)}; */
 
