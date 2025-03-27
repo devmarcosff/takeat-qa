@@ -34,7 +34,6 @@ export default function CategoriesRestaurant({ categories, scrolling }: Props) {
 
   const [checkCategorie, setCheckCategorie] = useState<string>()
   const height = scrolling * 30;
-  const heightSearch = scrolling * 50;
 
   const HEADER_HEIGHT = 200;
 

@@ -30,8 +30,8 @@ export const CategoriesContainer = styled.div`
   transition: all 0.3s ease-in-out;
 `;
 
-export const SearchContainer = styled.div<{ scrolling?: boolean, height?: number }>`
-${({ theme, height }) => css`
+export const SearchContainer = styled.div`
+${({ theme }) => css`
   gap: 10px;
   transition: height 0.4s ease-in-out;
   overflow: hidden;
@@ -41,33 +41,13 @@ ${({ theme, height }) => css`
   padding: 12px 16px;
   margin: 0 auto 12px;
   border-radius: 12px;
-  border: 1px solid ${({ theme }) => theme.colors.neutral.dark};
+  border: 1px solid ${theme.colors.neutral.dark};
   background: transparent;
-  color: ${({ theme }) => theme.colors.neutral.dark};
+  color: ${theme.colors.neutral.dark};
   font-weight: normal;
   box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.1);
   height: 50px;
 `}`;
-
-/* height: ${({ isSearchActive }) => (isSearchActive ? "50px" : "0")};
-opacity: ${({ isSearchActive }) => (isSearchActive ? 1 : 0)}; */
-
-// export const SearchContainer = styled.div`
-//   display: flex;
-//   align-items: center;
-//   width: calc(100% - 40px);
-//   height: 48px;
-//   gap: 8px;
-//   padding: 12px 16px;
-//   margin: 0 auto 12px;
-//   border-radius: 12px;
-//   border: 1px solid ${({ theme }) => theme.colors.neutral.dark};
-//   background: transparent;
-//   color: ${({ theme }) => theme.colors.neutral.dark};
-//   font-weight: normal;
-//   box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.1);
-// `;
-
 
 export const SearchInput = styled.input`
   width: 100%;
