@@ -5,6 +5,6 @@ type UiKitTheme = typeof DEFAULT_THEME;
 
 declare module "styled-components" {
     export interface DefaultTheme extends UiKitTheme {
-        _?: never; // Trick para manter a interface válida
+        _?: never;
     }
 }

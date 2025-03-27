@@ -14,7 +14,7 @@ export const MenuContainer = styled.div`
     position: fixed;
     width: 100%;
     height: 7rem;
-    z-index: 1500 !important;
+    /* z-index: 40 !important; */
     /* animation: ${CartFadeUp} ease-in-out .35s; */
     `}
     `;
@@ -22,13 +22,13 @@ export const MenuContainer = styled.div`
 export const MenuTags = styled.div`
   ${({ theme }) => css`
   position: fixed;
-  z-index: 20;
+  /* z-index: 20;  */
   bottom: 0;
   width: 100%;
   height: 64px;
   color: ${theme.colors.neutral.darker} !important;
   background-color: ${theme.colors.neutral.white};
-  animation: ${CartFadeUp} ease-in-out .35s;
+  /* animation: ${CartFadeUp} ease-in-out .35s; */
   font-weight: 600;
   `}
 `;
@@ -55,7 +55,7 @@ export const AnimationMenu = styled.div`
     animation: ${bounceDrop} .8s ease-in-out;
     height: 46px;
     width: 100%;
-    z-index: 4;
+    /* z-index: 4; */
     position: fixed;
     bottom: 64px;
     color: #FFF;
@@ -74,7 +74,7 @@ export const NotificationMenuContainer = styled.div`
     padding-left: 1rem;
     padding-right: 1rem;
     height: 100%;
-    font-size: 0.875rem;
+    font-size: 0.875rem; 
     cursor: pointer;
   `}
 `;

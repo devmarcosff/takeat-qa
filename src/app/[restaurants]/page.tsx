@@ -2,7 +2,6 @@
 import MenuComponent from "@/components/menu/menu.component";
 import HeaderComponent from "@/components/restaurants/header/header.components";
 import ProductsRestaurant from "@/components/restaurants/product/products.component";
-import LoadingTakeat from "@/components/theme/loading.component";
 import { TakeatApp, TakeatPage } from "@/components/theme/ThemeProviderWrapper";
 import PageWrapper from "@/hook/pageWrapper";
 import { api_categories_delivery, api_delivery } from "@/utils/apis";
@@ -55,7 +54,7 @@ export default function Restaurant({ params }: Props) {
     fetchRestaurant();
   }, [restaurant, push]);
 
-  if (loading) return <LoadingTakeat />
+  if (loading) return;
 
   return (
     <PageWrapper>

@@ -136,13 +136,13 @@ export const TextAddProductsQuantity = styled.button<{ disabled: boolean }>`
   `}
 `;
 
-export const SelectAddProducts = styled.div`
-  ${({ theme }) => css`
+export const SelectAddProducts = styled.div<{ width?: number }>`
+  ${({ theme, width }) => css`
     border: solid 1px ${theme.colors.primary.default};
     border-radius: 12px;
     display: flex;
     height: 100%;
-    width: 130px;
+    width: ${width ? `${width}px` : `100%`};
     align-items: center;
     justify-content: center;
     padding: 12px 24px;

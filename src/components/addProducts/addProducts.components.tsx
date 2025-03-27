@@ -72,7 +72,7 @@ export default function AddProductsComponents({ product, cart, params, observati
 
   return (
     <AddProductsContainer>
-      <SelectAddProducts>
+      <SelectAddProducts width={130}>
         <ButtonAddProducts disabled={quantityProduct === 1} onClick={() => setQuantityProduct(quantityProduct - 1)}>-</ButtonAddProducts>
         <QuantityAddProducts>
           <AnimatePresence mode="popLayout">

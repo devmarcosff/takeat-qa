@@ -95,7 +95,7 @@ export const TakeatApp = styled.div`
 
 export const TakeatPage = styled.div`
   position: absolute;
-  z-index: 100;
+  z-index: 49;
   /* animation: ${CartFadeUp} .3s ease-in-out; */
 `;
 

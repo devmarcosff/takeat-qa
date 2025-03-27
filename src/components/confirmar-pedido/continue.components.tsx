@@ -1,3 +1,4 @@
+import PageWrapper from '@/hook/pageWrapper';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
@@ -63,7 +64,9 @@ export default function ContinueComponents({ params, textButon }: Props) {
     <AddProductsContainer flex_direction={"column"} height={110}>
       <AddProductsPriceItem>
         <AddProductsPriceInfoItem weight={"600"}>
-          <span>Total:</span>
+          <PageWrapper>
+            <span>Total:</span>
+          </PageWrapper>
           <AnimatePresence mode="popLayout">
             <motion.span
               key={totalPrice}
@@ -79,11 +82,13 @@ export default function ContinueComponents({ params, textButon }: Props) {
       </AddProductsPriceItem>
 
       <ActionProducts>
-        <SelectAddProducts style={{ height: 48 }}>
-          <button disabled={totalPrice === 0} onClick={() => setModalOpen(!modalOpen)}>
-            <span className='text-takeat-primary-default font-semibold'>Limpar</span>
-          </button>
-        </SelectAddProducts>
+        <PageWrapper>
+          <SelectAddProducts style={{ height: 48 }}>
+            <button disabled={totalPrice === 0} onClick={() => setModalOpen(!modalOpen)}>
+              <span className='text-takeat-primary-default font-semibold'>Limpar</span>
+            </button>
+          </SelectAddProducts>
+        </PageWrapper>
         <AddProductsQuantity disabled={!(totalPrice > Number(active))} style={{ height: 48 }}>
           <TextAddProductsQuantity disabled={!(totalPrice > Number(active))} onClick={() => push(`/${params}/informacao`)}>
             {!(totalPrice > Number(active)) ? `Pedido mín: ${formatPrice(`${active}`)}` : `${textButon || 'Continuar Pedido'}`}
@@ -92,7 +97,7 @@ export default function ContinueComponents({ params, textButon }: Props) {
       </ActionProducts>
 
 
-      <Modal open={modalOpen} toggle={() => setModalOpen(!modalOpen)} style={{ height: "fit-content" }}>
+      <Modal open={modalOpen} toggle={() => setModalOpen(!modalOpen)} style={{ height: "fit-content", overflow: "hidden" }}>
         <Modal.Header>
           <h1>Tem certeza que deseja limpar o carrinho?</h1>
         </Modal.Header>
@@ -124,6 +129,6 @@ export default function ContinueComponents({ params, textButon }: Props) {
       </Modal>
 
 
-    </AddProductsContainer>
+    </AddProductsContainer >
   )
 }

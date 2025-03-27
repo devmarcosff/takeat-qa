@@ -1,3 +1,4 @@
+import { ICart } from "@/components/addProducts/addProducts.types";
 import { Product } from "@/types/categories.types";
 import { AnimatePresence, motion } from "framer-motion";
 import { useRouter } from "next/navigation";
@@ -21,7 +22,9 @@ import {
 } from "./products.style";
 
 export default function ProductsRestaurant({ categories = [], params }: CategoriesProps) {
+  const takeatBagKey = `@deliveryTakeat:${params}TakeatBag`;
   const [openIndexes, setOpenIndexes] = useState<number[]>([]);
+  const [parsedBag, setParsedBag] = useState<number>(0);
   const { push } = useRouter()
 
   const toggleShow = (index: number) => {
@@ -36,6 +39,11 @@ export default function ProductsRestaurant({ categories = [], params }: Categori
   }
 
   useEffect(() => {
+    const storedBag = localStorage.getItem(takeatBagKey);
+    const parsedBag = storedBag ? JSON.parse(storedBag)?.products || [] : [];
+    const qtd = parsedBag.reduce((acc: number, item: ICart) => acc + (item.qtd), 0);
+    setParsedBag(qtd)
+
     const handleToggleAccordion = (event: CustomEvent) => {
       const categoryName = event.detail;
       const categoryIndex = categories.findIndex((item) => item.name === categoryName);
@@ -51,8 +59,10 @@ export default function ProductsRestaurant({ categories = [], params }: Categori
     };
   }, [categories]);
 
+  const parsedbag = parsedBag;
+
   return (
-    <ProductsContainer>
+    <ProductsContainer parsedbag={parsedbag}>
       <div id="accordionExample">
         {categories?.map((item, index) => {
           const isOpen = openIndexes.includes(index);
@@ -90,7 +100,7 @@ export default function ProductsRestaurant({ categories = [], params }: Categori
                         <ProductItem key={index} onClick={() => savedStorage(product)}>
                           <ProductDetails>
                             <h2>{product.name}</h2>
-                            <p>{product.description}</p>
+                            <p className="line-clamp-3">{product.description}</p>
                             <ProductPrice>
                               {!!product.delivery_price ? formatPrice(product.delivery_price) : formatPrice(product.price)}
                               {!!product.delivery_price_promotion && <span>{formatPrice(product.delivery_price_promotion)}</span>}

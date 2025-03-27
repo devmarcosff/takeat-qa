@@ -6,6 +6,7 @@ import { useState } from "react";
 import { formatPrice, IconLocationFilled } from "takeat-design-system-ui-kit";
 import CategoriesRestaurant from "../categories/categories.component";
 import { CategoriesProps } from "../restaurants.types";
+import { DrawerHeaderComponent } from "./drawer.component";
 import {
   HeaderContainer,
   HeaderRow,
@@ -24,43 +25,12 @@ export const Logo = "/assets/default_image.svg";
 
 export default function HeaderComponent({ restaurant, categories }: { restaurant: Restaurant | null, categories: CategoriesProps[] | [] }) {
   const [isSearchActive, setIsSearchActive] = useState<boolean>(false);
+  const [openDrawer, setOpenDrawer] = useState<boolean>(false);
   useScrollProgress();
 
   const scrolling = window.scrollY > 5 ? 0 : 1
   const height = scrolling * 72;
   const DENSITY = scrolling ? 60 : 40
-
-  function deliveryInfo() {
-    if (restaurant?.delivery_info.is_delivery_active) {
-      return (
-        <StatusBadge color="green">
-          <PulseIndicator color="green" />
-          Aberto agora
-        </StatusBadge>
-      );
-    } else if (!restaurant?.delivery_info.is_delivery_active && restaurant?.delivery_info.is_withdrawal_active) {
-      return (
-        <StatusBadge color="orange">
-          <PulseIndicator color="orange" />
-          Apenas retirada
-        </StatusBadge>
-      );
-    } else if (!restaurant?.delivery_info.is_delivery_active && !restaurant?.delivery_info.is_withdrawal_active && restaurant?.delivery_info.is_delivery_allowed) {
-      return (
-        <StatusBadge color="green">
-          <PulseIndicator color="green" />
-          Delivery aberto
-        </StatusBadge>
-      );
-    } else {
-      return (
-        <StatusBadge color="primary">
-          <PulseIndicator color="primary" />
-          Estamos fechados
-        </StatusBadge>
-      );
-    }
-  }
 
   const handleSearchClick = () => {
     if (!scrolling) setIsSearchActive(!isSearchActive);
@@ -68,7 +38,7 @@ export default function HeaderComponent({ restaurant, categories }: { restaurant
 
   return (
     <HeaderContainer scrolling={scrolling}>
-      <HeaderWrapper scrolling={scrolling}>
+      <HeaderWrapper scrolling={scrolling} onClick={() => setOpenDrawer(true)}>
         <HeaderRow>
           <LogoContainer>
             <Image width={DENSITY} height={DENSITY} src={Logo} alt="Takeat" />
@@ -84,7 +54,7 @@ export default function HeaderComponent({ restaurant, categories }: { restaurant
                 Pedido Mínimo: {formatPrice(`${restaurant?.delivery_info.delivery_minimum_price}`)}
               </InfoText>
               <div className="flex gap-2 text-sm">
-                {deliveryInfo()}
+                {deliveryInfo({ restaurant })}
                 <span>Mais informações</span>
               </div>
               <LocationText>
@@ -96,6 +66,41 @@ export default function HeaderComponent({ restaurant, categories }: { restaurant
         </HeaderRow>
       </HeaderWrapper>
       <CategoriesRestaurant categories={categories as Category[]} scrolling={isSearchActive ? Number(isSearchActive) : scrolling} />
+
+      <DrawerHeaderComponent openDrawer={openDrawer} restaurant={restaurant} setOpenDrawer={setOpenDrawer} />
+
     </HeaderContainer>
   );
+}
+
+export function deliveryInfo({ restaurant }: { restaurant: Restaurant | null }) {
+  if (restaurant?.delivery_info.is_delivery_active) {
+    return (
+      <StatusBadge color="green">
+        <PulseIndicator color="green" />
+        Aberto agora
+      </StatusBadge>
+    );
+  } else if (!restaurant?.delivery_info.is_delivery_active && restaurant?.delivery_info.is_withdrawal_active) {
+    return (
+      <StatusBadge color="orange">
+        <PulseIndicator color="orange" />
+        Apenas retirada
+      </StatusBadge>
+    );
+  } else if (!restaurant?.delivery_info.is_delivery_active && !restaurant?.delivery_info.is_withdrawal_active && restaurant?.delivery_info.is_delivery_allowed) {
+    return (
+      <StatusBadge color="green">
+        <PulseIndicator color="green" />
+        Delivery aberto
+      </StatusBadge>
+    );
+  } else {
+    return (
+      <StatusBadge color="primary">
+        <PulseIndicator color="primary" />
+        Estamos fechados
+      </StatusBadge>
+    );
+  }
 }

@@ -6,11 +6,13 @@ interface ImageInternalContainerProps {
   img: string;
 }
 
-export const ProductsContainer = styled.section`
+export const ProductsContainer = styled.section<{ parsedbag: number }>`
+${({ theme, parsedbag }) => css`
   padding: 0 20px 40px 20px;
-  padding-bottom: 64px;
-  background-color: ${({ theme }) => theme.colors.neutral.lightest};
-`;
+  padding-bottom: ${parsedbag > 0 ? "120px" : "70px"};
+  padding-top: 24px;
+  background-color: ${theme.colors.neutral.lightest};
+`}`;
 
 export const CategoryContainer = styled.div`
   background: transparent;

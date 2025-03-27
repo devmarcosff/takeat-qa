@@ -23,7 +23,8 @@ export default function ProductPage({ params }: Props) {
   const restaurant = React.use(params)?.restaurants;
   const clientTakeat = `@clienteTakeat:${restaurant}`;
   const { push } = useRouter();
-  const { register, handleSubmit, setValue, reset, formState: { errors } } = useForm<FormData>();
+  const [isFocused, setIsFocused] = useState<{ tel?: string, name?: string }>();
+  const { register, handleSubmit, setValue, getValues, reset, formState: { errors } } = useForm<FormData>();
   const phone = usePhoneMask<FormData>(setValue, 'tel');
 
   useEffect(() => {
@@ -59,11 +60,12 @@ export default function ProductPage({ params }: Props) {
           <div className="flex flex-col w-full gap-3 font-semibold text-takeat-neutral-dark">
             <div className="text-start">
               <label htmlFor="tel">Celular</label>
-              <InputTakeat>
+              <InputTakeat className={`${isFocused?.tel ? "!border-takeat-primary-light" : ""} ${getValues('tel') && '!bg-takeat-neutral-lightest !border-none'}`}>
                 <IconPhoneFilled />
                 <input
                   {...register("tel", { required: true, minLength: 11 })}
                   id="tel"
+                  onFocus={() => setIsFocused({ tel: "tel" })}
                   className="w-full bg-transparent"
                   placeholder="DDD + seu número"
                   {...phone}
@@ -71,15 +73,16 @@ export default function ProductPage({ params }: Props) {
                 />
                 {errors.tel && <IconError className="fill-takeat-primary-default text-2xl" />}
               </InputTakeat>
-              {errors.tel && <span>{errors.name?.message}</span>}
+              {errors.tel && <span>{errors.tel?.message}</span>}
             </div>
             <div className="text-start">
               <label htmlFor="name">Nome</label>
-              <InputTakeat>
+              <InputTakeat className={`${isFocused?.name ? "!border-takeat-primary-light" : ""} ${getValues('name') && '!bg-takeat-neutral-lightest !border-none'}`}>
                 <IconUser className="text-xl" />
                 <input
                   {...register("name")}
                   id="name"
+                  onFocus={() => setIsFocused({ name: "name" })}
                   className="w-full bg-transparent"
                   placeholder="Digite seu nome"
                   disabled={isDisabled}
@@ -91,10 +94,10 @@ export default function ProductPage({ params }: Props) {
         </InputContainer>
 
         {isDisabled && (
-          <div className="w-full flex justify-end text-end mt-5">
-            <SelectAddProducts style={{ height: 48 }}>
+          <div className="w-full flex justify-end text-center mt-5">
+            <SelectAddProducts width={50} style={{ height: 48 }}>
               <button type="button" onClick={handleClearData}>
-                <span className='text-takeat-primary-default font-semibold'>Limpar dados</span>
+                <span className='text-takeat-primary-default font-semibold w-full'>Limpar dados</span>
               </button>
             </SelectAddProducts>
           </div>

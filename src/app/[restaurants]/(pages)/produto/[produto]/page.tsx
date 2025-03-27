@@ -9,6 +9,7 @@ import {
 import LoadingTakeat from "@/components/theme/loading.component";
 import { Complement, ComplementCategory, Product } from "@/types/categories.types";
 import { AnimatePresence, motion } from "framer-motion";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
 import { RiSubtractLine } from "react-icons/ri";
@@ -215,9 +216,9 @@ export default function ProductPage({ params }: Props) {
           className={`sticky top-0 z-30 bg-white shadow px-4 py-3 flex items-center gap-3 transition-all duration-300 ${showStickyHeader ? "opacity-100" : "opacity-0 pointer-events-none"
             }`}
         >
-          <button onClick={back} className="flex items-center justify-center bg-white rounded-lg p-2">
+          <Link href={'/'} className="flex items-center justify-center bg-white rounded-lg p-2">
             <IconChevronLeft />
-          </button>
+          </Link>
           <h2 className="text-base font-semibold truncate">{storage?.name}</h2>
         </div>
       ) : <div>
