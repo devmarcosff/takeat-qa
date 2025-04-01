@@ -1653,6 +1653,11 @@ date-fns@^4.1.0:
   resolved "https://registry.yarnpkg.com/date-fns/-/date-fns-4.1.0.tgz#64b3d83fff5aa80438f5b1a633c2e83b8a1c2d14"
   integrity sha512-Ukq0owbQXxa/U3EGtsdVBkR1w7KOQ5gIBqdH2hkvknzZPYvBxb/aa6E8L7tmjFtkwZBu3UXBbjIgPo/Ez4xaNg==
 
+dayjs@^1.11.13:
+  version "1.11.13"
+  resolved "https://registry.yarnpkg.com/dayjs/-/dayjs-1.11.13.tgz#92430b0139055c3ebb60150aa13e860a4b5a366c"
+  integrity sha512-oaMBel6gjolK862uaPQOVTA7q3TZhuSvuMQAAglQDOWYO9A91IrAOUJEyKVlqJlHE0vq5p5UXxzdPfMH/x6xNg==
+
 debug@^3.2.7:
   version "3.2.7"
   resolved "https://registry.yarnpkg.com/debug/-/debug-3.2.7.tgz#72580b7e9145fb39b6676f9c5e5fb100b934179a"
@@ -3968,10 +3973,10 @@ tailwindcss@^3.4.1:
     resolve "^1.22.8"
     sucrase "^3.35.0"
 
-takeat-design-system-ui-kit@^0.4.18:
-  version "0.4.18"
-  resolved "https://registry.yarnpkg.com/takeat-design-system-ui-kit/-/takeat-design-system-ui-kit-0.4.18.tgz#ba3b229d248b19e98f24ad60fb489adbbb73b3a8"
-  integrity sha512-m//Ms+XE674PNMqcYCieRlFAnn2m0ycK4MecA1VYAAwgkKltLpWRq/1SD+x1dnVOrNlRkUXW9CHHELOVLzBtyA==
+takeat-design-system-ui-kit@^0.4.20:
+  version "0.4.20"
+  resolved "https://registry.yarnpkg.com/takeat-design-system-ui-kit/-/takeat-design-system-ui-kit-0.4.20.tgz#043711d9998d46c18e8ea47dc8e10e42d6a6f73d"
+  integrity sha512-6XMfhFOz+2wUhR7fbxIUz4jDYysV+ygeD53VeEFoMNjRGoceORKlbL+YPzy6F8aMxluyr4NI9aMbn3JPC5K8LQ==
   dependencies:
     primereact "^10.9.3"
     react-number-format "^5.4.2"

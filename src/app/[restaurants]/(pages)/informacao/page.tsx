@@ -3,6 +3,7 @@
 import { SelectAddProducts } from "@/components/addProducts/addProducts.style";
 import InternalPages from "@/components/uiComponents/InternalPageHeader/internal_pages.header";
 import { usePhoneMask } from '@/hook/usePhoneMask';
+import { api_public } from "@/utils/apis";
 import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -26,6 +27,7 @@ export default function ProductPage({ params }: Props) {
   const [isFocused, setIsFocused] = useState<{ tel?: string, name?: string }>();
   const { register, handleSubmit, setValue, getValues, reset, formState: { errors } } = useForm<FormData>();
   const phone = usePhoneMask<FormData>(setValue, 'tel');
+  // const [InfoClient, setInfoClient] = useState<{ tel: string, name?: string }>({ tel: '', name: '' });
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -44,7 +46,17 @@ export default function ProductPage({ params }: Props) {
     localStorage.setItem(clientTakeat, JSON.stringify(data));
     setIsDisabled(true);
 
-    push(`/${restaurant}/entrega`)
+    const getInfoClient = localStorage.getItem(`@clienteTakeat:${restaurant}`);
+    const parsedGetInfoClient = JSON.parse(`${getInfoClient}`);
+
+    api_public.post(`/sessions`, {
+      "phone": `${parsedGetInfoClient.tel}`
+    }).then(res => {
+      localStorage.setItem(`@tokenUserTakeat:${restaurant}`, res.data.token)
+
+      // Gerar informação popup se o usuário for novo
+    }).catch(err => alert(err.response.data.error)).finally(() => push(`/${restaurant}/entrega`));
+
   };
 
   const handleClearData = () => {
@@ -95,7 +107,7 @@ export default function ProductPage({ params }: Props) {
 
         {isDisabled && (
           <div className="w-full flex justify-end text-center mt-5">
-            <SelectAddProducts width={50} style={{ height: 48 }}>
+            <SelectAddProducts width={200} style={{ height: 48 }}>
               <button type="button" onClick={handleClearData}>
                 <span className='text-takeat-primary-default font-semibold w-full'>Limpar dados</span>
               </button>

@@ -21,24 +21,25 @@ export default function ProductPage({ params }: Props) {
   const burger = "/assets/burger.svg";
 
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      const takeatBagKey = `@deliveryTakeat:${restaurant}TakeatBag`;
-      const checkStorage = () => {
-        const storedBag = localStorage.getItem(takeatBagKey);
-        const parsedBag = storedBag ? JSON.parse(storedBag)?.products || [] : [];
+    // if (typeof window !== "undefined") {
+    const takeatBagKey = `@deliveryTakeat:${restaurant}TakeatBag`;
+    const checkStorage = () => {
+      const storedBag = localStorage.getItem(takeatBagKey);
+      const parsedBag = storedBag ? JSON.parse(storedBag)?.products || [] : [];
 
-        setBag((prevBag) => {
-          if (JSON.stringify(prevBag) !== JSON.stringify(parsedBag)) {
-            return parsedBag;
-          }
-          return prevBag;
-        });
-      };
+      setBag((prevBag) => {
+        if (JSON.stringify(prevBag) !== JSON.stringify(parsedBag)) {
+          return parsedBag;
+        }
+        return prevBag;
+      });
+    };
 
-      const interval = setInterval(checkStorage, 1000);
+    // const interval = setInterval(checkStorage, 1000);
 
-      return () => clearInterval(interval);
-    }
+    // return () => clearInterval(interval);
+    return checkStorage
+    // }
   }, [restaurant]);
 
   const updateQuantity = ({ index, newQuantity }: { index: number, newQuantity: number }) => {

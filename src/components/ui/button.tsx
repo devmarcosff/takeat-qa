@@ -11,7 +11,7 @@ const buttonVariants = cva(
       variant: {
         default:
           // "rounded-2xl bg-takeat-primary-default !text-white !fill-white shadow hover:bg-takeat-primary-default/90",
-          "text-white fill-white rounded-2xl bg-takeat-primary-default",
+          "text-white fill-white rounded-2xl bg-takeat-primary-default !px-4",
         destructive:
           "bg-destructive text-destructive-foreground shadow-sm hover:bg-destructive/90",
         outline:

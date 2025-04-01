@@ -120,13 +120,12 @@ export default function ContinueComponents({ params, route, clear, textButon, ta
     };
 
     api_create_order.post('/orders', payload, config).then(res => {
-      console.log(res)
       setModalGen(res.data.pix_info)
       if (res.data.pix_info) {
         setOpenModal(true)
       } else {
         localStorage.removeItem(takeatBagKey);
-        localStorage.removeItem(tokenClient);
+        // localStorage.removeItem(tokenClient);
         localStorage.removeItem(MethodPaymentTakeat);
         localStorage.removeItem(storageTakeat);
         push(`/${params}/pedido-realizado`)

@@ -2,7 +2,7 @@
 import { methodDeliveryProps } from "@/app/[restaurants]/(pages)/endereco/page";
 import { ButtonTakeatBottom, ButtonTakeatContainer, TextButtonTakeat } from "@/app/[restaurants]/(pages)/informacao/informacao.style";
 import { SelectAddProducts } from "@/components/addProducts/addProducts.style";
-import { api_delivery_address, api_public, api_validate_address } from "@/utils/apis";
+import { api_delivery_address, api_validate_address } from "@/utils/apis";
 import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
 import Select, { SingleValue } from 'react-select';
@@ -23,6 +23,7 @@ interface Props {
 export default function AddressClientComponent({ params, methodDelivery }: Props) {
   const restaurant = React.use(params)?.restaurants;
   const addressClientDeliveryTakeat = `@addressClientDeliveryTakeat:${restaurant}`;
+  const tokenUserTakeat = `@tokenUserTakeat:${restaurant}`;
 
   const [isDisabled, setIsDisabled] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
@@ -39,13 +40,13 @@ export default function AddressClientComponent({ params, methodDelivery }: Props
   const [getInfoBairro, setGetInfoBairro] = useState('');
   const [getInfoComplemento, setGetInfoComplemento] = useState('');
   const [getInfoReferencia, setGetInfoReferencia] = useState('');
-  const [InfoClient, setInfoClient] = useState<{ tel: string, name?: string }>({ tel: '', name: '' });
+  // const [InfoClient, setInfoClient] = useState<{ tel: string, name?: string }>({ tel: '', name: '' });
 
   const { push } = useRouter();
   const addressMethodDelivery = methodDelivery.delimit_by_area || methodDelivery.is_delivery_by_distance;
 
   const onSubmit = () => {
-    setIsDisabled(true)
+    // setIsDisabled(true)
     const payload = {
       "country": "BR",
       "state": `${selectedState?.value}`,
@@ -58,25 +59,37 @@ export default function AddressClientComponent({ params, methodDelivery }: Props
       "zip_code": `${getInfoCep}`,
       "restaurant_id": restaurantId
     }
-
-    api_public.post(`/sessions`, {
-      "phone": `${InfoClient.tel}`
-    }).then(res => {
-      const token = res.data.token;
-      localStorage.setItem(`@tokenUserTakeat:${restaurant}`, token);
-      api_validate_address.post('/validate-and-save', payload, {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      }).then((res) => {
-        const valid_address = res.data.valid_address
-        const address = res.data.address
-        if (valid_address == true) {
-          localStorage.setItem(addressClientDeliveryTakeat, JSON.stringify(address));
-          push(`/${restaurant}/pagamento`)
-        }
-      }).catch(() => setModalOpen(true)).finally(() => setIsDisabled(false))
+    const token = localStorage.getItem(tokenUserTakeat)
+    api_validate_address.post('/validate-and-save', payload, {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    }).then((res) => {
+      const valid_address = res.data.valid_address
+      const address = res.data.address
+      if (valid_address == true) {
+        localStorage.setItem(addressClientDeliveryTakeat, JSON.stringify(address));
+        push(`/${restaurant}/pagamento`)
+      }
     }).catch(() => setModalOpen(true)).finally(() => setIsDisabled(false))
+    // api_public.post(`/sessions`, {
+    //   "phone": `${InfoClient.tel}`
+    // }).then(res => {
+    //   const token = res.data.token;
+    //   localStorage.setItem(`@tokenUserTakeat:${restaurant}`, token);
+    // api_validate_address.post('/validate-and-save', payload, {
+    //   headers: {
+    //     Authorization: `Bearer ${token}`
+    //   }
+    // }).then((res) => {
+    //   const valid_address = res.data.valid_address
+    //   const address = res.data.address
+    //   if (valid_address == true) {
+    //     localStorage.setItem(addressClientDeliveryTakeat, JSON.stringify(address));
+    //     push(`/${restaurant}/pagamento`)
+    //   }
+    // }).catch(() => setModalOpen(true)).finally(() => setIsDisabled(false))
+    // }).catch(() => setModalOpen(true)).finally(() => setIsDisabled(false))
   };
 
   const getAddressWithCep = async (cep: string) => {
@@ -103,11 +116,11 @@ export default function AddressClientComponent({ params, methodDelivery }: Props
     } catch (err) { return err }
   };
 
-  useEffect(() => {
-    const getInfoClient = localStorage.getItem(`@clienteTakeat:${restaurant}`);
-    const parsedGetInfoClient = JSON.parse(getInfoClient || '');
-    setInfoClient(parsedGetInfoClient)
-  }, [])
+  // useEffect(() => {
+  //   const getInfoClient = localStorage.getItem(`@clienteTakeat:${restaurant}`);
+  //   const parsedGetInfoClient = JSON.parse(getInfoClient || '');
+  //   setInfoClient(parsedGetInfoClient)
+  // }, [])
 
   useEffect(() => {
     const fetchRestaurant = async () => {

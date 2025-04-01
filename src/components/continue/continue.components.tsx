@@ -127,7 +127,7 @@ export default function ContinueComponents({ params, route, clear, textButon, ta
         setOpenModal(true)
       } else {
         localStorage.removeItem(takeatBagKey);
-        localStorage.removeItem(tokenClient);
+        // localStorage.removeItem(tokenClient);
         localStorage.removeItem(MethodPaymentTakeat);
         localStorage.removeItem(storageTakeat);
         push(`/${params}/pedido-realizado`)

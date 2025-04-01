@@ -14,7 +14,7 @@ interface Props {
   params: Promise<{ restaurants: string }>;
 }
 
-interface IAddress {
+export interface IAddress {
   state: string;
   city: string;
   neighborhood: string;
