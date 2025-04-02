@@ -1,6 +1,6 @@
 "use client";
 import { ICart } from "@/components/addProducts/addProducts.types";
-import ConfirmarPedidoButton from "@/components/confirmar-pedido/continue.components";
+import CarrinhoButtonComponent from "@/components/confirmar-pedido/continue.components";
 import { TakeatApp } from "@/components/theme/ThemeProviderWrapper";
 import InternalPages from "@/components/uiComponents/InternalPageHeader/internal_pages.header";
 import PageWrapper from "@/hook/pageWrapper";
@@ -19,11 +19,10 @@ export default function ProductPage({ params }: Props) {
   const [bag, setBag] = useState<ICart[]>([]);
   const [lastQuantities, setLastQuantities] = useState<Record<string, number>>({});
   const burger = "/assets/burger.svg";
+  const takeatBagKey = `@deliveryTakeat:${restaurant}TakeatBag`;
 
   useEffect(() => {
-    // if (typeof window !== "undefined") {
-    const takeatBagKey = `@deliveryTakeat:${restaurant}TakeatBag`;
-    const checkStorage = () => {
+    if (typeof window !== "undefined") {
       const storedBag = localStorage.getItem(takeatBagKey);
       const parsedBag = storedBag ? JSON.parse(storedBag)?.products || [] : [];
 
@@ -33,14 +32,12 @@ export default function ProductPage({ params }: Props) {
         }
         return prevBag;
       });
-    };
-
-    // const interval = setInterval(checkStorage, 1000);
-
-    // return () => clearInterval(interval);
-    return checkStorage
-    // }
+    }
   }, [restaurant]);
+
+  const clearBag = () => {
+    setBag([]);
+  };
 
   const updateQuantity = ({ index, newQuantity }: { index: number, newQuantity: number }) => {
     setBag((prevBag) => {
@@ -174,7 +171,7 @@ export default function ProductPage({ params }: Props) {
             : <div className="flex items-center justify-center w-full pt-8"><h2>Carrinho vazio</h2></div>
         }
       </PageWrapper>
-      <ConfirmarPedidoButton params={restaurant} />
+      <CarrinhoButtonComponent params={restaurant} onClearBag={clearBag} />
     </InternalPages >
   );
 }

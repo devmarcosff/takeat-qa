@@ -127,7 +127,7 @@ export const AddProductsQuantity = styled.div<TextAddProductsQuantityProps>`
   `}
 `;
 
-export const TextAddProductsQuantity = styled.button<{ disabled: boolean }>`
+export const TextAddProductsQuantity = styled.button<{ disabled?: boolean }>`
   ${({ }) => css`
     font-weight: 600;
     width: 100%;

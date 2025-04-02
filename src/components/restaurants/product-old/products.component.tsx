@@ -1,10 +1,10 @@
 import { ICart } from "@/components/addProducts/addProducts.types";
 import { Product } from "@/types/categories.types";
 import { AnimatePresence, motion } from "framer-motion";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { formatPrice, IconClockFilled } from "takeat-design-system-ui-kit";
 import { CategoriesProps } from "../restaurants.types";
-import ProductDrawer from "./products.drawer";
 import {
   CategoryButton,
   CategoryContainer,
@@ -21,12 +21,11 @@ import {
   ProductsContainer
 } from "./products.style";
 
-export default function ProductsRestaurant({ categories = [], params, searchTerm }: CategoriesProps & { searchTerm: string }) {
+export default function ProductsRestaurantOld({ categories = [], params, searchTerm }: CategoriesProps & { searchTerm: string }) {
   const takeatBagKey = `@deliveryTakeat:${params}TakeatBag`;
   const [openIndexes, setOpenIndexes] = useState<number[]>([]);
   const [parsedBag, setParsedBag] = useState<number>(0);
-  const [openDrawer, setOpenDrawer] = useState<boolean>(false);
-  const [productInDrawer, setProductInDrawer] = useState<Product>({} as Product);
+  const { push } = useRouter()
 
   const toggleShow = (index: number) => {
     setOpenIndexes((prevIndexes) =>
@@ -34,9 +33,9 @@ export default function ProductsRestaurant({ categories = [], params, searchTerm
     );
   };
 
-  const viewProductInDrawer = (product: Product) => {
-    setOpenDrawer(!openDrawer)
-    setProductInDrawer(product)
+  const savedStorage = (item: Product) => {
+    localStorage.setItem(`@deliveryTakeat:${params}ProductRestaurant`, JSON.stringify(item));
+    push(`/${params}/produto/${item.name}`)
   }
 
   useEffect(() => {
@@ -74,9 +73,7 @@ export default function ProductsRestaurant({ categories = [], params, searchTerm
           {filteredProducts.length > 0 ? (
             filteredProducts.map((product, index) => {
               return (
-                <div
-                  className="flex bg-white rounded-2xl p-3 shadow"
-                  key={index}>
+                <div className="flex bg-white rounded-2xl p-3 shadow" key={index} onClick={() => savedStorage(product)}>
                   <ProductDetails className="">
                     <h2>{product.name}</h2>
                     <p className="line-clamp-3">{product.description}</p>
@@ -152,9 +149,7 @@ export default function ProductsRestaurant({ categories = [], params, searchTerm
                         {item.products.map((product, index) => (
                           <ProductItem
                             key={index}
-                            onClick={() => viewProductInDrawer(product)}
-                          // onClick={() => setOpenDrawer(!openDrawer)}
-                          // onClick={() => savedStorage(product)}
+                            onClick={() => savedStorage(product)}
                           >
                             <ProductDetails>
                               <h2>{product.name}</h2>
@@ -190,8 +185,6 @@ export default function ProductsRestaurant({ categories = [], params, searchTerm
           })}
         </div>
       )}
-
-      <ProductDrawer openDrawer={openDrawer} setOpenDrawer={setOpenDrawer} products={productInDrawer} params={params} />
     </ProductsContainer>
   );
 }

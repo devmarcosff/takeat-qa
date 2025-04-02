@@ -27,7 +27,7 @@ export default function ContinueComponents({ params, route, clear, textButon, ta
   const tokenCard = `@tokenCardUserTakeat:${params}`;
   const addressClientDelivery = `@addressClientDeliveryTakeat:${params}`;
   const [totalPrice, setTotalPrice] = useState<number>(0);
-  const [active, setActive] = useState()
+  const [active, setActive] = useState<number>(0)
   const [openModal, setOpenModal] = useState(false)
   const [confirmPix, setConfirmPix] = useState(false)
   const [modalGen, setModalGen] = useState<{ qrcode: string, zoop_id: string }>()
@@ -43,7 +43,6 @@ export default function ContinueComponents({ params, route, clear, textButon, ta
     const total = parsedBag.reduce((acc: number, item: ICart) => acc + (item.price * item.qtd), 0);
     setTotalPrice(Number(total.toFixed(2)));
   }, [takeatBagKey]);
-
 
   const handleCreateOrder = () => {
     // TOKEN
@@ -139,8 +138,7 @@ export default function ContinueComponents({ params, route, clear, textButon, ta
     if (typeof window !== "undefined") {
       const parsedStorage = localStorage.getItem(storageTakeat);
       if (parsedStorage) {
-        const minimum_price = JSON.parse(parsedStorage).delivery_minimum_price;
-        setActive(minimum_price);
+        setActive(Number(parsedStorage));
       }
 
       const parsedMethodDelivery = localStorage.getItem(methodDelivery);

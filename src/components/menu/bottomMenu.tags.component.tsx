@@ -13,7 +13,7 @@ export const BottomMenu = ({ params }: { params: string }) => {
 
   const links = [
     { href: `/${params}`, label: "Início", icon: IconTHome },
-    { href: `/${params}/destaques`, label: "Destaques", icon: IconTDiscount },
+    { href: `/${params}/destaques`, label: "Promoções", icon: IconTDiscount },
     { href: `/${params}/desconto`, label: "Desconto", icon: IconTFilled },
     { href: `/${params}/pedidos`, label: "Pedidos", icon: IconTClipboard },
   ];

@@ -157,7 +157,7 @@ const YourCardComponent = ({ basket, userChange }: { basket: OrderBasketItem, us
           </div>
         </div>
 
-        <div className={`w-full justify-between items-center ${basket.order_status !== 'finished' ? 'flex' : 'hidden'}`}>
+        <div className={`w-full justify-between gap-1 items-center ${basket.order_status !== 'finished' ? 'flex' : 'hidden'}`}>
           {[0, 1, 2].map((step) => {
             const status = basket.order_status;
 
@@ -210,15 +210,17 @@ const YourCardComponent = ({ basket, userChange }: { basket: OrderBasketItem, us
         {basket.order_status === 'finished' && (
           <div className="mt-4 border-t pt-3">
 
-            <div className="flex justify-between items-end mt-1">
-              {
-                basket.orders?.map((order: IOrders) => (
-                  <div key={order.id} className="text-gray-600 text-md flex items-center justify-start gap-3">
-                    <span className="bg-takeat-neutral-lightest font-semibold text-sm py-1 px-2 rounded-lg flex items-center justify-center">{order.amount}x</span>
-                    <h2 className="font-semibold">{order.product?.name}</h2>
-                  </div>
-                ))
-              }
+            <div className="flex justify-between items-end">
+              <div className="flex flex-col justify-between mt-1 gap-2">
+                {
+                  basket.orders?.map((order: IOrders) => (
+                    <div key={order.id} className="text-gray-600 text-md flex items-center justify-start gap-3">
+                      <span className="bg-takeat-neutral-lightest font-semibold text-sm py-1 px-2 rounded-lg flex items-center justify-center">{order.amount}x</span>
+                      <h2 className="font-semibold">{order.product?.name}</h2>
+                    </div>
+                  ))
+                }
+              </div>
               <ChevronRight className="text-gray-400 h-6 w-6" />
             </div>
           </div>

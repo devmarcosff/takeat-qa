@@ -99,18 +99,15 @@ export default function PedidoConfirmadoPage({ params }: Props) {
         ) : (
           <div>
 
-            <div>
-              <div className="fixed top-6 left-6 z-20">
-                <button className="w-full flex items-center justify-center fill-takeat-primary-light rounded-lg p-3"><IconChevronLeft className="text-3xl" /></button>
-              </div>
-              <div className="fixed top-6 right-6 z-20">
-                <Link href={'#'} className="bg-takeat-primary-default text-white px-4 py-2 rounded-lg border-none font-semibold">Ajuda</Link>
-              </div>
+            <div className="fixed top-6 left-0 z-20 flex justify-between px-4 items-center w-full">
+              <Link href={`/${restaurant}/pedidos`}><IconChevronLeft className="text-3xl" /></Link>
+
+              <Link href={`#`} className="bg-takeat-primary-default text-white px-4 py-2 rounded-lg border-none font-semibold">Ajuda</Link>
             </div>
 
             <div className="fixed top-0 left-0 w-full h-[300px] z-1">
               <div>
-                asdsadas
+                Imagem
               </div>
             </div>
 

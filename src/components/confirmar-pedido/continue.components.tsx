@@ -15,13 +15,14 @@ interface Props {
   taxservice?: number,
   desconto?: boolean,
   finishOrder?: boolean,
+  onClearBag?: () => void;
 }
 
-export default function ContinueComponents({ params, textButon }: Props) {
+export default function ContinueComponents({ params, textButon, onClearBag }: Props) {
   const takeatBagKey = `@deliveryTakeat:${params}TakeatBag`;
   const storageTakeat = `@deliveryTakeat:${params}`;
   const [totalPrice, setTotalPrice] = useState<number>(0);
-  const [active, setActive] = useState()
+  const [active, setActive] = useState<number>(0)
   const { push } = useRouter();
   const [modalOpen, setModalOpen] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -39,8 +40,7 @@ export default function ContinueComponents({ params, textButon }: Props) {
 
     const parsedStorage = localStorage.getItem(storageTakeat);
     if (parsedStorage) {
-      const minimum_price = JSON.parse(parsedStorage).delivery_minimum_price;
-      setActive(minimum_price);
+      setActive(Number(parsedStorage));
     }
 
     const handleStorageChange = (event: StorageEvent) => {
@@ -116,12 +116,15 @@ export default function ContinueComponents({ params, textButon }: Props) {
             disabled={loading}
             onClick={() => {
               setLoading(true);
-              localStorage.removeItem(takeatBagKey)
+              localStorage.removeItem(takeatBagKey);
+
               setTimeout(() => {
-                setModalOpen(!modalOpen);
+                setModalOpen(false);
                 setLoading(false);
-              }, 600);
+                onClearBag?.();
+              }, 300);
             }}
+
           >
             {loading ? <AiOutlineLoading3Quarters className='animate-spin' /> : 'Confirmar'}
           </Button>

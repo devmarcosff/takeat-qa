@@ -25,7 +25,7 @@ import {
 
 export const Logo = "/assets/default_image.svg";
 
-export default function HeaderComponent({ restaurant, categories, searchTerm }: { restaurant: Restaurant | null, categories: CategoriesProps[] | [], searchTerm: string }) {
+export default function HeaderComponent({ restaurant, categories, searchTerm }: { restaurant: Restaurant | null, categories: CategoriesProps['categories'] | [], searchTerm: string }) {
   const [isSearchActive, setIsSearchActive] = useState<boolean>(false);
   const [openDrawer, setOpenDrawer] = useState<boolean>(false);
   useScrollProgress();

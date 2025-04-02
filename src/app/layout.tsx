@@ -1,5 +1,6 @@
 import Analytics from "@/analytics/analytics";
 import ThemeProviderWrapper from "@/components/theme/ThemeProviderWrapper";
+import { DeliveryProvider } from "@/context/DeliveryContext";
 import type { Metadata } from "next";
 import { Poppins } from "next/font/google";
 import "./globals.css";
@@ -25,7 +26,9 @@ export default function RootLayout({
       <body className={`${poppins.className} md:hidden`}>
         <Analytics />
         <ThemeProviderWrapper>
-          {children}
+          <DeliveryProvider>
+            {children}
+          </DeliveryProvider>
         </ThemeProviderWrapper>
       </body>
     </html>
