@@ -1,6 +1,7 @@
 import { api_confirm_pix, api_create_order } from '@/utils/apis';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Copy, Loader2 } from 'lucide-react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { formatPrice, IconChevronRight, IconTicketFilled, Modal } from 'takeat-design-system-ui-kit';
@@ -48,6 +49,8 @@ export default function ContinueComponents({ params, route, clear, textButon, ta
   const [openModal, setOpenModal] = useState(false)
   const [confirmPix, setConfirmPix] = useState(false)
   const [modalGen, setModalGen] = useState<{ qrcode: string, zoop_id: string }>()
+  const [openErrorModal, setOpenErrorModal] = useState<boolean>()
+  const [errorInfo, setErrorInfo] = useState<string>('')
   const [taxService, setTaxService] = useState<number>()
   const [parseAddress, setParseAddress] = useState<number>(0)
   const [isMethodDelivery, setIsMethodDelivery] = useState<string>('')
@@ -97,7 +100,6 @@ export default function ContinueComponents({ params, route, clear, textButon, ta
     const cardToken = cardTokenRef.current;
 
     const orders: OrderItem[] = parsedCart.products.map((product) => {
-      // const orders: OrderItem[] = parsedCart.products.map((product: Product) => {
       const orderItem: OrderItem = {
         id: product.categoryId,
         amount: product.qtd,
@@ -153,7 +155,10 @@ export default function ContinueComponents({ params, route, clear, textButon, ta
           setLoading(false)
         }
       })
-      .catch(err => console.log(err.response.data));
+      .catch(err => {
+        setOpenErrorModal(true)
+        setErrorInfo((err.response.data.message))
+      });
   };
 
   useEffect(() => {
@@ -330,6 +335,22 @@ export default function ContinueComponents({ params, route, clear, textButon, ta
 
           <div className="flex w-full gap-3 pt-6">
             <button onClick={() => handleConfirmPix()} className='px-3 py-2 w-full border rounded-lg font-semibold text-white bg-takeat-primary-default hover:bg-takeat-primary-default/80 text-center flex items-center justify-center'>{!confirmPix ? "Confirmar pagamento" : <Loader2 className='animate-spin' />}</button>
+          </div>
+        </Modal.Body>
+      </Modal>
+
+      <Modal open={openErrorModal} style={{
+        height: "fit-content"
+      }}>
+        <Modal.Header className='text-center'>
+          <h2>Algo inesperado aconteceu!</h2>
+        </Modal.Header>
+        <Modal.Body>
+
+          <span>{errorInfo}</span>
+
+          <div className="flex w-full gap-3 pt-6">
+            <Link href={`/${params}`} className='px-3 py-2 w-full border rounded-lg font-semibold text-white bg-takeat-primary-default hover:bg-takeat-primary-default/80 text-center flex items-center justify-center'>{!confirmPix ? "Voltar ao início" : <Loader2 className='animate-spin' />}</Link>
           </div>
         </Modal.Body>
       </Modal>
