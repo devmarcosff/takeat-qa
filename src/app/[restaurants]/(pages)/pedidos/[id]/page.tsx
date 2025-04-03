@@ -6,7 +6,6 @@ import { TakeatApp, TakeatPage } from "@/components/theme/ThemeProviderWrapper";
 import PageWrapper from "@/hook/pageWrapper";
 import { AnimatePresence, motion } from "framer-motion";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { use, useEffect, useState } from "react";
 import { formatPrice, IconCardFront, IconChevronLeft, IconLocationFilled, IconMoney, IconPix, IconRoundChat } from "takeat-design-system-ui-kit";
 import { IAddress } from "../../confirmar-pedido/page";
@@ -41,7 +40,6 @@ export default function PedidoConfirmadoPage({ params }: Props) {
     delivery_tax_price: ''
   });
   const [resumeCart] = useState<ICart[]>([])
-  const { push } = useRouter()
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -79,7 +77,7 @@ export default function PedidoConfirmadoPage({ params }: Props) {
     return (
       <div className="flex pb-3 items-center justify-between">
         <h2 className="font-semibold text-lg">{title}</h2>
-        <h2 className="font-semibold text-lg text-takeat-primary-default" onClick={() => push(`/${restaurant}/${url}`)}>Alterar</h2>
+        <Link className="font-semibold text-lg text-takeat-primary-default" href={`/${restaurant}/${url}`}>Alterar</Link>
       </div>
     )
   }

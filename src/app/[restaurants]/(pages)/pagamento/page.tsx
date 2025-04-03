@@ -11,7 +11,7 @@ import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
 import Cards from "react-credit-cards-2";
 import "react-credit-cards-2/dist/es/styles-compiled.css";
-import { IconCardFront, IconMoney, IconPix } from "takeat-design-system-ui-kit";
+import { IconCardFront, IconMoney, IconPix, maskString } from "takeat-design-system-ui-kit";
 import errorAnimation from "../../../../../public/assets/erroranimation.json";
 import successAnimation from "../../../../../public/assets/succesanimation.json";
 const Lottie = dynamic(() => import("lottie-react"), { ssr: false });
@@ -53,12 +53,12 @@ export default function PagamentoPage({ params }: Props) {
   const tokenClient = `@tokenUserTakeat:${restaurant}`;
   const clientCard = `@clientCardTakeat:${restaurant}`;
   const tokenCard = `@tokenCardUserTakeat:${restaurant}`;
-  const deliveryTakeat = `@deliveryTakeat:${restaurant}`;
+  const allInfoRestaurant = `@deliveryTakeatRestaurant:${restaurant}`;
   const MethodPaymentTakeat = `@methodPaymentTakeat:${restaurant}`;
 
   const [isDisabled, setIsDisabled] = useState(true);
   const [methodPayment, setMethodPayment] = useState<IPaymentsProps[]>([]);
-  const [infoPayment, setInfoPayment] = useState<IPaymentInfo>();
+  const [infoRestaurant, setInfoRestaurant] = useState<IPaymentInfo>();
   const [openDrawer, setOpenDrawer] = useState(false);
   const [openDialog, setOpenDialog] = useState(false);
   const [openResultDialog, setOpenResultDialog] = useState(false);
@@ -102,9 +102,9 @@ export default function PagamentoPage({ params }: Props) {
       setMethodDelivery(getMethodDeliveryTakeat);
     }
 
-    const getDeliveryTakeat = localStorage.getItem(deliveryTakeat);
-    if (getDeliveryTakeat) {
-      setInfoPayment(JSON.parse(getDeliveryTakeat));
+    const getInfoRestaurant = localStorage.getItem(allInfoRestaurant);
+    if (getInfoRestaurant) {
+      setInfoRestaurant(JSON.parse(getInfoRestaurant));
     }
 
     fetchRestaurant();
@@ -121,8 +121,8 @@ export default function PagamentoPage({ params }: Props) {
   };
 
   const allowedOnlineMethods: string[] = [];
-  if (infoPayment?.has_pix) allowedOnlineMethods.push("pix_auto");
-  if (infoPayment?.has_credit_card) allowedOnlineMethods.push("credit_card_auto");
+  if (infoRestaurant?.has_pix) allowedOnlineMethods.push("pix_auto");
+  if (infoRestaurant?.has_credit_card) allowedOnlineMethods.push("credit_card_auto");
 
   const onlinePayments = sortPaymentMethods(
     methodPayment.filter((method) =>
@@ -164,11 +164,6 @@ export default function PagamentoPage({ params }: Props) {
     localStorage.setItem(`@acceptTerms:${restaurant}`, JSON.stringify(true));
     setAcceptTerms(true);
     setOpenDialog(false);
-    handleSubmit();
-  };
-
-  const handleSubmit = () => {
-    setIsLoading(true);
 
     const payload = {
       "holder_name": state.name,
@@ -200,27 +195,64 @@ export default function PagamentoPage({ params }: Props) {
       }).finally(() => setIsLoading(false))
   };
 
+  const handleSubmit = () => {
+    setIsLoading(true);
+
+    const payload = {
+      "holder_name": state.name,
+      "expiration_month": state.expiryM,
+      "expiration_year": state.expiryA,
+      "card_number": state.number,
+      "security_code": state.cvc
+    }
+    const token = localStorage.getItem(tokenClient);
+    const config = {
+      headers: { Authorization: `Bearer ${token}` }
+    }
+    api_token_card.post('/token-card', payload, config)
+      .then(res => {
+        setPaymentStatus("success");
+        localStorage.setItem(tokenCard, JSON.stringify(res.data.id));
+
+        setOpenDrawer(false);
+        setOpenResultDialog(true);
+        setTimeout(() => {
+          push(`/${restaurant}/confirmar-pedido`);
+        }, 1500);
+      })
+      .catch(() => {
+        setPaymentStatus("error");
+        setOpenDrawer(false);
+        setOpenResultDialog(true);
+      }).finally(() => setIsLoading(false))
+  };
+
+  console.log(methodDelivery)
+
   return (
     <InternalPages title="Pagamento" button>
+
       <div className="pt-3 mt-3">
-        {/* {infoPayment?.has_pix == true && (
-          <> */}
-        <h2 className="font-semibold text-lg">Pagar Online</h2>
-        {onlinePayments.map((method) => (
-          <Link href={method.keyword === "pix_auto" ? `/${restaurant}/confirmar-pedido` : ''} key={method.id} onClick={() => handlePaymentClick(method)}
-            className="flex items-center justify-between w-full h-[60px] border border-takeat-neutral-light rounded-xl px-4 my-3">
-            <div className="flex items-center gap-3">
-              {
-                method.keyword === "pix_auto"
-                  ? <IconPix className="fill-takeat-green-default text-3xl" />
-                  : <IconCardFront className="fill-takeat-primary-default text-3xl" />
-              }
-              <span>{method.keyword == "pix_auto" ? "Pix" : "Cartão de Crédito"}</span>
-            </div>
-          </Link>
-        ))}
-        {/* </>
-        )} */}
+        {
+          (infoRestaurant?.has_pix || infoRestaurant?.has_pix) && (
+            <>
+              <h2 className="font-semibold text-lg">Pagar Online</h2>
+              {onlinePayments.map((method) => (
+                <Link href={method.keyword === "pix_auto" ? `/${restaurant}/confirmar-pedido` : ''} key={method.id} onClick={() => handlePaymentClick(method)}
+                  className="flex items-center justify-between w-full h-[60px] border border-takeat-neutral-light rounded-xl px-4 my-3">
+                  <div className="flex items-center gap-3">
+                    {
+                      method.keyword === "pix_auto"
+                        ? <IconPix className="fill-takeat-green-default text-3xl" />
+                        : <IconCardFront className="fill-takeat-primary-default text-3xl" />
+                    }
+                    <span>{method.keyword == "pix_auto" ? "Pix" : "Cartão de Crédito"}</span>
+                  </div>
+                </Link>
+              ))}
+            </>
+          )
+        }
 
         <h2 className="font-semibold text-lg mt-4">{methodDelivery === "delivery" || methodDelivery === "agendamentoDelivery" ? 'Pagar na Entrega' : 'Pagar na retirada'}</h2>
         {offlinePayments.map((method) => (
@@ -256,7 +288,7 @@ export default function PagamentoPage({ params }: Props) {
             {/* Inputs do cartão */}
             <div className="flex flex-col gap-3 w-full mt-3">
               <label htmlFor="number" className="font-medium">Número do cartão</label>
-              <input id="number" placeholder="Número do cartão" className="border rounded-lg p-2 w-full" type="text" value={state.number} onChange={(e) => setState({ ...state, number: e.target.value })} onFocus={handleInputFocus} />
+              <input id="number" placeholder="Número do cartão" className="border rounded-lg p-2 w-full" type="text" value={maskString(state.number)} onChange={(e) => setState({ ...state, number: e.target.value })} onFocus={handleInputFocus} />
 
               <div className="flex gap-3">
                 <div className="w-1/3">

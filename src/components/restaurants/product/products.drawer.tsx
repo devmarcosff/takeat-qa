@@ -7,7 +7,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import { RiSubtractLine } from "react-icons/ri";
-import { formatPrice, IconAddCircleFilled, IconChevronLeft, IconRoundChat, IconTrashFilled } from "takeat-design-system-ui-kit";
+import { formatPrice, IconAddCircleFilled, IconClose, IconRoundChat, IconTrashFilled } from "takeat-design-system-ui-kit";
 import Placeholder from '../../../assets/placeholder.svg';
 import { ProductInternalContainer } from "./products.style";
 
@@ -235,17 +235,17 @@ export default function ProductDrawer({ openDrawer, setOpenDrawer, products, par
 
   return (
     <Drawer open={openDrawer} onOpenChange={setOpenDrawer}>
-      <DrawerContent className="h-full flex flex-col rounded-t-[40px] overflow-hidden">
+      <DrawerContent className="h-full w-full flex flex-col overflow-hidden !rounded-none">
         <div className="!-mt-8 mb-6">
-          <div className="fixed top-6 left-6 z-20">
+          <div className="fixed top-6 right-6 z-20">
             <button className="w-full flex items-center justify-center bg-white rounded-lg p-3 border">
-              <IconChevronLeft onClick={() => setOpenDrawer(!openDrawer)} />
+              <IconClose onClick={() => setOpenDrawer(!openDrawer)} />
             </button>
           </div>
           <Image src={products.image?.url_thumb || Placeholder} className="!w-full h-full max-h-[330px]" width={100} height={100} alt="Takeat Image" />
         </div>
 
-        <div className="flex-1 overflow-y-auto px-4 pb-64 scroll-smooth [scroll-padding-bottom:10px]">
+        <div className="flex-1 overflow-y-auto px-4 pb-64 scroll-smooth [scroll-padding-bottom:10px] !rounded-t-[40px] overflow-hidden">
           <ProductInternalContainer>
             <div>
               <div className="flex flex-col gap-3 mb-3 w-full">

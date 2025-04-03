@@ -8,15 +8,17 @@ interface Props {
 }
 
 export interface methodDeliveryProps {
-  delimit_by_area: boolean
-  is_delivery_by_distance: boolean
+  id?: string;
+  delimit_by_area: boolean;
+  is_delivery_by_distance: boolean;
 }
 
 export default function EnderecoPage({ params }: Props) {
   const restaurant = React.use(params)?.restaurants;
-  const deliveryTakeatStorage = `@deliveryTakeat:${restaurant}`;
+  const deliveryTakeatStorage = `@deliveryTakeatInfo:${restaurant}`;
   const [methodDelivery, setMethodDelivery] = useState<methodDeliveryProps>(
     {
+      id: "",
       delimit_by_area: false,
       is_delivery_by_distance: false
     }
@@ -24,10 +26,8 @@ export default function EnderecoPage({ params }: Props) {
 
   useEffect(() => {
     const methodDelivery = localStorage.getItem(deliveryTakeatStorage);
-
     if (methodDelivery) {
       const newMethodDelivery = JSON.parse(methodDelivery);
-
       setMethodDelivery(newMethodDelivery)
     }
   }, [deliveryTakeatStorage])

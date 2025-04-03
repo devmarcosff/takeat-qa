@@ -124,7 +124,7 @@ const YourCardComponent = ({ basket, userChange }: { basket: OrderBasketItem, us
   const formattedTimeFinished = basket.start_time ? dayjs(basket.start_time).format('DD/MM/YY - HH[h]mm') : '--:--';
 
   return (
-    <div className="max-w-md rounded-2xl bg-white shadow-md overflow-hidden cursor-pointer my-4 border">
+    <div className="max-w-3xl rounded-2xl bg-white shadow-md overflow-hidden cursor-pointer my-4 border">
       <div className="flex justify-between items-center w-full bg-takeat-neutral-lighter p-3">
         <h2 className="font-bold text-gray-800">{basket.with_withdrawal ? 'Retirada' : 'Entrega'}</h2>
         <p className="text-sm text-gray-800 font-semibold">Senha {basket.basket_id}</p>

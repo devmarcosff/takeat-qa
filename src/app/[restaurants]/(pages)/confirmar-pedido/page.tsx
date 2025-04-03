@@ -5,7 +5,7 @@ import { TakeatApp } from "@/components/theme/ThemeProviderWrapper";
 import InformationButton from "@/components/uiComponents/Buttons/informationButton.component";
 import InternalPages from "@/components/uiComponents/InternalPageHeader/internal_pages.header";
 import { AnimatePresence, motion } from "framer-motion";
-import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { use, useEffect, useState } from "react";
 import { formatPrice, IconCardFront, IconLocationFilled, IconMoney, IconPix, IconRoundChat, IconUserFilled } from "takeat-design-system-ui-kit";
 import { IPaymentsProps } from "../pagamento/page";
@@ -54,7 +54,6 @@ export default function ConfirmarPedidoPage({ params }: Props) {
     zip_code: ``,
     delivery_tax_price: ''
   });
-  const { push } = useRouter();
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -100,7 +99,7 @@ export default function ConfirmarPedidoPage({ params }: Props) {
     return (
       <div className="flex pb-3 items-center justify-between">
         <h2 className="font-semibold text-lg">{title}</h2>
-        <h2 className="font-semibold text-lg text-takeat-primary-default" onClick={() => push(`/${restaurant}/${url}`)}>Alterar</h2>
+        <Link className="font-semibold text-lg text-takeat-primary-default" href={`/${restaurant}/${url}`}>Alterar</Link>
       </div>
     )
   }
@@ -232,4 +231,4 @@ export default function ConfirmarPedidoPage({ params }: Props) {
       <ContinueComponents params={restaurant} route="pedido-realizado" finishOrder textButon="Enviar Pedido" />
     </InternalPages>
   );
-}
+} 

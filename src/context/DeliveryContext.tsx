@@ -22,6 +22,8 @@ export const DeliveryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     try {
       const res = await api_delivery.get(`/${restaurant}`);
       setGetRestaurants(res.data);
+      localStorage.setItem(`@deliveryTakeatRestaurant:${restaurant}`, JSON.stringify(res.data));
+      localStorage.setItem(`@deliveryTakeatInfo:${restaurant}`, JSON.stringify(res.data.delivery_info));
       localStorage.setItem(`@deliveryTakeat:${restaurant}`, res.data.delivery_info.delivery_minimum_price);
       const catRes = await api_categories_delivery.get(`/${res.data.id}?gd=true`);
       setGetCategories(catRes.data);
@@ -48,6 +50,7 @@ export const DeliveryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
 export const useDelivery = () => {
   const context = useContext(DeliveryContext);
+  // localStorage.setItem('@deliveryTakeat', context?.getRestaurants?.is_delivery_by_distance);
   if (!context) {
     throw new Error("useDelivery deve ser usado dentro de um DeliveryProvider");
   }

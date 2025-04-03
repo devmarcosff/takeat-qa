@@ -2,7 +2,7 @@ import { api_confirm_pix, api_create_order } from '@/utils/apis';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Copy, Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { formatPrice, IconChevronRight, IconTicketFilled, Modal } from 'takeat-design-system-ui-kit';
 import { ActionProducts, AddProductsContainer, AddProductsPriceInfoItem, AddProductsPriceItem, AddProductsQuantity, ButtonProductsDiscount, ProductsDiscount, ProductsDiscountContainer, ProductsDiscountText, SelectAddProducts, TextAddProductsQuantity } from '../addProducts/addProducts.style';
 import { ICart } from '../addProducts/addProducts.types';
@@ -17,10 +17,27 @@ interface Props {
   desconto?: boolean,
   finishOrder?: boolean,
 }
+type RestaurantRef = { id: string }; // ou o que vier do seu localStorage
+type AddressRef = { id: string; delivery_tax_price: string }; // ajuste conforme necessário
+// type Product = {
+//   categoryId: number;
+//   qtd: number;
+//   complements?: {
+//     categoryId: number;
+//     complementId: number;
+//     name: string;
+//     price: number;
+//     qtd: number;
+//   }[];
+// };
+type CartRef = { products: Product[] };
+type MethodPaymentRef = { keyword: string; id?: number };
+
 
 export default function ContinueComponents({ params, route, clear, textButon, taxservice, desconto, finishOrder }: Props) {
   const MethodPaymentTakeat = `@methodPaymentTakeat:${params}`;
   const takeatBagKey = `@deliveryTakeat:${params}TakeatBag`;
+  const deliveryTakeatRestaurant = `@deliveryTakeatRestaurant:${params}`;
   const storageTakeat = `@deliveryTakeat:${params}`;
   const tokenClient = `@tokenUserTakeat:${params}`
   const methodDelivery = `@methodDeliveryTakeat:${params}`
@@ -34,6 +51,7 @@ export default function ContinueComponents({ params, route, clear, textButon, ta
   const [taxService, setTaxService] = useState<number>()
   const [parseAddress, setParseAddress] = useState<number>(0)
   const [isMethodDelivery, setIsMethodDelivery] = useState<string>('')
+  const [loading, setLoading] = useState<boolean>(false)
   const { push } = useRouter();
 
   const updateStorageData = useCallback(() => {
@@ -44,46 +62,53 @@ export default function ContinueComponents({ params, route, clear, textButon, ta
     setTotalPrice(Number(total.toFixed(2)));
   }, [takeatBagKey]);
 
+  const cardTokenRef = useRef<string | null>(null);
+  const restaurantIdRef = useRef<RestaurantRef | null>(null);
+  const addressClientRef = useRef<AddressRef | null>(null);
+  const cartRef = useRef<CartRef | null>(null);
+  const methodPaymentRef = useRef<MethodPaymentRef | null>(null);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      cardTokenRef.current = localStorage.getItem(tokenCard);
+
+      const storageRestaurantId = localStorage.getItem(deliveryTakeatRestaurant);
+      restaurantIdRef.current = JSON.parse(`${storageRestaurantId}`);
+
+      const address = localStorage.getItem(addressClientDelivery);
+      addressClientRef.current = address ? JSON.parse(address) : null;
+
+      const cart = localStorage.getItem(takeatBagKey);
+      cartRef.current = cart ? JSON.parse(cart) : { products: [] };
+
+      const methodPayment = localStorage.getItem(MethodPaymentTakeat);
+      methodPaymentRef.current = methodPayment ? JSON.parse(methodPayment) : null;
+    }
+  }, []);
+
   const handleCreateOrder = () => {
-    // TOKEN
-    const storageCardToken = localStorage.getItem(tokenCard)
+    setLoading(true)
+    const token = localStorage.getItem(tokenClient);
 
-    // RestaurantId
-    const storageRestaurantId = localStorage.getItem(`${storageTakeat}`)
-    const parsedRestaurantId = JSON.parse(`${storageRestaurantId}`)
+    const parsedMethodPayment = methodPaymentRef.current;
+    const parsedRestaurantId = restaurantIdRef.current;
+    const parsedAddressClient = addressClientRef.current;
+    const parsedCart = cartRef.current ?? { products: [] };
+    const cardToken = cardTokenRef.current;
 
-    // Address ID
-    const storageAddressClientDelivery = localStorage.getItem(`${addressClientDelivery}`)
-    const parsedAddressClientDelivery = JSON.parse(`${storageAddressClientDelivery}`)
-
-    // Order
-    // const storageCart = localStorage.getItem(`${takeatBagKey}`)
-    // const parsedCart = JSON.parse(`${storageCart}`)
-    const storageCart = localStorage.getItem(`${takeatBagKey}`);
-    const parsedCart = storageCart ? JSON.parse(storageCart) : { products: [] };
-
-    // Method => ex:"credito"
-    const storageMethodPaymentTakeat = localStorage.getItem(MethodPaymentTakeat);
-    const parsedMethodPaymentTakeat = JSON.parse(`${storageMethodPaymentTakeat}`)
-    // eut.methods.keyword 
-
-    const orders: OrderItem[] = parsedCart.products.map((product: Product) => {
+    const orders: OrderItem[] = parsedCart.products.map((product) => {
+      // const orders: OrderItem[] = parsedCart.products.map((product: Product) => {
       const orderItem: OrderItem = {
-        id: product.categoryId, // ID do produto
-        amount: product.qtd, // Quantidade do produto
-        complement_categories: [] // Sempre existe no objeto, mesmo vazio
+        id: product.categoryId,
+        amount: product.qtd,
+        complement_categories: [],
       };
 
-      // Adicionando complementos apenas se existirem
-      if (product.complements && product.complements.length > 0) {
-        // Agrupar complementos por categoria
-        const complementsByCategory: Record<string, ComplementCategory> = product.complements.reduce((acc, complement) => {
+      if (product.complements?.length) {
+        const complementsByCategory = product.complements.reduce((acc, complement) => {
           const categoryId = complement.categoryId;
           if (!acc[categoryId]) {
-            acc[categoryId] = {
-              id: Number(categoryId),
-              complements: [],
-            };
+            acc[categoryId] = { id: Number(categoryId), complements: [] };
           }
           acc[categoryId].complements.push({
             id: Number(complement.complementId),
@@ -93,8 +118,6 @@ export default function ContinueComponents({ params, route, clear, textButon, ta
           });
           return acc;
         }, {} as Record<string, ComplementCategory>);
-
-        // Convertendo o objeto em array
         orderItem.complement_categories = Object.values(complementsByCategory);
       }
 
@@ -102,37 +125,36 @@ export default function ContinueComponents({ params, route, clear, textButon, ta
     });
 
     const payload = {
-      payment_method: parsedMethodPaymentTakeat.keyword,
-      payment_token: JSON.parse(`${storageCardToken}`) ? `${JSON.parse(`${storageCardToken}`)}` : null,
-      payment_method_id: parsedMethodPaymentTakeat.id ? parsedMethodPaymentTakeat.id : null,
-      restaurant_id: parsedRestaurantId.restaurantId,
-      buyer_address_id: parsedAddressClientDelivery ? parsedAddressClientDelivery.id : null,
-      with_withdrawal: isMethodDelivery === 'agendamentoRetirada' || isMethodDelivery === 'retirarBalcao' ? true : false,
+      payment_method: parsedMethodPayment?.keyword,
+      payment_method_id: parsedMethodPayment?.id || null,
+      payment_token: cardToken ? JSON.parse(cardToken) : null,
+      restaurant_id: parsedRestaurantId?.id,
+      buyer_address_id: parsedAddressClient?.id || null,
+      with_withdrawal: isMethodDelivery === 'agendamentoRetirada' || isMethodDelivery === 'retirarBalcao',
       details: "",
       coupon_code: "",
       rescue: 0,
       will_receive_sms: true,
-      order: orders
+      order: orders,
     };
 
-    const token = localStorage.getItem(tokenClient);
-    const config = {
-      headers: { Authorization: `Bearer ${token}` }
-    };
+    const config = { headers: { Authorization: `Bearer ${token}` } };
 
-    api_create_order.post('/orders', payload, config).then(res => {
-      setModalGen(res.data.pix_info)
-      if (res.data.pix_info) {
-        setOpenModal(true)
-      } else {
-        localStorage.removeItem(takeatBagKey);
-        // localStorage.removeItem(tokenClient);
-        localStorage.removeItem(MethodPaymentTakeat);
-        localStorage.removeItem(storageTakeat);
-        push(`/${params}/pedido-realizado`)
-      }
-    }).catch(err => console.log(err))
-  }
+    api_create_order.post('/orders', payload, config)
+      .then(res => {
+        setModalGen(res.data.pix_info);
+        if (res.data.pix_info) {
+          setOpenModal(true);
+        } else {
+          localStorage.removeItem(takeatBagKey);
+          localStorage.removeItem(MethodPaymentTakeat);
+          localStorage.removeItem(storageTakeat);
+          push(`/${params}/pedido-realizado`);
+          setLoading(false)
+        }
+      })
+      .catch(err => console.log(err.response.data));
+  };
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -166,7 +188,6 @@ export default function ContinueComponents({ params, route, clear, textButon, ta
       const interval = setInterval(() => {
         updateStorageData();
       }, 500);
-
 
       return () => {
         window.removeEventListener("storage", handleStorageChange);
@@ -260,9 +281,13 @@ export default function ContinueComponents({ params, route, clear, textButon, ta
           </SelectAddProducts>
         )}
         {!!finishOrder ? (
-          <AddProductsQuantity disabled={!(totalPrice > Number(active))} style={{ height: 48 }}>
-            <TextAddProductsQuantity disabled={!(totalPrice > Number(active))} onClick={handleCreateOrder}>
-              {!(totalPrice > Number(active)) ? `Pedido mín: ${formatPrice(`${active}`)}` : `${textButon || 'Continuar Pedido'}`}
+          <AddProductsQuantity style={{ height: 48 }}>
+            <TextAddProductsQuantity disabled={loading} onClick={handleCreateOrder}>
+              {
+                !(totalPrice > Number(active)) ? `Pedido mín: ${formatPrice(`${active}`)}`
+                  : <>
+                    {loading ? <Loader2 className='animate-spin flex w-full justify-center items-center' /> : textButon}
+                  </>}
             </TextAddProductsQuantity>
           </AddProductsQuantity>
         ) : (
