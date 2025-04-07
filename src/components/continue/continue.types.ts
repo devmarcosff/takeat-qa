@@ -31,8 +31,3 @@ export interface Product {
         categoryId: string;
     }[];
 }
-
-// Definição do tipo do carrinho recuperado do `localStorage`
-// interface Cart {
-//     products: Product[];
-// }

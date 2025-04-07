@@ -1,22 +1,19 @@
 "use client";
 import InternalPages from "@/components/uiComponents/InternalPageHeader/internal_pages.header";
+import AgendamentoDrawerComponent from "@/components/v2/entregas/agendamento.drawer";
 import Link from "next/link";
-import React from "react";
+import React, { useState } from "react";
 import { IconClock, IconDeliveryBag, IconDeliveryBagSchedule, IconDeliverySchedule, IconMotorcycle } from "takeat-design-system-ui-kit";
 
 interface Props {
   params: Promise<{ restaurants: string }>;
 }
 
-// INFORMAÇÃO DOS STATUS DA ENTREGA
-// 1 => Delivery
-// 2 => Retirar no Balcão
-// 3 => Agendamento Delivery
-// 4 => Agendamento Retirada
-
 export default function EntregaPage({ params }: Props) {
   const restaurant = React.use(params)?.restaurants;
   const methodDeliveryTakeat = `@methodDeliveryTakeat:${restaurant}`;
+  const [openDrawer, setOpenDrawer] = useState(false)
+  const [title, setTitle] = useState<string>('')
   const add = (e: string) => {
     localStorage.setItem(methodDeliveryTakeat, e)
   }
@@ -74,7 +71,10 @@ export default function EntregaPage({ params }: Props) {
             borderRadius: '50px'
           }} />
         </div>
-        <Link href={''} onClick={() => add('agendamentoDelivery')}
+        <Link href={''} onClick={() => {
+          setTitle('Agendamento Delivery')
+          setOpenDrawer(!openDrawer)
+        }}
           className="
           flex items-center justify-between w-full h-[60px]
           border border-takeat-neutral-light rounded-xl px-4
@@ -88,7 +88,10 @@ export default function EntregaPage({ params }: Props) {
             <span>13 min.</span>
           </div>
         </Link>
-        <Link href={''} onClick={() => add('agendamentoRetirada')}
+        <Link href={''} onClick={() => {
+          setTitle('Agendamento Retirada')
+          setOpenDrawer(!openDrawer)
+        }}
           className="
           flex items-center justify-between w-full h-[60px]
           border border-takeat-neutral-light rounded-xl px-4
@@ -103,6 +106,8 @@ export default function EntregaPage({ params }: Props) {
           </div>
         </Link>
       </div>
+
+      <AgendamentoDrawerComponent restaurant={restaurant} openDrawer={openDrawer} setOpenDrawer={setOpenDrawer} title={title} description="Escolha o dia e horário para o agendamento" />
     </InternalPages>
   );
 }

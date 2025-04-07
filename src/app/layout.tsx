@@ -23,7 +23,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="pt-br">
-      <body className={`${poppins.className} md:hidden`}>
+      <body className={`${poppins.className}`}>
         <Analytics />
         <ThemeProviderWrapper>
           <DeliveryProvider>

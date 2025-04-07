@@ -42,25 +42,25 @@ export default function PedidoConfirmadoPage({ params }: Props) {
   const [resumeCart] = useState<ICart[]>([])
 
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      const getAddressDelivery = localStorage.getItem(addressClientDeliveryTakeat);
-      const getMethodDeliveryTakeat = localStorage.getItem(methodDeliveryTakeat);
-      const getMethodPaymentTakeat = localStorage.getItem(MethodPaymentTakeat);
+    // if (typeof window !== "undefined") {
+    const getAddressDelivery = localStorage.getItem(addressClientDeliveryTakeat);
+    const getMethodDeliveryTakeat = localStorage.getItem(methodDeliveryTakeat);
+    const getMethodPaymentTakeat = localStorage.getItem(MethodPaymentTakeat);
 
-      if (getMethodDeliveryTakeat) {
-        setMethodDelivery(getMethodDeliveryTakeat);
-      }
-
-      if (getAddressDelivery) {
-        const parsedGetAddressDelivery = JSON.parse(getAddressDelivery);
-        setAddressDelivery(parsedGetAddressDelivery);
-      }
-
-      if (getMethodPaymentTakeat) {
-        const parsedGetMethodPaymentTakeat = JSON.parse(getMethodPaymentTakeat);
-        setParsedMethodPayment(parsedGetMethodPaymentTakeat);
-      }
+    if (getMethodDeliveryTakeat) {
+      setMethodDelivery(getMethodDeliveryTakeat);
     }
+
+    if (getAddressDelivery) {
+      const parsedGetAddressDelivery = JSON.parse(getAddressDelivery);
+      setAddressDelivery(parsedGetAddressDelivery);
+    }
+
+    if (getMethodPaymentTakeat) {
+      const parsedGetMethodPaymentTakeat = JSON.parse(getMethodPaymentTakeat);
+      setParsedMethodPayment(parsedGetMethodPaymentTakeat);
+    }
+    // }
   }, []);
 
   useEffect(() => {
