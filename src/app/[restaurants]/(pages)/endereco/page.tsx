@@ -15,7 +15,7 @@ export interface methodDeliveryProps {
 
 export default function EnderecoPage({ params }: Props) {
   const restaurant = React.use(params)?.restaurants;
-  const deliveryTakeatStorage = `@deliveryTakeatInfo:${restaurant}`;
+  const deliveryTakeatStorage = `@deliveryTakeatRestaurant:${restaurant}`;
   const [methodDelivery, setMethodDelivery] = useState<methodDeliveryProps>(
     {
       id: "",

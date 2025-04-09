@@ -15,7 +15,10 @@ export default function EntregaPage({ params }: Props) {
   const [openDrawer, setOpenDrawer] = useState(false)
   const [title, setTitle] = useState<string>('')
   const add = (e: string) => {
-    localStorage.setItem(methodDeliveryTakeat, e)
+    const parsedValue = {
+      method: e
+    }
+    localStorage.setItem(methodDeliveryTakeat, JSON.stringify(parsedValue))
   }
 
   return (
@@ -71,7 +74,7 @@ export default function EntregaPage({ params }: Props) {
             borderRadius: '50px'
           }} />
         </div>
-        <Link href={''} onClick={() => {
+        <button onClick={() => {
           setTitle('Agendamento Delivery')
           setOpenDrawer(!openDrawer)
         }}
@@ -87,8 +90,8 @@ export default function EntregaPage({ params }: Props) {
             <IconClock />
             <span>13 min.</span>
           </div>
-        </Link>
-        <Link href={''} onClick={() => {
+        </button>
+        <button onClick={() => {
           setTitle('Agendamento Retirada')
           setOpenDrawer(!openDrawer)
         }}
@@ -104,7 +107,7 @@ export default function EntregaPage({ params }: Props) {
             <IconClock />
             <span>13 min.</span>
           </div>
-        </Link>
+        </button>
       </div>
 
       <AgendamentoDrawerComponent restaurant={restaurant} openDrawer={openDrawer} setOpenDrawer={setOpenDrawer} title={title} description="Escolha o dia e horário para o agendamento" />

@@ -10,8 +10,13 @@ import {
   DrawerHeader,
   DrawerTitle
 } from "@/components/ui/drawer";
+import { Label } from "@/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { useDelivery } from "@/context/DeliveryContext";
+import { api_token_card } from "@/utils/apis";
 import { ptBR } from "date-fns/locale";
-import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 
 interface Props {
   openDrawer: boolean,
@@ -23,9 +28,15 @@ interface Props {
 
 export default function AgendamentoDrawerComponent({ openDrawer, setOpenDrawer, title, description, restaurant }: Props) {
   const methodDeliveryTakeat = `@methodDeliveryTakeat:${restaurant}`;
+  const deliveryTakeatRestaurant = `@deliveryTakeatRestaurant:${restaurant}`;
+  const tokenClient = `@tokenUserTakeat:${restaurant}`;
+  const [isScheduling, setIsScheduling] = useState<string[]>([])
   const [date, setDate] = useState<Date | undefined>(new Date())
-  const [hour, setHour] = useState<string>(`${new Date().getHours()}:${new Date().getMinutes()}`)
+  const [hour, setHour] = useState<string>(``)
   const [month, setMonth] = useState<number>(new Date().getMonth() + 1)
+  const { getRestaurants } = useDelivery()
+  const { push } = useRouter()
+
   const add = () => {
     const mountedAgendamento = {
       method: title,
@@ -34,7 +45,39 @@ export default function AgendamentoDrawerComponent({ openDrawer, setOpenDrawer, 
       hour: hour
     }
     localStorage.setItem(methodDeliveryTakeat, JSON.stringify(mountedAgendamento))
+    setOpenDrawer(false)
+    if (title === 'Agendamento Retirada') {
+      console.log('Agendamento Retirada')
+      push(`/${restaurant}/pagamento`)
+    } else {
+      console.log('Agendamento Delivery')
+      push(`/${restaurant}/endereco`)
+    }
   }
+
+  useEffect(() => {
+    if (!date) return;
+
+    const restaurantId = localStorage.getItem(deliveryTakeatRestaurant);
+    const parsedRestaurantId = restaurantId ? JSON.parse(restaurantId) : null;
+
+    const token = localStorage.getItem(tokenClient);
+    const config = {
+      headers: { Authorization: `Bearer ${token}` }
+    };
+
+    const formattedDay = date.toISOString();
+
+    api_token_card
+      .get(`/order-scheduling/available-times?restaurant_id=${parsedRestaurantId?.id}&day=${formattedDay}&with_withdrawal=false`, config)
+      .then((response) => {
+        setIsScheduling(response.data.times);
+      })
+      .catch((error) => {
+        console.log("Erro ao buscar horários:", error);
+      });
+  }, [date]);
+
   return (
     <Drawer open={openDrawer} onOpenChange={() => setOpenDrawer(!openDrawer)}>
       <DrawerContent>
@@ -58,23 +101,32 @@ export default function AgendamentoDrawerComponent({ openDrawer, setOpenDrawer, 
             />
           </div>
 
-          <div className="flex flex-col gap-1">
+          <div className="flex flex-col gap-3">
             <label htmlFor="time" className="text-sm font-medium text-gray-700">
-              Selecione o Horário
+              {isScheduling.length > 0 ? 'Selecione o Horário' : 'Nenhum horário disponível'}
             </label>
-            <input
-              type="time"
-              name="time"
-              required={true}
-              id="time"
-              onChange={(e) => setHour(e.target.value)}
-              className="border rounded-md px-3 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-takeat-primary-default"
-            />
+
+            <RadioGroup className="grid grid-cols-4 gap-3" onValueChange={(value) => setHour(value)}>
+              {isScheduling.map((item, index) => {
+                const time = new Date(item).toLocaleTimeString("pt-BR", {
+                  hour: "2-digit",
+                  minute: "2-digit"
+                })
+
+                return (
+                  <div key={index} className="flex items-center space-x-2">
+                    <RadioGroupItem value={item} id={`time-${index}`} />
+                    <Label htmlFor={`time-${index}`}>{time}</Label>
+                  </div>
+                )
+              })}
+            </RadioGroup>
+
           </div>
         </div>
 
         <DrawerFooter>
-          <Button onClick={() => add()}>
+          <Button onClick={() => add()} className="w-full">
             Agendar
           </Button>
           <DrawerClose asChild>

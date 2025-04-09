@@ -4,6 +4,7 @@ import ContinueComponents from "@/components/continue/continue.components";
 import { TakeatApp } from "@/components/theme/ThemeProviderWrapper";
 import InformationButton from "@/components/uiComponents/Buttons/informationButton.component";
 import InternalPages from "@/components/uiComponents/InternalPageHeader/internal_pages.header";
+import { Restaurant } from "@/types/restaurant.types";
 import { AnimatePresence, motion } from "framer-motion";
 import Link from "next/link";
 import { use, useEffect, useState } from "react";
@@ -31,10 +32,18 @@ export interface IClienteTakeat {
   tel: string
 }
 
+export interface IIsAgendamento {
+  day?: number,
+  hour?: string,
+  method?: string,
+  month?: number,
+}
+
 export default function ConfirmarPedidoPage({ params }: Props) {
   const restaurant = use(params)?.restaurants;
   const takeatBagKey = `@deliveryTakeat:${restaurant}TakeatBag`;
   const addressClientDeliveryTakeat = `@addressClientDeliveryTakeat:${restaurant}`;
+  const addressRestaurant = `@deliveryTakeatRestaurant:${restaurant}`;
   const MethodPaymentTakeat = `@methodPaymentTakeat:${restaurant}`;
   const clienteTakeat = `@clienteTakeat:${restaurant}`;
   const deliveryTakeat = `@deliveryTakeat:${restaurant}`;
@@ -42,7 +51,8 @@ export default function ConfirmarPedidoPage({ params }: Props) {
   const [resumeCart, setResumeCart] = useState<ICart[]>();
   const [isClienteTakeat, setIsClienteTakeat] = useState<IClienteTakeat>();
   const [parsedMethodPayment, setParsedMethodPayment] = useState<IPaymentsProps>();
-  const [methodDelivery, setMethodDelivery] = useState<string>();
+  const [methodDelivery, setMethodDelivery] = useState<IIsAgendamento>({});
+  const [addressDeliveryRestaurant, setAddressDeliveryRestaurant] = useState<Restaurant>()
   const [addressDelivery, setAddressDelivery] = useState<IAddress>({
     state: ``,
     city: ``,
@@ -57,11 +67,17 @@ export default function ConfirmarPedidoPage({ params }: Props) {
 
   useEffect(() => {
     if (typeof window !== "undefined") {
+      const addressDeliveryRestaurant = localStorage.getItem(addressRestaurant);
       const getTakeatBag = localStorage.getItem(takeatBagKey);
       const getAddressDelivery = localStorage.getItem(addressClientDeliveryTakeat);
       const getClienteTakeat = localStorage.getItem(clienteTakeat);
       const getMethodDeliveryTakeat = localStorage.getItem(methodDeliveryTakeat);
       const getMethodPaymentTakeat = localStorage.getItem(MethodPaymentTakeat);
+
+      if (addressDeliveryRestaurant) {
+        const parsedGetTakeatBag = JSON.parse(addressDeliveryRestaurant);
+        setAddressDeliveryRestaurant(parsedGetTakeatBag);
+      }
 
       if (getTakeatBag) {
         const parsedGetTakeatBag = JSON.parse(getTakeatBag);
@@ -69,7 +85,8 @@ export default function ConfirmarPedidoPage({ params }: Props) {
       }
 
       if (getMethodDeliveryTakeat) {
-        setMethodDelivery(getMethodDeliveryTakeat);
+        const parsedGetMethodDeliveryTakeat = JSON.parse(getMethodDeliveryTakeat);
+        setMethodDelivery(parsedGetMethodDeliveryTakeat);
       }
 
       if (getClienteTakeat) {
@@ -98,11 +115,13 @@ export default function ConfirmarPedidoPage({ params }: Props) {
   const TitleMethodPayment = (title: string, url: string) => {
     return (
       <div className="flex pb-3 items-center justify-between">
-        <h2 className="font-semibold text-lg">{title}</h2>
+        <h2 className={`font-semibold text-lg ${title === 'Retirada' && 'text-takeat-primary-default'}`}>{title}</h2>
         <Link className="font-semibold text-lg text-takeat-primary-default" href={`/${restaurant}/${url}`}>Alterar</Link>
       </div>
     )
   }
+
+  console.log(addressDeliveryRestaurant?.adress)
 
   return (
     <InternalPages title="Confirmar Pedido" button>
@@ -185,8 +204,8 @@ export default function ConfirmarPedidoPage({ params }: Props) {
         </div>
 
         <div className="pt-3">
-          {TitleMethodPayment('Delivery', 'entrega')}
-          {methodDelivery === 'delivery' ? (
+          {TitleMethodPayment(`${methodDelivery.method === 'retirarBalcao' ? 'Retirada' : methodDelivery.method === 'delivery' ? 'Delivery' : methodDelivery.method}`, 'entrega')}
+          {methodDelivery.method === 'delivery' || methodDelivery.method === 'Agendamento Delivery' ? (
             <div className="border-b pb-3">
               {!!addressDelivery.city && (
                 <div className="flex items-center gap-2 font-semibold">
@@ -204,9 +223,19 @@ export default function ConfirmarPedidoPage({ params }: Props) {
             <div className="border-b pb-3">
               <div className="flex items-center gap-2 font-semibold">
                 <IconLocationFilled className="text-2xl fill-takeat-neutral-dark" />
-                <span>
-                  {`${methodDelivery == 'retirarBalcao' ? 'Retirar no balcão' : methodDelivery == 'agendamentoDelivery' ? 'Agendamento de entrega' : methodDelivery == 'agendamentoRetirada' ? 'Agendamento de retirada' : 'Delivery'}`}
-                </span>
+                {
+                  addressDeliveryRestaurant?.adress && (
+                    <div>
+                      <div>
+                        <span>{`${addressDeliveryRestaurant.adress.street}, ${addressDeliveryRestaurant.adress.number}`}</span>
+                      </div>
+                      <div className="flex flex-col font-medium text-takeat-neutral-default">
+                        <span>{`${addressDeliveryRestaurant.adress.neighborhood}, ${addressDeliveryRestaurant.adress.city} - ${addressDeliveryRestaurant.adress.state}`}</span>
+                        <span>{`${addressDeliveryRestaurant.adress.complement}, ${addressDeliveryRestaurant.adress.zip_code}`}</span>
+                      </div>
+                    </div>
+                  )
+                }
               </div>
             </div>
           )}

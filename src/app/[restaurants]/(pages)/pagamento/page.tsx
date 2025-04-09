@@ -227,8 +227,6 @@ export default function PagamentoPage({ params }: Props) {
       }).finally(() => setIsLoading(false))
   };
 
-  console.log(methodDelivery)
-
   return (
     <InternalPages title="Pagamento" button>
 

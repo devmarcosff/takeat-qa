@@ -88,7 +88,7 @@ export default function AddressClientComponent({ params, methodDelivery }: Props
 
   useEffect(() => {
     const fetchRestaurant = async () => {
-      const restaurantTest = localStorage.getItem(`@deliveryTakeatInfo:${restaurant}`);
+      const restaurantTest = localStorage.getItem(`@deliveryTakeatRestaurant:${restaurant}`);
       const parsedRestaurantTest = JSON.parse(restaurantTest || '');
       if (!restaurantTest) return;
 
