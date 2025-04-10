@@ -12,7 +12,6 @@ import {
 } from "@/components/ui/drawer";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { useDelivery } from "@/context/DeliveryContext";
 import { api_token_card } from "@/utils/apis";
 import { ptBR } from "date-fns/locale";
 import { useRouter } from "next/navigation";
@@ -34,7 +33,6 @@ export default function AgendamentoDrawerComponent({ openDrawer, setOpenDrawer, 
   const [date, setDate] = useState<Date | undefined>(new Date())
   const [hour, setHour] = useState<string>(``)
   const [month, setMonth] = useState<number>(new Date().getMonth() + 1)
-  const { getRestaurants } = useDelivery()
   const { push } = useRouter()
 
   const add = () => {
@@ -47,10 +45,10 @@ export default function AgendamentoDrawerComponent({ openDrawer, setOpenDrawer, 
     localStorage.setItem(methodDeliveryTakeat, JSON.stringify(mountedAgendamento))
     setOpenDrawer(false)
     if (title === 'Agendamento Retirada') {
-      console.log('Agendamento Retirada')
+      // console.log('Agendamento Retirada')
       push(`/${restaurant}/pagamento`)
     } else {
-      console.log('Agendamento Delivery')
+      // console.log('Agendamento Delivery')
       push(`/${restaurant}/endereco`)
     }
   }

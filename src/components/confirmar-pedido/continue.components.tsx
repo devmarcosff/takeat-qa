@@ -96,7 +96,6 @@ export default function ContinueComponents({ params, textButon, onClearBag }: Pr
         </AddProductsQuantity>
       </ActionProducts>
 
-
       <Modal open={modalOpen} toggle={() => setModalOpen(!modalOpen)} style={{ height: "fit-content", overflow: "hidden" }}>
         <Modal.Header>
           <h1>Tem certeza que deseja limpar o carrinho?</h1>
@@ -130,7 +129,6 @@ export default function ContinueComponents({ params, textButon, onClearBag }: Pr
           </Button>
         </Modal.Footer>
       </Modal>
-
 
     </AddProductsContainer >
   )

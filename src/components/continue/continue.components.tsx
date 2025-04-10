@@ -1,4 +1,5 @@
-import { api_confirm_pix, api_create_order } from '@/utils/apis';
+import { IAgendamento } from '@/app/[restaurants]/(pages)/confirmar-pedido/page';
+import { api_confirm_pix, api_create_order, api_scheduling } from '@/utils/apis';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Copy, Loader2 } from 'lucide-react';
 import Link from 'next/link';
@@ -44,6 +45,8 @@ export default function ContinueComponents({ params, route, clear, textButon, ta
   const methodDelivery = `@methodDeliveryTakeat:${params}`
   const tokenCard = `@tokenCardUserTakeat:${params}`;
   const addressClientDelivery = `@addressClientDeliveryTakeat:${params}`;
+  const methodDeliveryTakeat = `@methodDeliveryTakeat:${params}`;
+  const useChange = `@useChange:${params}`;
   const [totalPrice, setTotalPrice] = useState<number>(0);
   const [active, setActive] = useState<number>(0)
   const [openModal, setOpenModal] = useState(false)
@@ -55,6 +58,8 @@ export default function ContinueComponents({ params, route, clear, textButon, ta
   const [parseAddress, setParseAddress] = useState<number>(0)
   const [isMethodDelivery, setIsMethodDelivery] = useState<string>('')
   const [loading, setLoading] = useState<boolean>(false)
+  const [scheduling, setScheduling] = useState<IAgendamento>({})
+  const [troco, setTroco] = useState<string>('')
   const { push } = useRouter();
 
   const updateStorageData = useCallback(() => {
@@ -74,6 +79,13 @@ export default function ContinueComponents({ params, route, clear, textButon, ta
   useEffect(() => {
     if (typeof window !== "undefined") {
       cardTokenRef.current = localStorage.getItem(tokenCard);
+
+
+      const getMethodDeliveryTakeat = localStorage.getItem(methodDeliveryTakeat);
+      if (getMethodDeliveryTakeat) {
+        const parsedMethodDeliveryTakeat = JSON.parse(getMethodDeliveryTakeat);
+        setScheduling(parsedMethodDeliveryTakeat)
+      }
 
       const storageRestaurantId = localStorage.getItem(deliveryTakeatRestaurant);
       restaurantIdRef.current = JSON.parse(`${storageRestaurantId}`);
@@ -126,39 +138,83 @@ export default function ContinueComponents({ params, route, clear, textButon, ta
       return orderItem;
     });
 
-    const payload = {
-      payment_method: parsedMethodPayment?.keyword,
-      payment_method_id: parsedMethodPayment?.id || null,
-      payment_token: cardToken ? JSON.parse(cardToken) : null,
-      restaurant_id: parsedRestaurantId?.id,
-      buyer_address_id: parsedAddressClient?.id || null,
-      with_withdrawal: isMethodDelivery === 'agendamentoRetirada' || isMethodDelivery === 'retirarBalcao',
-      details: "",
-      coupon_code: "",
-      rescue: 0,
-      will_receive_sms: true,
-      order: orders,
-    };
-
     const config = { headers: { Authorization: `Bearer ${token}` } };
 
-    api_create_order.post('/orders', payload, config)
-      .then(res => {
-        setModalGen(res.data.pix_info);
-        if (res.data.pix_info) {
-          setOpenModal(true);
-        } else {
-          localStorage.removeItem(takeatBagKey);
-          localStorage.removeItem(MethodPaymentTakeat);
-          localStorage.removeItem(storageTakeat);
-          push(`/${params}/pedido-realizado`);
-          setLoading(false)
-        }
-      })
-      .catch(err => {
-        setOpenErrorModal(true)
-        setErrorInfo((err.response.data.message))
-      });
+    if (scheduling.method === 'Agendamento Delivery' || scheduling.method === 'Agendamento Retirada') {
+      console.log('Realizando pedido "com" agendamento de entrega...');
+
+      const payload = {
+        payment_method: parsedMethodPayment?.keyword,
+        payment_method_id: parsedMethodPayment?.id || null,
+        payment_token: cardToken ? JSON.parse(cardToken) : null,
+        restaurant_id: parsedRestaurantId?.id,
+        buyer_address_id: parsedAddressClient?.id || null,
+        with_withdrawal: isMethodDelivery === 'agendamentoRetirada' || isMethodDelivery === 'retirarBalcao',
+        details: "",
+        coupon_code: "",
+        rescue: 0,
+        scheduled_time: scheduling.hour, // Se for agendamento de retirada
+        user_change: troco, // Se existir troco
+        will_receive_sms: true,
+        order: orders,
+      };
+
+      api_scheduling.post('/orders', payload, config)
+        .then(res => {
+          setModalGen(res.data.pix_info);
+          if (res.data.pix_info) {
+            setOpenModal(true);
+          } else {
+            localStorage.removeItem(takeatBagKey);
+            localStorage.removeItem(MethodPaymentTakeat);
+            localStorage.removeItem(storageTakeat);
+            push(`/${params}/pedido-realizado`);
+            setLoading(false)
+          }
+        })
+        .catch(err => {
+          setOpenErrorModal(true)
+          setErrorInfo((err.response.data.message))
+        });
+
+    } else {
+      console.log('Realizando pedido "sem" agendamento de entrega...');
+
+      const payload = {
+        payment_method: parsedMethodPayment?.keyword,
+        payment_method_id: parsedMethodPayment?.id || null,
+        payment_token: cardToken ? JSON.parse(cardToken) : null,
+        restaurant_id: parsedRestaurantId?.id,
+        buyer_address_id: parsedAddressClient?.id || null,
+        with_withdrawal: isMethodDelivery === 'agendamentoRetirada' || isMethodDelivery === 'retirarBalcao',
+        details: "",
+        coupon_code: "",
+        rescue: 0,
+        user_change: troco, // Se existir troco
+        will_receive_sms: true,
+        order: orders,
+      };
+
+      api_create_order.post('/orders', payload, config)
+        .then(res => {
+          setModalGen(res.data.pix_info);
+          if (res.data.pix_info) {
+            setOpenModal(true);
+          } else {
+            localStorage.removeItem(takeatBagKey);
+            localStorage.removeItem(MethodPaymentTakeat);
+            localStorage.removeItem(methodDeliveryTakeat);
+            localStorage.removeItem(storageTakeat);
+            localStorage.removeItem(useChange);
+            push(`/${params}/pedido-realizado`);
+            setLoading(false)
+          }
+        })
+        .catch(err => {
+          setOpenErrorModal(true)
+          setErrorInfo((err.response.data.message))
+        });
+    }
   };
 
   useEffect(() => {
@@ -171,6 +227,12 @@ export default function ContinueComponents({ params, route, clear, textButon, ta
       const parsedMethodDelivery = localStorage.getItem(methodDelivery);
       if (parsedMethodDelivery) {
         setIsMethodDelivery(parsedMethodDelivery);
+      }
+
+      const getTroco = localStorage.getItem(useChange);
+      if (getTroco) {
+        const parsedTroco = JSON.parse(getTroco);
+        setTroco(parsedTroco);
       }
 
       const address = localStorage.getItem(addressClientDelivery);

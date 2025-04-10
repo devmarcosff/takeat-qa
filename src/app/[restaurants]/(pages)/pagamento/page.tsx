@@ -1,5 +1,6 @@
 "use client";
 import LoadingTakeat from "@/components/theme/loading.component";
+import { Button } from "@/components/ui/button";
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Drawer, DrawerClose, DrawerContent, DrawerFooter, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
 import InternalPages from "@/components/uiComponents/InternalPageHeader/internal_pages.header";
@@ -64,7 +65,9 @@ export default function PagamentoPage({ params }: Props) {
   const [openResultDialog, setOpenResultDialog] = useState(false);
   const [acceptTerms, setAcceptTerms] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [openTroco, setOpenTroco] = useState(false);
   const [methodDelivery, setMethodDelivery] = useState<string>('');
+  const [troco, setTroco] = useState<string>('');
   const [paymentStatus, setPaymentStatus] = useState<"success" | "error" | null>(null);
 
   const [state, setState] = useState<ICardProps>({
@@ -152,11 +155,18 @@ export default function PagamentoPage({ params }: Props) {
       method_online: method.restaurant_method.map((restaurantMethod) => restaurantMethod.delivery_accepts).includes(true),
       restaurant_method: method.restaurant_method,
     };
-    if (method.keyword === "credit_card_auto") {
+
+    if (method.keyword === 'dinheiro') {
+      setOpenTroco(true)
       localStorage.setItem(MethodPaymentTakeat, JSON.stringify(methodPayload));
-      setOpenDrawer(true);
     } else {
-      localStorage.setItem(MethodPaymentTakeat, JSON.stringify(methodPayload));
+      if (method.keyword === "credit_card_auto") {
+        localStorage.setItem(MethodPaymentTakeat, JSON.stringify(methodPayload));
+        setOpenDrawer(true);
+      } else {
+        localStorage.setItem(MethodPaymentTakeat, JSON.stringify(methodPayload));
+        push(`/${restaurant}/confirmar-pedido`);
+      }
     }
   };
 
@@ -254,7 +264,7 @@ export default function PagamentoPage({ params }: Props) {
 
         <h2 className="font-semibold text-lg mt-4">{methodDelivery === "delivery" || methodDelivery === "agendamentoDelivery" ? 'Pagar na Entrega' : 'Pagar na retirada'}</h2>
         {offlinePayments.map((method) => (
-          <Link href={`/${restaurant}/confirmar-pedido`} key={method.id} onClick={() => handlePaymentClick(method)}
+          <button key={method.id} onClick={() => handlePaymentClick(method)}
             className="flex items-center justify-between w-full h-[60px] border border-takeat-neutral-light rounded-xl px-4 my-3">
             <div className="flex items-center gap-3">
               {
@@ -264,7 +274,7 @@ export default function PagamentoPage({ params }: Props) {
               }
               <span>{method.name}</span>
             </div>
-          </Link>
+          </button>
         ))}
       </div>
 
@@ -343,6 +353,30 @@ export default function PagamentoPage({ params }: Props) {
             <Lottie loop={false} animationData={paymentStatus === "success" ? successAnimation : errorAnimation} className="w-40 h-40 mx-auto" />
             <p className="text-center font-semibold text-sm">{paymentStatus === "success" ? "Seu cartão foi adicionado e validado com sucesso. Agora você pode utilizá-lo para pagamentos." : "Verifique se os dados do cartão estão corretos ou tente outra forma de pagamento."}</p>
           </DialogTitle>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal para Troco */}
+      <Dialog open={openTroco} onOpenChange={setOpenTroco}>
+        <DialogContent>
+          <DialogTitle>Deseja troco?</DialogTitle>
+          <div>
+            <div className="border rounded-lg p-2 w-full font-normal flex items-center gap-2 my-6">
+              <span className="text-takeat-neutral-light">R$</span>
+              <input type="text" placeholder="50" onChange={e => setTroco(e.target.value)} />
+            </div>
+
+            <div className="flex gap-2 items-center justify-center w-full">
+              <Button className="w-full" variant={'outline'} onClick={() => {
+                localStorage.setItem(`@useChange:${restaurant}`, '0');
+                push(`/${restaurant}/confirmar-pedido`)
+              }}>Sem troco</Button>
+              <Button className="w-full" disabled={troco.length == 0} onClick={() => {
+                localStorage.setItem(`@useChange:${restaurant}`, troco);
+                push(`/${restaurant}/confirmar-pedido`);
+              }}>Confirmar</Button>
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
 

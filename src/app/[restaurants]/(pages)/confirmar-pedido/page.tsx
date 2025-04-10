@@ -32,7 +32,7 @@ export interface IClienteTakeat {
   tel: string
 }
 
-export interface IIsAgendamento {
+export interface IAgendamento {
   day?: number,
   hour?: string,
   method?: string,
@@ -42,6 +42,7 @@ export interface IIsAgendamento {
 export default function ConfirmarPedidoPage({ params }: Props) {
   const restaurant = use(params)?.restaurants;
   const takeatBagKey = `@deliveryTakeat:${restaurant}TakeatBag`;
+  const useChange = `@useChange:${restaurant}`;
   const addressClientDeliveryTakeat = `@addressClientDeliveryTakeat:${restaurant}`;
   const addressRestaurant = `@deliveryTakeatRestaurant:${restaurant}`;
   const MethodPaymentTakeat = `@methodPaymentTakeat:${restaurant}`;
@@ -51,8 +52,9 @@ export default function ConfirmarPedidoPage({ params }: Props) {
   const [resumeCart, setResumeCart] = useState<ICart[]>();
   const [isClienteTakeat, setIsClienteTakeat] = useState<IClienteTakeat>();
   const [parsedMethodPayment, setParsedMethodPayment] = useState<IPaymentsProps>();
-  const [methodDelivery, setMethodDelivery] = useState<IIsAgendamento>({});
+  const [methodDelivery, setMethodDelivery] = useState<IAgendamento>({});
   const [addressDeliveryRestaurant, setAddressDeliveryRestaurant] = useState<Restaurant>()
+  const [troco, setTroco] = useState('')
   const [addressDelivery, setAddressDelivery] = useState<IAddress>({
     state: ``,
     city: ``,
@@ -69,6 +71,7 @@ export default function ConfirmarPedidoPage({ params }: Props) {
     if (typeof window !== "undefined") {
       const addressDeliveryRestaurant = localStorage.getItem(addressRestaurant);
       const getTakeatBag = localStorage.getItem(takeatBagKey);
+      const getTroco = localStorage.getItem(useChange);
       const getAddressDelivery = localStorage.getItem(addressClientDeliveryTakeat);
       const getClienteTakeat = localStorage.getItem(clienteTakeat);
       const getMethodDeliveryTakeat = localStorage.getItem(methodDeliveryTakeat);
@@ -82,6 +85,11 @@ export default function ConfirmarPedidoPage({ params }: Props) {
       if (getTakeatBag) {
         const parsedGetTakeatBag = JSON.parse(getTakeatBag);
         setResumeCart(parsedGetTakeatBag.products);
+      }
+
+      if (getTroco) {
+        const parsedTroco = JSON.parse(getTroco);
+        setTroco(parsedTroco);
       }
 
       if (getMethodDeliveryTakeat) {
@@ -121,7 +129,15 @@ export default function ConfirmarPedidoPage({ params }: Props) {
     )
   }
 
-  console.log(addressDeliveryRestaurant?.adress)
+  console.log(parsedMethodPayment?.keyword === 'dinheiro' && `Troco paga: R$ ${troco}`)
+
+  const PaymentInfo = () => {
+    if (parsedMethodPayment?.keyword == 'dinheiro') {
+      return `Troco para: ${formatPrice(troco)}`
+    } else if (parsedMethodPayment?.keyword !== 'credit_card_auto' && parsedMethodPayment?.keyword !== 'pix_auto') {
+      return `Pagamento na entrega`
+    } else return `Pagamento online`
+  }
 
   return (
     <InternalPages title="Confirmar Pedido" button>
@@ -197,7 +213,7 @@ export default function ConfirmarPedidoPage({ params }: Props) {
                 }
                 <span className="font-semibold uppercase">{parsedMethodPayment?.name}</span>
               </div>
-              <span>{parsedMethodPayment?.method_online == true ? 'Pagamento Online' : 'Pagamento na entrega'}</span>
+              <span>{PaymentInfo()}</span>
             </div>
             <InformationButton onClick={() => alert('Adicionar desconto')} title="Adicionar desconto" icon="IconTicketFilled" fill="#7a7a7a" arrow />
           </div>

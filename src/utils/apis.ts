@@ -62,3 +62,10 @@ export const api_Club = axios.create({
     "Content-Type": "application/json",
   },
 });
+
+export const api_scheduling = axios.create({
+  baseURL: process.env.NEXT_PUBLIC_API_SCHEDULING,
+  headers: {
+    "Content-Type": "application/json",
+  },
+});
