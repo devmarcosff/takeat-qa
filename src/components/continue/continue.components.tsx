@@ -56,10 +56,10 @@ export default function ContinueComponents({ params, route, clear, textButon, ta
   const [errorInfo, setErrorInfo] = useState<string>('')
   const [taxService, setTaxService] = useState<number>()
   const [parseAddress, setParseAddress] = useState<number>(0)
-  const [isMethodDelivery, setIsMethodDelivery] = useState<string>('')
+  const [isMethodDelivery, setIsMethodDelivery] = useState<IAgendamento>({})
   const [loading, setLoading] = useState<boolean>(false)
   const [scheduling, setScheduling] = useState<IAgendamento>({})
-  const [troco, setTroco] = useState<string>('')
+  const [troco, setTroco] = useState<number>(0)
   const { push } = useRouter();
 
   const updateStorageData = useCallback(() => {
@@ -140,25 +140,23 @@ export default function ContinueComponents({ params, route, clear, textButon, ta
 
     const config = { headers: { Authorization: `Bearer ${token}` } };
 
+    const payload = {
+      payment_method: parsedMethodPayment?.keyword, // Método de pagamento
+      payment_method_id: parsedMethodPayment?.id || null, // ID do método de pagamento
+      payment_token: cardToken ? JSON.parse(cardToken) : null, //  Token do cartão
+      restaurant_id: parsedRestaurantId?.id, // ID do restaurante
+      buyer_address_id: parsedAddressClient?.id || null, // Se Delivery ou agendamento de Delivery
+      with_withdrawal: isMethodDelivery.method === 'Agendamento Retirada' || isMethodDelivery.method === 'retirarBalcao' ? true : false, // Se for agendamento de entrega
+      will_receive_sms: true, // Se receber SMS
+      details: "", // Detalhes do pedido
+      coupon_code: "", // Código do cupom
+      rescue: 0, // Resgate
+      scheduled_time: scheduling.hour || '', // Se for agendamento de retirada
+      user_change: troco || 0, // Se existir troco
+      order: orders, // Objeto de produtos
+    };
+
     if (scheduling.method === 'Agendamento Delivery' || scheduling.method === 'Agendamento Retirada') {
-      console.log('Realizando pedido "com" agendamento de entrega...');
-
-      const payload = {
-        payment_method: parsedMethodPayment?.keyword,
-        payment_method_id: parsedMethodPayment?.id || null,
-        payment_token: cardToken ? JSON.parse(cardToken) : null,
-        restaurant_id: parsedRestaurantId?.id,
-        buyer_address_id: parsedAddressClient?.id || null,
-        with_withdrawal: isMethodDelivery === 'agendamentoRetirada' || isMethodDelivery === 'retirarBalcao',
-        details: "",
-        coupon_code: "",
-        rescue: 0,
-        scheduled_time: scheduling.hour, // Se for agendamento de retirada
-        user_change: troco, // Se existir troco
-        will_receive_sms: true,
-        order: orders,
-      };
-
       api_scheduling.post('/orders', payload, config)
         .then(res => {
           setModalGen(res.data.pix_info);
@@ -178,23 +176,6 @@ export default function ContinueComponents({ params, route, clear, textButon, ta
         });
 
     } else {
-      console.log('Realizando pedido "sem" agendamento de entrega...');
-
-      const payload = {
-        payment_method: parsedMethodPayment?.keyword,
-        payment_method_id: parsedMethodPayment?.id || null,
-        payment_token: cardToken ? JSON.parse(cardToken) : null,
-        restaurant_id: parsedRestaurantId?.id,
-        buyer_address_id: parsedAddressClient?.id || null,
-        with_withdrawal: isMethodDelivery === 'agendamentoRetirada' || isMethodDelivery === 'retirarBalcao',
-        details: "",
-        coupon_code: "",
-        rescue: 0,
-        user_change: troco, // Se existir troco
-        will_receive_sms: true,
-        order: orders,
-      };
-
       api_create_order.post('/orders', payload, config)
         .then(res => {
           setModalGen(res.data.pix_info);
@@ -224,8 +205,9 @@ export default function ContinueComponents({ params, route, clear, textButon, ta
         setActive(Number(parsedStorage));
       }
 
-      const parsedMethodDelivery = localStorage.getItem(methodDelivery);
-      if (parsedMethodDelivery) {
+      const getMethodDelivery = localStorage.getItem(methodDelivery);
+      if (getMethodDelivery) {
+        const parsedMethodDelivery = JSON.parse(getMethodDelivery);
         setIsMethodDelivery(parsedMethodDelivery);
       }
 
@@ -271,7 +253,7 @@ export default function ContinueComponents({ params, route, clear, textButon, ta
 
 
   const HeightCheckout = () => {
-    if (isMethodDelivery === "delivery") {
+    if (isMethodDelivery.method === "delivery") {
       return 170
     } else {
       return 120
@@ -298,7 +280,7 @@ export default function ContinueComponents({ params, route, clear, textButon, ta
   return (
     <AddProductsContainer flex_direction={"column"} height={HeightCheckout()}>
       <AddProductsPriceItem>
-        {isMethodDelivery === "delivery" && (
+        {isMethodDelivery.method === "delivery" && (
           <>
             <AddProductsPriceInfoItem textsize={16}>
               <span>Subtotal:</span>
@@ -321,7 +303,7 @@ export default function ContinueComponents({ params, route, clear, textButon, ta
               exit={{ x: -20, opacity: 0 }}
               transition={{ duration: 0.3, ease: "backInOut" }}
             >
-              {isMethodDelivery === "delivery" ? formatPrice(totalPrice + parseAddress) : formatPrice(totalPrice)}
+              {isMethodDelivery.method === "delivery" ? formatPrice(totalPrice + parseAddress) : formatPrice(totalPrice)}
             </motion.span>
           </AnimatePresence>
         </AddProductsPriceInfoItem>

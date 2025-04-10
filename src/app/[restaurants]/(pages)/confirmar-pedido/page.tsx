@@ -54,7 +54,7 @@ export default function ConfirmarPedidoPage({ params }: Props) {
   const [parsedMethodPayment, setParsedMethodPayment] = useState<IPaymentsProps>();
   const [methodDelivery, setMethodDelivery] = useState<IAgendamento>({});
   const [addressDeliveryRestaurant, setAddressDeliveryRestaurant] = useState<Restaurant>()
-  const [troco, setTroco] = useState('')
+  const [troco, setTroco] = useState<number>(0)
   const [addressDelivery, setAddressDelivery] = useState<IAddress>({
     state: ``,
     city: ``,
@@ -124,16 +124,19 @@ export default function ConfirmarPedidoPage({ params }: Props) {
     return (
       <div className="flex pb-3 items-center justify-between">
         <h2 className={`font-semibold text-lg ${title === 'Retirada' && 'text-takeat-primary-default'}`}>{title}</h2>
-        <Link className="font-semibold text-lg text-takeat-primary-default" href={`/${restaurant}/${url}`}>Alterar</Link>
+        <Link
+          className="font-semibold text-lg text-takeat-primary-default"
+          href={`/${restaurant}/${url}`}
+
+          onClick={() => { if (url == 'pagamento') return localStorage.removeItem(`@useChange:${restaurant}`) }}
+        >Alterar</Link>
       </div>
     )
   }
 
-  console.log(parsedMethodPayment?.keyword === 'dinheiro' && `Troco paga: R$ ${troco}`)
-
   const PaymentInfo = () => {
     if (parsedMethodPayment?.keyword == 'dinheiro') {
-      return `Troco para: ${formatPrice(troco)}`
+      return `Troco para: ${formatPrice(troco || 0)}`
     } else if (parsedMethodPayment?.keyword !== 'credit_card_auto' && parsedMethodPayment?.keyword !== 'pix_auto') {
       return `Pagamento na entrega`
     } else return `Pagamento online`
