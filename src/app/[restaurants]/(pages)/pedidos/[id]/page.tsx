@@ -49,7 +49,7 @@ export default function InfoPedidos({ params }: Props) {
     return (
       <div className="flex pb-3 items-center justify-between">
         <h2 className="font-semibold text-lg">{title}</h2>
-        <Link className="font-semibold text-lg text-takeat-primary-default" href={`/${restaurant}/${url}`}>Alterar</Link>
+        <Link className="font-semibold !text-sm text-takeat-primary-default" href={`/${restaurant}/${url}`}>Alterar</Link>
       </div>
     )
   }

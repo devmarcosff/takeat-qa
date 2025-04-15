@@ -10,6 +10,7 @@ import Link from "next/link";
 import { use, useEffect, useState } from "react";
 import { formatPrice, IconCardFront, IconLocationFilled, IconMoney, IconPix, IconRoundChat, IconUserFilled } from "takeat-design-system-ui-kit";
 import { IPaymentsProps } from "../pagamento/page";
+import CashbackDrawer from "./cashback.drawer";
 
 interface Props {
   params: Promise<{ restaurants: string }>;
@@ -55,6 +56,7 @@ export default function ConfirmarPedidoPage({ params }: Props) {
   const [methodDelivery, setMethodDelivery] = useState<IAgendamento>({});
   const [addressDeliveryRestaurant, setAddressDeliveryRestaurant] = useState<Restaurant>()
   const [troco, setTroco] = useState<number>(0)
+  const [openDrawer, setOpenDrawer] = useState<boolean>(false)
   const [addressDelivery, setAddressDelivery] = useState<IAddress>({
     state: ``,
     city: ``,
@@ -125,7 +127,7 @@ export default function ConfirmarPedidoPage({ params }: Props) {
       <div className="flex pb-3 items-center justify-between">
         <h2 className={`font-semibold text-lg ${title === 'Retirada' && 'text-takeat-primary-default'}`}>{title}</h2>
         <Link
-          className="font-semibold text-lg text-takeat-primary-default"
+          className="font-semibold text-sm md:text-[16px] text-takeat-primary-default"
           href={`/${restaurant}/${url}`}
           onClick={() => { if (url == 'pagamento') return localStorage.removeItem(`@useChange:${restaurant}`) }}
         >Alterar</Link>
@@ -218,7 +220,7 @@ export default function ConfirmarPedidoPage({ params }: Props) {
               </div>
               <span>{PaymentInfo()}</span>
             </div>
-            <InformationButton onClick={() => alert('Adicionar desconto')} title="Adicionar desconto" icon="IconTicketFilled" fill="#7a7a7a" arrow />
+            <InformationButton onClick={() => setOpenDrawer(!openDrawer)} title="Adicionar desconto" icon="IconTicketFilled" fill="#7a7a7a" arrow />
           </div>
         </div>
 
@@ -277,6 +279,7 @@ export default function ConfirmarPedidoPage({ params }: Props) {
       </div>
 
       <ContinueComponents params={restaurant} route="pedido-realizado" finishOrder textButon="Enviar Pedido" />
+      <CashbackDrawer openDrawer={openDrawer} setOpenDrawer={() => setOpenDrawer(!openDrawer)} />
     </InternalPages>
   );
 } 

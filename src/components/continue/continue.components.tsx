@@ -285,7 +285,7 @@ export default function ContinueComponents({ params, route, clear, textButon, ta
   return (
     <AddProductsContainer flex_direction={"column"} height={HeightCheckout()}>
       <AddProductsPriceItem>
-        {isMethodDelivery.method === "delivery" || isMethodDelivery.method === "Agendamento Delivery" && (
+        {isMethodDelivery.method === "delivery" ? (
           <>
             <AddProductsPriceInfoItem textsize={16}>
               <span>Subtotal:</span>
@@ -293,11 +293,22 @@ export default function ContinueComponents({ params, route, clear, textButon, ta
             </AddProductsPriceInfoItem>
             <AddProductsPriceInfoItem textsize={16}>
               <span>Taxa de entrega:</span>
-              {/* <span>{formatPrice(String(taxService)) || formatPrice(String(parseAddress))}</span> */}
-              <span>R$ {taxService || parseAddress}</span>
+              <span>{formatPrice(parseAddress)}</span>
             </AddProductsPriceInfoItem>
           </>
-        )}
+        ) : isMethodDelivery.method === "Agendamento Delivery" ? (
+          <>
+            <AddProductsPriceInfoItem textsize={16}>
+              <span>Subtotal:</span>
+              <span>{formatPrice(totalPrice)}</span>
+            </AddProductsPriceInfoItem>
+            <AddProductsPriceInfoItem textsize={16}>
+              <span>Taxa de entrega:</span>
+              <span>{formatPrice(parseAddress)}</span>
+            </AddProductsPriceInfoItem>
+          </>
+        ) : ''
+        }
         <AddProductsPriceInfoItem weight={"600"}>
           <span>Total:</span>
           <AnimatePresence mode="popLayout">
@@ -308,7 +319,7 @@ export default function ContinueComponents({ params, route, clear, textButon, ta
               exit={{ x: -20, opacity: 0 }}
               transition={{ duration: 0.3, ease: "backInOut" }}
             >
-              {isMethodDelivery.method === "delivery" ? formatPrice(totalPrice + parseAddress) : formatPrice(totalPrice)}
+              {isMethodDelivery.method === "delivery" || isMethodDelivery.method === "Agendamento Delivery" ? formatPrice(totalPrice + parseAddress) : formatPrice(totalPrice)}
             </motion.span>
           </AnimatePresence>
         </AddProductsPriceInfoItem>

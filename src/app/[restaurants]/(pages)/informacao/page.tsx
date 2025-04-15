@@ -80,6 +80,7 @@ export default function ProductPage({ params }: Props) {
                   onFocus={() => setIsFocused({ tel: "tel" })}
                   className="w-full bg-transparent"
                   placeholder="DDD + seu número"
+                  inputMode="numeric"
                   {...phone}
                   disabled={isDisabled}
                 />
