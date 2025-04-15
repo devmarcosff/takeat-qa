@@ -6,12 +6,13 @@ interface ImageInternalContainerProps {
   img: string;
 }
 
-export const ProductsContainer = styled.section<{ parsedbag: number }>`
-${({ theme, parsedbag }) => css`
+export const ProductsContainer = styled.section<{ parsedbag: number, search?: number }>`
+${({ theme, parsedbag, search }) => css`
   padding: 0 20px 40px 20px;
   padding-bottom: ${parsedbag > 0 ? "120px" : "70px"};
   padding-top: 24px;
   background-color: ${theme.colors.neutral.lightest};
+  height: ${search || 0 > 0 ? "100vh" : "100%"};
 `}`;
 
 export const CategoryContainer = styled.div`
@@ -105,15 +106,15 @@ export const ProductDetails = styled.div`
   }
 `;
 
-export const ProductPrice = styled.p`
+export const ProductPrice = styled.p<{ delivery_price?: string }>`
   font-size: 16px !important;
   font-weight: 600;
-  color: ${({ theme }) => theme.colors.green.lighter} !important;
+  color: ${({ delivery_price }) => delivery_price ? '#50A773' : '#000'} !important;
 
   span {
     font-size: 0.875rem;
     text-decoration: line-through;
-    color: ${({ theme }) => theme.colors.neutral.dark};
+    color: #545454;
     margin-left: 6px;
   }
 `;

@@ -12,7 +12,7 @@ import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
 import Cards from "react-credit-cards-2";
 import "react-credit-cards-2/dist/es/styles-compiled.css";
-import { IconCardFront, IconMoney, IconPix, maskString } from "takeat-design-system-ui-kit";
+import { IconCardFront, IconMoney, IconPix } from "takeat-design-system-ui-kit";
 import errorAnimation from "../../../../../public/assets/erroranimation.json";
 import successAnimation from "../../../../../public/assets/succesanimation.json";
 const Lottie = dynamic(() => import("lottie-react"), { ssr: false });
@@ -84,6 +84,8 @@ export default function PagamentoPage({ params }: Props) {
       const storageClientCard = localStorage.getItem(clientCard)
       const parsedCardClient = JSON.parse(`${storageClientCard}`)
       if (storageClientCard) setState(parsedCardClient)
+
+      console.log(parsedCardClient)
 
       try {
         const res = await api_delivery.get(`/${restaurant}`);
@@ -296,20 +298,20 @@ export default function PagamentoPage({ params }: Props) {
             {/* Inputs do cartão */}
             <div className="flex flex-col gap-3 w-full mt-3">
               <label htmlFor="number" className="font-medium">Número do cartão</label>
-              <input id="number" placeholder="Número do cartão" className="border rounded-lg p-2 w-full" type="text" value={maskString(state.number)} onChange={(e) => setState({ ...state, number: e.target.value })} onFocus={handleInputFocus} />
+              <input id="number" maxLength={16} inputMode="numeric" pattern="[0-9]*" placeholder="Número do cartão" className="border rounded-lg p-2 w-full" type="text" value={state.number} onChange={(e) => setState({ ...state, number: e.target.value })} onFocus={handleInputFocus} />
 
               <div className="flex gap-3">
                 <div className="w-1/3">
                   <label htmlFor="expiryM" className="font-medium">Mês</label>
-                  <input id="expiryM" placeholder="12" className="border rounded-lg p-2 w-full" type="text" value={state.expiryM} onChange={(e) => setState({ ...state, expiryM: e.target.value })} onFocus={handleInputFocus} />
+                  <input id="expiryM" maxLength={2} inputMode="numeric" pattern="[0-9]*" placeholder="12" className="border rounded-lg p-2 w-full" type="text" value={state.expiryM} onChange={(e) => setState({ ...state, expiryM: e.target.value })} onFocus={handleInputFocus} />
                 </div>
                 <div className="w-1/3">
                   <label htmlFor="expiryA" className="font-medium">Ano</label>
-                  <input id="expiryA" placeholder="25" className="border rounded-lg p-2 w-full" type="text" value={state.expiryA} onChange={(e) => setState({ ...state, expiryA: e.target.value })} onFocus={handleInputFocus} />
+                  <input id="expiryA" maxLength={2} inputMode="numeric" pattern="[0-9]*" placeholder="25" className="border rounded-lg p-2 w-full" type="text" value={state.expiryA} onChange={(e) => setState({ ...state, expiryA: e.target.value })} onFocus={handleInputFocus} />
                 </div>
                 <div className="w-1/3">
                   <label htmlFor="cvc" className="font-medium">CVC</label>
-                  <input id="cvc" placeholder="591" className="border rounded-lg p-2 w-full" type="text" value={state.cvc} onChange={(e) => setState({ ...state, cvc: e.target.value })} onFocus={handleInputFocus} />
+                  <input id="cvc" maxLength={3} inputMode="numeric" pattern="[0-9]*" placeholder="591" className="border rounded-lg p-2 w-full" type="text" value={state.cvc} onChange={(e) => setState({ ...state, cvc: e.target.value })} onFocus={handleInputFocus} />
                 </div>
               </div>
 
@@ -363,7 +365,7 @@ export default function PagamentoPage({ params }: Props) {
           <div>
             <div className="border rounded-lg p-2 w-full font-normal flex items-center gap-2 my-6">
               <span className="text-takeat-neutral-light">R$</span>
-              <input type="text" placeholder="50" onChange={e => setTroco(e.target.value)} />
+              <input type="tel" inputMode="numeric" pattern="[0-9]*" placeholder="50" onChange={e => setTroco(e.target.value)} />
             </div>
 
             <div className="flex gap-2 items-center justify-center w-full">

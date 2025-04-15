@@ -1,6 +1,5 @@
 import { Category } from "@/types/categories.types";
 import { EmblaOptionsType } from "embla-carousel";
-import Autoplay from "embla-carousel-autoplay";
 import useEmblaCarousel from "embla-carousel-react";
 import { useRef, useState } from "react";
 import { Logo } from "../header/header.components";
@@ -30,7 +29,7 @@ export default function CategoriesRestaurant({ categories, scrolling }: Props) {
     slidesToScroll: 1,
     containScroll: "trimSnaps",
   };
-  const [emblaRef] = useEmblaCarousel(OPTIONS, [Autoplay()]);
+  const [emblaRef] = useEmblaCarousel(OPTIONS);
 
   const [checkCategorie, setCheckCategorie] = useState<string>()
   const height = scrolling * 30;

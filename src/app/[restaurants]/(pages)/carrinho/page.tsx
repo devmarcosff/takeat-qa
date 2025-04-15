@@ -18,11 +18,10 @@ export default function ProductPage({ params }: Props) {
   const restaurant = React.use(params).restaurants;
   const [bag, setBag] = useState<ICart[]>([]);
   const [lastQuantities, setLastQuantities] = useState<Record<string, number>>({});
-  const burger = "/assets/burger.svg";
-  const takeatBagKey = `@deliveryTakeat:${restaurant}TakeatBag`;
 
   useEffect(() => {
     if (typeof window !== "undefined") {
+      const takeatBagKey = `@deliveryTakeat:${restaurant}TakeatBag`;
       const storedBag = localStorage.getItem(takeatBagKey);
       const parsedBag = storedBag ? JSON.parse(storedBag)?.products || [] : [];
 
@@ -38,6 +37,8 @@ export default function ProductPage({ params }: Props) {
   const clearBag = () => {
     setBag([]);
   };
+
+  console.log(bag)
 
   const updateQuantity = ({ index, newQuantity }: { index: number, newQuantity: number }) => {
     setBag((prevBag) => {
@@ -83,9 +84,9 @@ export default function ProductPage({ params }: Props) {
                         <TakeatApp key={index}>
                           <div className="py-3">
                             <div className="flex gap-3">
-                              <div className="flex items-center flex-col gap-1 w-full max-w-28">
-                                <div className="w-28">
-                                  <Image src={burger} width={112} height={112} alt="test" className="w-full rounded-lg shadow-md" />
+                              <div className="flex items-start flex-col gap-1 w-full max-w-20">
+                                <div className="w-[74px] h-[74px] overflow-hidden rounded-lg">
+                                  <Image src={item.img} width={120} height={120} alt={`${item.img}`} className="w-[74px] h-[74px] rounded-lg" />
                                 </div>
                                 {/* <span className="text-takeat-primary-default font-semibold flex items-center justify-center gap-1 w-full"><IconPencilFilled className="fill-takeat-primary-default text-lg" /> Editar</span> */}
                               </div>
@@ -115,7 +116,7 @@ export default function ProductPage({ params }: Props) {
                                       {quantity === 1 ? <IconTrashFilled className="text-md fill-takeat-primary-default text-[28px]" /> : <RiSubtractLine className="text-md" />}
                                     </button>
 
-                                    <div className="relative rounded-full w-5 h-5 flex items-center justify-center overflow-hidden">
+                                    <div className="relative rounded-full w-12 h-5 flex items-center justify-center overflow-hidden">
                                       <AnimatePresence mode="popLayout">
                                         <motion.span
                                           key={quantity}

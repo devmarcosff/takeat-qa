@@ -23,9 +23,10 @@ export default function MenuComponent({ params }: Props) {
     const parsedBag = storedBag ? JSON.parse(storedBag)?.products || [] : [];
 
     const total = parsedBag.reduce((acc: number, item: ICart) => acc + (item.price * item.qtd), 0);
-    const qtd = parsedBag.reduce((acc: number, item: ICart) => acc + (item.qtd), 0);
+    // const qtd = parsedBag.reduce((acc: number, item: ICart) => acc + (item.qtd), 0);
+    // const qtd = parsedBag.reduce((acc: number, item: ICart) => acc + Math.ceil(item.qtd), 0);
     setCart(total);
-    setQtd(qtd)
+    setQtd(parsedBag.length)
   }, [takeatBagKey]);
 
   useEffect(() => {
@@ -62,7 +63,7 @@ export default function MenuComponent({ params }: Props) {
                   <NotificationIconMenu />
                   <CircleNotificationMenu>{qtd}</CircleNotificationMenu>
                 </CartUpdate>
-                <span>Fazer Pedido</span>
+                <span className="text-[16px]">Fazer Pedido</span>
               </NotificationMenuInfo>
               <AnimatePresence mode="popLayout">
                 <motion.span
@@ -72,7 +73,7 @@ export default function MenuComponent({ params }: Props) {
                   exit={{ y: -20, opacity: 0 }}
                   transition={{ duration: 0.3, ease: "backInOut" }}
                 >
-                  {formatPrice(cart)}
+                  <span className="text-[16px]">{formatPrice(cart)}</span>
                 </motion.span>
               </AnimatePresence>
             </NotificationMenuContainer>

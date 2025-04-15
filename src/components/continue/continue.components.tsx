@@ -80,7 +80,6 @@ export default function ContinueComponents({ params, route, clear, textButon, ta
     if (typeof window !== "undefined") {
       cardTokenRef.current = localStorage.getItem(tokenCard);
 
-
       const getMethodDeliveryTakeat = localStorage.getItem(methodDeliveryTakeat);
       if (getMethodDeliveryTakeat) {
         const parsedMethodDeliveryTakeat = JSON.parse(getMethodDeliveryTakeat);
@@ -114,7 +113,10 @@ export default function ContinueComponents({ params, route, clear, textButon, ta
     const orders: OrderItem[] = parsedCart.products.map((product) => {
       const orderItem: OrderItem = {
         id: product.categoryId,
-        amount: product.qtd,
+        amount: product.use_weight == false ? product.qtd : 1,
+        weight: product.use_weight == true ? `${product.qtd}` : undefined,
+        use_weight: product.use_weight,
+        observation: product.observation,
         complement_categories: [],
       };
 
@@ -163,11 +165,15 @@ export default function ContinueComponents({ params, route, clear, textButon, ta
           if (res.data.pix_info) {
             setOpenModal(true);
           } else {
-            localStorage.removeItem(takeatBagKey);
-            localStorage.removeItem(MethodPaymentTakeat);
-            localStorage.removeItem(storageTakeat);
             push(`/${params}/pedido-realizado`);
-            setLoading(false)
+            setTimeout(() => {
+              localStorage.removeItem(takeatBagKey);
+              localStorage.removeItem(MethodPaymentTakeat);
+              localStorage.removeItem(methodDeliveryTakeat);
+              localStorage.removeItem(storageTakeat);
+              localStorage.removeItem(useChange);
+              // setLoading(false)
+            }, 700)
           }
         })
         .catch(err => {
@@ -182,13 +188,12 @@ export default function ContinueComponents({ params, route, clear, textButon, ta
           if (res.data.pix_info) {
             setOpenModal(true);
           } else {
+            push(`/${params}/pedido-realizado`);
             localStorage.removeItem(takeatBagKey);
             localStorage.removeItem(MethodPaymentTakeat);
             localStorage.removeItem(methodDeliveryTakeat);
             localStorage.removeItem(storageTakeat);
             localStorage.removeItem(useChange);
-            push(`/${params}/pedido-realizado`);
-            setLoading(false)
           }
         })
         .catch(err => {
@@ -253,7 +258,7 @@ export default function ContinueComponents({ params, route, clear, textButon, ta
 
 
   const HeightCheckout = () => {
-    if (isMethodDelivery.method === "delivery") {
+    if (isMethodDelivery.method === "delivery" || isMethodDelivery.method === "Agendamento Delivery") {
       return 170
     } else {
       return 120
@@ -280,7 +285,7 @@ export default function ContinueComponents({ params, route, clear, textButon, ta
   return (
     <AddProductsContainer flex_direction={"column"} height={HeightCheckout()}>
       <AddProductsPriceItem>
-        {isMethodDelivery.method === "delivery" && (
+        {isMethodDelivery.method === "delivery" || isMethodDelivery.method === "Agendamento Delivery" && (
           <>
             <AddProductsPriceInfoItem textsize={16}>
               <span>Subtotal:</span>
@@ -390,9 +395,7 @@ export default function ContinueComponents({ params, route, clear, textButon, ta
           <h2>Algo inesperado aconteceu!</h2>
         </Modal.Header>
         <Modal.Body>
-
           <span>{errorInfo}</span>
-
           <div className="flex w-full gap-3 pt-6">
             <Link href={`/${params}`} className='px-3 py-2 w-full border rounded-lg font-semibold text-white bg-takeat-primary-default hover:bg-takeat-primary-default/80 text-center flex items-center justify-center'>{!confirmPix ? "Voltar ao início" : <Loader2 className='animate-spin' />}</Link>
           </div>

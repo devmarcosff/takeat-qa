@@ -85,7 +85,7 @@ export default function ContinueComponents({ params, textButon, onClearBag }: Pr
         <PageWrapper>
           <SelectAddProducts style={{ height: 48 }}>
             <button disabled={totalPrice === 0} onClick={() => setModalOpen(!modalOpen)}>
-              <span className='text-takeat-primary-default font-semibold'>Limpar</span>
+              <span className='text-takeat-primary-default font-semibold px-5'>Limpar</span>
             </button>
           </SelectAddProducts>
         </PageWrapper>

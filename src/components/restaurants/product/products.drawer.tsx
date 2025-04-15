@@ -5,6 +5,7 @@ import { Drawer, DrawerContent, DrawerTitle } from "@/components/ui/drawer";
 import { Complement, ComplementCategory, Product } from "@/types/categories.types";
 import { AnimatePresence, motion } from "framer-motion";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { RiSubtractLine } from "react-icons/ri";
 import { formatPrice, IconAddCircleFilled, IconClose, IconRoundChat, IconTrashFilled } from "takeat-design-system-ui-kit";
@@ -33,9 +34,10 @@ export default function ProductDrawer({ openDrawer, setOpenDrawer, products, par
   const [lastQuantities, setLastQuantities] = useState<{ [key: string]: number }>({});
   const [observation, setObservation] = useState<string>('');
   const [quantityProduct, setQuantityProduct] = useState(1);
-  const [valueProduct, setValueProduct] = useState(products?.price || 0);
+  const [valueProduct, setValueProduct] = useState(products?.delivery_price || 0);
   const [complements, setComplements] = useState<ComplementItem[]>([]);
   const [highlightedCategory, setHighlightedCategory] = useState<string | null>(null);
+  const router = useRouter();
 
   useEffect(() => {
     const cartItems = Object.values(selectedQuantities).filter(({ qtd }) => qtd > 0).map(({ name, limit, qtd, price, categoryId, complementId }) => ({
@@ -50,10 +52,10 @@ export default function ProductDrawer({ openDrawer, setOpenDrawer, products, par
     setComplements(cartItems);
 
     const totalPrice = cartItems.map(({ qtd, price }) => qtd * Number(price))
-      .reduce((acc, curr) => acc + curr, Number(products.price));
+      .reduce((acc, curr) => acc + curr, Number(products.delivery_price));
 
     setValueProduct(totalPrice);
-  }, [selectedQuantities, products.price]);
+  }, [selectedQuantities, products.delivery_price]);
 
   useEffect(() => {
     resetProductState();
@@ -65,7 +67,7 @@ export default function ProductDrawer({ openDrawer, setOpenDrawer, products, par
     setLastQuantities({});
     setObservation('');
     setQuantityProduct(1);
-    setValueProduct(products.price || 0);
+    setValueProduct(products.delivery_price || 0);
     setComplements([]);
   };
 
@@ -160,8 +162,13 @@ export default function ProductDrawer({ openDrawer, setOpenDrawer, products, par
     };
   };
 
+  const handleCloseDrawer = () => {
+    router.push(`/${params}`, { scroll: false });
+    setOpenDrawer(false);
+  };
+
   const handleAddToBag = () => {
-    if (valueProduct <= 0 || quantityProduct === 0) return;
+    if (Number(valueProduct) <= 0 || quantityProduct === 0) return;
 
     const isValid = validateRequiredCategories();
     if (!isValid) return;
@@ -170,14 +177,18 @@ export default function ProductDrawer({ openDrawer, setOpenDrawer, products, par
     const storedCart = localStorage.getItem(takeatBag);
     const existingCart = storedCart ? JSON.parse(storedCart) : { products: [] };
 
+    const image = products.image ? products.image.url_thumb : Placeholder;
+
     const payloadProduct = {
       name: products.name,
       categoryId: products.id,
-      oldPrice: products.price,
+      oldPrice: products.delivery_price,
       price: valueProduct,
-      qtd: quantityProduct,
+      img: image,
       observation,
       complements,
+      qtd: quantityProduct,
+      use_weight: products.use_weight
     };
 
     let updatedCart;
@@ -202,9 +213,9 @@ export default function ProductDrawer({ openDrawer, setOpenDrawer, products, par
     }
 
     localStorage.setItem(takeatBag, JSON.stringify({ products: updatedCart }));
-    setOpenDrawer(false);
-  };
 
+    handleCloseDrawer()
+  };
 
   const categoryRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
@@ -232,14 +243,24 @@ export default function ProductDrawer({ openDrawer, setOpenDrawer, products, par
     return true;
   };
 
+  const incrementWeight = () => {
+    setQuantityProduct((prev) => parseFloat((prev + 0.050).toFixed(3)));
+  };
+
+  const decrementWeight = () => {
+    setQuantityProduct((prev) => {
+      const newValue = prev - 0.050;
+      return newValue < 0.050 ? 0.050 : parseFloat(newValue.toFixed(3));
+    });
+  };
 
   return (
-    <Drawer open={openDrawer} onOpenChange={setOpenDrawer}>
+    <Drawer open={openDrawer} onOpenChange={handleCloseDrawer}>
       <DrawerContent className="h-full w-full flex flex-col overflow-hidden !rounded-none">
         <div className="!-mt-8 mb-6">
           <div className="fixed top-6 right-6 z-20">
             <button className="w-full flex items-center justify-center bg-white rounded-lg p-3 border">
-              <IconClose onClick={() => setOpenDrawer(!openDrawer)} />
+              <IconClose onClick={() => handleCloseDrawer()} />
             </button>
           </div>
           <Image src={products.image?.url_thumb || Placeholder} className="!w-full h-full max-h-[330px]" width={100} height={100} alt="Takeat Image" />
@@ -261,7 +282,7 @@ export default function ProductDrawer({ openDrawer, setOpenDrawer, products, par
                   <p className="text-takeat-neutral-dark">{products.description}</p>
                 </div>
                 <div className="flex items-center gap-2">
-                  <p className="text-takeat-green-dark font-semibold">{formatPrice(products.price)}</p>
+                  <p className="text-takeat-green-dark font-semibold">{formatPrice(products.delivery_price || products.price)}</p>
                   <p className="text-takeat-neutral-dark line-through">{products.delivery_price_promotion && formatPrice(products.delivery_price_promotion)}</p>
                 </div>
               </div>
@@ -276,7 +297,7 @@ export default function ProductDrawer({ openDrawer, setOpenDrawer, products, par
                     <div>
                       <h3 className="text-lg font-semibold text-takeat-neutral-dark">{category.name}</h3>
                       <p className="text-takeat-neutral-dark text-sm">
-                        Escolha {category.limit === 1 ? `${category.limit} opção` : `${category.limit} opções`}
+                        Escolha até {category.limit === 1 ? `${category.limit} opção` : `${category.limit} opções`}
                       </p>
                     </div>
                     {!category.optional && (
@@ -392,40 +413,66 @@ export default function ProductDrawer({ openDrawer, setOpenDrawer, products, par
         {/* Rodapé fixo */}
         <div className="flex-shrink-0 border-t px-4 py-2 bg-white mb-16 !border-none">
           <AddProductsContainer style={{ height: "65px !important" }}>
-            <SelectAddProducts width={130}>
-              <ButtonAddProducts disabled={quantityProduct === 1} onClick={() => setQuantityProduct(quantityProduct - 1)}>-</ButtonAddProducts>
-              <QuantityAddProducts>
-                <AnimatePresence mode="popLayout">
-                  <motion.span
-                    key={quantityProduct}
-                    initial={{ y: -20, opacity: 0 }}
-                    animate={{ y: 0, opacity: 1 }}
-                    exit={{ y: 20, opacity: 0 }}
-                    transition={{ duration: 0.3, ease: "backInOut" }}
-                    style={{
-                      position: 'absolute',
-                      fontSize: '16px'
-                    }}
-                  >
-                    {quantityProduct}
-                  </motion.span>
-                </AnimatePresence>
-              </QuantityAddProducts>
-              <ButtonAddProducts onClick={() => setQuantityProduct(quantityProduct + 1)}>+</ButtonAddProducts>
-            </SelectAddProducts>
+
+            {products.use_weight ? (
+              <SelectAddProducts>
+                <ButtonAddProducts disabled={quantityProduct <= 0.050} onClick={decrementWeight}>-</ButtonAddProducts>
+                <QuantityAddProducts>
+                  <AnimatePresence mode="popLayout">
+                    <motion.span
+                      key={quantityProduct}
+                      initial={{ y: -20, opacity: 0 }}
+                      animate={{ y: 0, opacity: 1 }}
+                      exit={{ y: 20, opacity: 0 }}
+                      transition={{ duration: 0.3, ease: "backInOut" }}
+                      style={{
+                        position: 'absolute',
+                        fontSize: '16px',
+                        width: '100%',
+                      }}
+                    >
+                      {quantityProduct.toFixed(3)}
+                    </motion.span>
+                  </AnimatePresence>
+                </QuantityAddProducts>
+                <ButtonAddProducts onClick={incrementWeight}>+</ButtonAddProducts>
+              </SelectAddProducts>
+            ) : (
+              <SelectAddProducts width={130}>
+                <ButtonAddProducts disabled={quantityProduct === 1} onClick={() => setQuantityProduct(quantityProduct - 1)}>-</ButtonAddProducts>
+                <QuantityAddProducts>
+                  <AnimatePresence mode="popLayout">
+                    <motion.span
+                      key={quantityProduct}
+                      initial={{ y: -20, opacity: 0 }}
+                      animate={{ y: 0, opacity: 1 }}
+                      exit={{ y: 20, opacity: 0 }}
+                      transition={{ duration: 0.3, ease: "backInOut" }}
+                      style={{
+                        position: 'absolute',
+                        fontSize: '16px'
+                      }}
+                    >
+                      {quantityProduct}
+                    </motion.span>
+                  </AnimatePresence>
+                </QuantityAddProducts>
+                <ButtonAddProducts onClick={() => setQuantityProduct(quantityProduct + 1)}>+</ButtonAddProducts>
+              </SelectAddProducts>
+            )}
 
             <AddProductsQuantity >
               <TextAddProductsQuantity onClick={handleAddToBag}>
                 <span>Adicionar </span>
                 <AnimatePresence mode="popLayout">
                   <motion.span
-                    key={valueProduct * quantityProduct}
+                    key={Number(valueProduct) * quantityProduct}
                     initial={{ x: -20, opacity: 0 }}
                     animate={{ x: 0, opacity: 1 }}
                     exit={{ x: 20, opacity: 0 }}
                     transition={{ duration: .3, ease: "easeInOut" }}
                   >
-                    {formatPrice(valueProduct * quantityProduct)}
+                    {formatPrice(Number(valueProduct) * quantityProduct)}
                   </motion.span>
                 </AnimatePresence>
               </TextAddProductsQuantity>

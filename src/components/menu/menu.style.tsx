@@ -28,7 +28,6 @@ export const MenuTags = styled.div`
   height: 64px;
   color: ${theme.colors.neutral.darker} !important;
   background-color: ${theme.colors.neutral.white};
-  /* animation: ${CartFadeUp} ease-in-out .35s; */
   font-weight: 600;
   `}
 `;
@@ -53,7 +52,7 @@ export const CircleNotificationMenu = styled.div`
 export const AnimationMenu = styled.div`
   ${({ theme }) => css`
     animation: ${bounceDrop} .8s ease-in-out;
-    height: 46px;
+    height: 50px;
     width: 100%;
     /* z-index: 4; */
     position: fixed;

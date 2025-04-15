@@ -17,5 +17,7 @@ export interface ICart {
     categoryId: string,
     complementId: string,
     observation: string,
+    img: string,
+    use_weight: boolean,
     complements: Complement[]
 } 

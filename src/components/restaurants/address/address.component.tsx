@@ -2,12 +2,16 @@
 import { methodDeliveryProps } from "@/app/[restaurants]/(pages)/endereco/page";
 import { ButtonTakeatBottom, ButtonTakeatContainer, TextButtonTakeat } from "@/app/[restaurants]/(pages)/informacao/informacao.style";
 import { api_delivery_address, api_validate_address } from "@/utils/apis";
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
+import { LoaderCircle } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
+import { MapContainer, Marker, Popup, TileLayer } from 'react-leaflet';
 import Select, { SingleValue } from 'react-select';
-import { DEFAULT_THEME, getAddressByCep, IconLocationFilled, Modal } from "takeat-design-system-ui-kit";
+import { DEFAULT_THEME, getAddressByCep, IconLocationFilled, IconPencilFilled, Modal } from "takeat-design-system-ui-kit";
 import { ButtonTakeatModal } from "./address.style";
 
 interface SelectStateProps {
@@ -25,6 +29,7 @@ export default function AddressClientComponent({ params, methodDelivery }: Props
   const restaurant = React.use(params)?.restaurants;
   const addressClientDeliveryTakeat = `@addressClientDeliveryTakeat:${restaurant}`;
   const tokenUserTakeat = `@tokenUserTakeat:${restaurant}`;
+  const methodDeliveryTakeat = `@methodDeliveryTakeat:${restaurant}`;
 
   const [isDisabled, setIsDisabled] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
@@ -40,11 +45,14 @@ export default function AddressClientComponent({ params, methodDelivery }: Props
   const [getInfoBairro, setGetInfoBairro] = useState('');
   const [getInfoComplemento, setGetInfoComplemento] = useState('');
   const [getInfoReferencia, setGetInfoReferencia] = useState('');
+  const [openModalStreetMap, setOpenModalStreetMap] = useState<boolean>(false);
+  const [latLong, setLatLong] = useState<MapProps>({ lat: 0, lng: 0 });
 
   const { handleSubmit } = useForm<FormData>();
 
   const { push } = useRouter();
   const addressMethodDelivery = methodDelivery.delimit_by_area || methodDelivery.is_delivery_by_distance;
+
   const onSubmit = () => {
 
     const token = localStorage.getItem(tokenUserTakeat)
@@ -67,12 +75,18 @@ export default function AddressClientComponent({ params, methodDelivery }: Props
         Authorization: `Bearer ${token}`
       }
     }).then((res) => {
-      const valid_address = res.data.valid_address
-      const address = res.data.address
-      if (valid_address == true) {
-        localStorage.setItem(addressClientDeliveryTakeat, JSON.stringify(address));
-        push(`/${restaurant}/pagamento`)
+      if (res.data.address.latitude && res.data.address.longitude) {
+        setOpenModalStreetMap(true)
+        setLatLong({ lat: res.data.address.latitude, lng: res.data.address.longitude })
+      } else {
+        const valid_address = res.data.valid_address
+        const address = res.data.address
+        if (valid_address == true) {
+          localStorage.setItem(addressClientDeliveryTakeat, JSON.stringify(address));
+          push(`/${restaurant}/pagamento`)
+        }
       }
+
     }).catch(() => setModalOpen(true)).finally(() => setIsDisabled(false))
   };
 
@@ -403,7 +417,7 @@ export default function AddressClientComponent({ params, methodDelivery }: Props
         <ButtonTakeatContainer>
           <ButtonTakeatBottom type="submit" disabled={isDisabled}>
             {!isDisabled ? <TextButtonTakeat>Cadastrar</TextButtonTakeat>
-              : <div className="flex items-center gap-3 text-white"><div className="h-4 w-4 p-2 flex border rounded-full animate-pulse" />Verificando endereço</div>}
+              : <div className="flex items-center gap-3 text-white"><LoaderCircle className="flex rounded-full animate-spin" />Analisando endereço</div>}
           </ButtonTakeatBottom>
         </ButtonTakeatContainer>
 
@@ -426,8 +440,26 @@ export default function AddressClientComponent({ params, methodDelivery }: Props
           </Modal.Body>
           <Modal.Footer>
             <ButtonTakeatModal width={50} textcolor={DEFAULT_THEME.colors.primary.default} color="white" onClick={() => setModalOpen(!modalOpen)}>Fechar</ButtonTakeatModal>
-            <Link href={`/${restaurant}/entrega`} className={`h-12 w-full flex items-center justify-center rounded-lg font-semibold border border-takeat-primary-default bg-takeat-primary-default text-takeat-neutral-white`}>
+            <Link href={`/${restaurant}/pagamento`} onClick={() => localStorage.setItem(methodDeliveryTakeat, JSON.stringify('retirarBalcao'))} className={`h-12 w-full flex items-center justify-center rounded-lg font-semibold border border-takeat-primary-default bg-takeat-primary-default text-takeat-neutral-white`}>
               Retirar no Balcão
+            </Link>
+          </Modal.Footer>
+        </Modal>
+
+        <Modal open={openModalStreetMap} toggle={() => setOpenModalStreetMap(false)} style={{
+          height: "fit-content"
+        }}>
+          <Modal.Body className="-mb-4">
+            <span className="font-semibold">Confirme seu endereço</span>
+
+            <div className="mt-3">
+              <MapPreview lat={latLong.lat} lng={latLong.lng} />
+            </div>
+          </Modal.Body>
+          <Modal.Footer>
+            <ButtonTakeatModal className="flex items-center gap-2" width={50} textcolor={DEFAULT_THEME.colors.primary.default} color="white" onClick={() => setOpenModalStreetMap(false)}><IconPencilFilled className="fill-takeat-primary-default" /> Editar</ButtonTakeatModal>
+            <Link href={`/${restaurant}/pagamento`} className={`h-12 w-full flex items-center justify-center rounded-lg font-semibold border border-takeat-primary-default bg-takeat-primary-default text-takeat-neutral-white`}>
+              Confirmar
             </Link>
           </Modal.Footer>
         </Modal>
@@ -435,3 +467,46 @@ export default function AddressClientComponent({ params, methodDelivery }: Props
     </form>
   );
 }
+
+interface LeafletDefaultIconPrototype {
+  _getIconUrl?: () => string;
+}
+
+// Corrige o ícone padrão no Leaflet que quebra no Next.js/Vite
+// delete (L.Icon.Default as LeafletDefaultIconPrototype).prototype._getIconUrl;
+delete (L.Icon.Default.prototype as LeafletDefaultIconPrototype)._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconUrl: 'https://unpkg.com/leaflet@1.9.3/dist/images/marker-icon.png',
+  iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.3/dist/images/marker-icon-2x.png',
+  shadowUrl: 'https://unpkg.com/leaflet@1.9.3/dist/images/marker-shadow.png',
+});
+
+// L.Icon.Default.mergeOptions({
+//   iconUrl: 'https://unpkg.com/leaflet@1.9.3/dist/images/marker-icon.png',
+//   iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.3/dist/images/marker-icon-2x.png',
+//   shadowUrl: 'https://unpkg.com/leaflet@1.9.3/dist/images/marker-shadow.png',
+// });
+
+interface MapProps {
+  lat: number;
+  lng: number;
+}
+
+const MapPreview = ({ lat, lng }: MapProps) => {
+  return (
+    <MapContainer
+      center={[lat, lng]}
+      zoom={16}
+      scrollWheelZoom={false}
+      style={{ height: '300px', width: '100%', borderRadius: '10px' }}
+    >
+      <TileLayer
+        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+        attribution="&copy; OpenStreetMap contributors"
+      />
+      <Marker position={[lat, lng]}>
+        <Popup>Endereço selecionado</Popup>
+      </Marker>
+    </MapContainer>
+  );
+};

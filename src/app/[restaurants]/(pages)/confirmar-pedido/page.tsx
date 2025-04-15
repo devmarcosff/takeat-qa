@@ -127,7 +127,6 @@ export default function ConfirmarPedidoPage({ params }: Props) {
         <Link
           className="font-semibold text-lg text-takeat-primary-default"
           href={`/${restaurant}/${url}`}
-
           onClick={() => { if (url == 'pagamento') return localStorage.removeItem(`@useChange:${restaurant}`) }}
         >Alterar</Link>
       </div>
@@ -150,14 +149,15 @@ export default function ConfirmarPedidoPage({ params }: Props) {
           <div>
             {
               resumeCart?.map((item, index) => {
-
                 return (
                   <TakeatApp key={index}>
                     <div className="py-3">
                       <div className="flex gap-3 z-0 relative">
                         <div>
-                          <div className="flex items-center justify-center text-sm rounded-lg overflow-hidden bg-takeat-neutral-lightest w-[28px] h-[28px] font-semibold p-4">
-                            <span>{item.qtd}x</span>
+                          <div className={`flex items-center justify-center text-sm rounded-lg overflow-hidden bg-takeat-neutral-lightest ${item.use_weight ? 'w-full' : 'w-[28px]'} h-[28px] font-semibold px-2 shadow`}>
+                            {
+                              item.use_weight ? <span>{item.qtd}kg</span> : <span>{item.qtd}x</span>
+                            }
                           </div>
                         </div>
 
@@ -223,7 +223,7 @@ export default function ConfirmarPedidoPage({ params }: Props) {
         </div>
 
         <div className="pt-3">
-          {TitleMethodPayment(`${methodDelivery.method === 'retirarBalcao' ? 'Retirada' : methodDelivery.method === 'delivery' ? 'Delivery' : methodDelivery.method}`, 'entrega')}
+          {TitleMethodPayment(`${methodDelivery.method === 'retirarBalcao' ? 'Retirada' : methodDelivery.method === 'delivery' ? 'Delivery' : methodDelivery.method}`, `${methodDelivery.method === 'retirarBalcao' || methodDelivery.method === 'Agendamento Retirada' ? 'entrega' : 'endereco'}`)}
           {methodDelivery.method === 'delivery' || methodDelivery.method === 'Agendamento Delivery' ? (
             <div className="border-b pb-3">
               {!!addressDelivery.city && (

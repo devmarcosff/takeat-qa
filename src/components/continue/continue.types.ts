@@ -16,6 +16,9 @@ export interface ComplementCategory {
 export interface OrderItem {
     id: number;
     amount: number;
+    observation?: string;
+    weight?: string;
+    use_weight?: boolean;
     complement_categories?: ComplementCategory[];
 }
 
@@ -23,6 +26,9 @@ export interface OrderItem {
 export interface Product {
     categoryId: number;
     qtd: number;
+    observation: string;
+    weight?: string;
+    use_weight?: boolean;
     complements?: {
         complementId: string;
         name: string;

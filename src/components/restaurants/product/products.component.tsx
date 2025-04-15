@@ -1,6 +1,7 @@
 import { ICart } from "@/components/addProducts/addProducts.types";
 import { Product } from "@/types/categories.types";
 import { AnimatePresence, motion } from "framer-motion";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { formatPrice, IconClockFilled } from "takeat-design-system-ui-kit";
 import { CategoriesProps } from "../restaurants.types";
@@ -23,18 +24,23 @@ import {
 
 export default function ProductsRestaurant({ categories = [], params, searchTerm }: CategoriesProps & { searchTerm: string }) {
   const takeatBagKey = `@deliveryTakeat:${params}TakeatBag`;
-  const [openIndexes, setOpenIndexes] = useState<number[]>([]);
+  // const [_, setOpenIndexes] = useState<number[]>([]);
   const [parsedBag, setParsedBag] = useState<number>(0);
   const [openDrawer, setOpenDrawer] = useState<boolean>(false);
   const [productInDrawer, setProductInDrawer] = useState<Product>({} as Product);
+  const router = useRouter();
 
-  const toggleShow = (index: number) => {
-    setOpenIndexes((prevIndexes) =>
-      prevIndexes.includes(index) ? prevIndexes.filter((i) => i !== index) : [...prevIndexes, index]
-    );
-  };
+  // const toggleShow = (index: number) => {
+  //   setOpenIndexes((prevIndexes) =>
+  //     prevIndexes.includes(index) ? prevIndexes.filter((i) => i !== index) : [...prevIndexes, index]
+  //   );
+  // };
 
   const viewProductInDrawer = (product: Product) => {
+    const productSlug = encodeURIComponent(product.name);
+    // Atualiza a URL (shallow: true)
+    router.push(`?produto=${productSlug}`, { scroll: false });
+
     setOpenDrawer(!openDrawer)
     setProductInDrawer(product)
   }
@@ -45,19 +51,19 @@ export default function ProductsRestaurant({ categories = [], params, searchTerm
     const qtd = parsedBag.reduce((acc: number, item: ICart) => acc + (item.qtd), 0);
     setParsedBag(qtd)
 
-    const handleToggleAccordion = (event: CustomEvent) => {
-      const categoryName = event.detail;
-      const categoryIndex = categories.findIndex((item) => item.name === categoryName);
-      if (categoryIndex !== -1) {
-        setOpenIndexes((prev) => (prev.includes(categoryIndex) ? prev : [...prev, categoryIndex]));
-      }
-    };
+    // const handleToggleAccordion = (event: CustomEvent) => {
+    //   const categoryName = event.detail;
+    //   const categoryIndex = categories.findIndex((item) => item.name === categoryName);
+    //   if (categoryIndex !== -1) {
+    //     setOpenIndexes((prev) => (prev.includes(categoryIndex) ? prev : [...prev, categoryIndex]));
+    //   }
+    // };
 
-    window.addEventListener("toggleAccordion", handleToggleAccordion as EventListener);
+    // window.addEventListener("toggleAccordion", handleToggleAccordion as EventListener);
 
-    return () => {
-      window.removeEventListener("toggleAccordion", handleToggleAccordion as EventListener);
-    };
+    // return () => {
+    //   window.removeEventListener("toggleAccordion", handleToggleAccordion as EventListener);
+    // }; s
   }, [categories]);
 
   const parsedbag = parsedBag;
@@ -68,16 +74,17 @@ export default function ProductsRestaurant({ categories = [], params, searchTerm
   );
 
   return (
-    <ProductsContainer parsedbag={parsedbag}>
+    <ProductsContainer search={searchTerm.length} parsedbag={parsedbag}>
       {searchTerm ? (
         <div className="space-y-2">
           {filteredProducts.length > 0 ? (
             filteredProducts.map((product, index) => {
               return (
                 <div
+                  onClick={() => viewProductInDrawer(product)}
                   className="flex bg-white rounded-2xl p-3 shadow"
                   key={index}>
-                  <ProductDetails className="">
+                  <ProductDetails>
                     <h2>{product.name}</h2>
                     <p className="line-clamp-3">{product.description}</p>
                     <ProductPrice>
@@ -107,14 +114,17 @@ export default function ProductsRestaurant({ categories = [], params, searchTerm
       ) : (
         <div id="accordionExample">
           {categories.map((item, index) => {
-            const isOpen = openIndexes.includes(index);
+            // const isOpen = openIndexes.includes(index);
+            const isOpen = true;
             const categoryImageUrl =
               item?.image?.url ||
               item.products.find((p) => p.image?.url)?.image?.url;
 
             return (
               <CategoryContainer key={index}>
-                <CategoryHeader onClick={() => toggleShow(index)} id={item.name}>
+                <CategoryHeader
+                  // onClick={() => toggleShow(index)}
+                  id={item.name}>
                   <CategoryImageContainer>
                     <CategoryImage
                       src={categoryImageUrl}
@@ -153,15 +163,11 @@ export default function ProductsRestaurant({ categories = [], params, searchTerm
                           <ProductItem
                             key={index}
                             onClick={() => viewProductInDrawer(product)}
-                          // onClick={() => setOpenDrawer(!openDrawer)}
-                          // onClick={() => savedStorage(product)}
                           >
                             <ProductDetails>
                               <h2>{product.name}</h2>
-                              <p className="line-clamp-3">
-                                {product.description}
-                              </p>
-                              <ProductPrice>
+                              <p className="line-clamp-3">{product.description}</p>
+                              <ProductPrice delivery_price={product.delivery_price_promotion ? `${product.delivery_price_promotion}` : undefined}>
                                 {!!product.delivery_price
                                   ? formatPrice(product.delivery_price)
                                   : formatPrice(product.price)}

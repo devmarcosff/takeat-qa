@@ -144,8 +144,8 @@ export const SelectAddProducts = styled.div<{ width?: number }>`
     height: 100%;
     width: ${width ? `${width}px` : `100%`};
     align-items: center;
-    justify-content: center;
-    padding: 12px 24px;
+    justify-content: space-between;
+    /* padding: 12px 24px; */
   `}
 `;
 
@@ -167,11 +167,12 @@ export const ButtonAddProducts = styled.button`
 export const QuantityAddProducts = styled.div`
   ${({ }) => css`
     position: relative;
-    width: 40px;
+    width: 100%;
     height: 32px;
     display: flex;
     align-items: center;
     justify-content: center;
+    text-align: center;
     overflow: hidden;
     padding: 0 8px;
   `}
