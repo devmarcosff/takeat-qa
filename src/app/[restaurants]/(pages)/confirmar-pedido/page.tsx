@@ -4,6 +4,7 @@ import ContinueComponents from "@/components/continue/continue.components";
 import { TakeatApp } from "@/components/theme/ThemeProviderWrapper";
 import InformationButton from "@/components/uiComponents/Buttons/informationButton.component";
 import InternalPages from "@/components/uiComponents/InternalPageHeader/internal_pages.header";
+import { useDelivery } from "@/context/DeliveryContext";
 import { Restaurant } from "@/types/restaurant.types";
 import { AnimatePresence, motion } from "framer-motion";
 import Link from "next/link";
@@ -68,6 +69,8 @@ export default function ConfirmarPedidoPage({ params }: Props) {
     zip_code: ``,
     delivery_tax_price: ''
   });
+
+  const { cuponValue } = useDelivery()
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -220,7 +223,8 @@ export default function ConfirmarPedidoPage({ params }: Props) {
               </div>
               <span>{PaymentInfo()}</span>
             </div>
-            <InformationButton onClick={() => setOpenDrawer(!openDrawer)} title="Adicionar desconto" icon="IconTicketFilled" fill="#7a7a7a" arrow />
+
+            <InformationButton onClick={() => setOpenDrawer(!openDrawer)} title={`${cuponValue.code ? 'Cupom aplicado!' : 'Adicionar desconto'}`} description={cuponValue.code} icon={`${cuponValue.code ? 'Nothing' : 'IconTicketFilled'}`} fill="#7a7a7a" arrow />
           </div>
         </div>
 

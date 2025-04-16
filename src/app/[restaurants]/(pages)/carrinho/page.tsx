@@ -103,7 +103,7 @@ export default function ProductPage({ params }: Props) {
                                       exit={{ x: -20, opacity: 0 }}
                                       transition={{ duration: 0.35, ease: "backInOut" }}
                                     >
-                                      {formatPrice(item.price * quantity)}
+                                      {formatPrice(item.price * item.qtd)}
                                     </motion.span>
                                   </AnimatePresence>
 

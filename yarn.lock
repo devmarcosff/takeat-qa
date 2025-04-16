@@ -4133,10 +4133,10 @@ tailwindcss@^3.4.1:
     resolve "^1.22.8"
     sucrase "^3.35.0"
 
-takeat-design-system-ui-kit@^0.4.21:
-  version "0.4.21"
-  resolved "https://registry.yarnpkg.com/takeat-design-system-ui-kit/-/takeat-design-system-ui-kit-0.4.21.tgz#3d7a385d9452b642a44eac15067a8b706d8371bc"
-  integrity sha512-9GHflaZBx6mCcbmqqesnsUCNK0/kazUsF5U+xbeOpmKrSpac6eTTNiuBYePn78CluU9EV2FSoE1OEBSmkdG9Bw==
+takeat-design-system-ui-kit@^0.4.23:
+  version "0.4.23"
+  resolved "https://registry.yarnpkg.com/takeat-design-system-ui-kit/-/takeat-design-system-ui-kit-0.4.23.tgz#7d34f9f5a4ec16fcf21cc5a6ca30e4e6ea5a8694"
+  integrity sha512-v0vDhxXAdRiMCYiDws7FYMjO+deCtVsftTT4+S62OxfedPK1KwCKUL0q72/AcDY5OkyEb3r6ILq5klLHcmeIog==
   dependencies:
     primereact "^10.9.3"
     react-number-format "^5.4.2"

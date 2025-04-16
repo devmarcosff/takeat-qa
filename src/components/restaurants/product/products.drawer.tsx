@@ -8,9 +8,10 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { RiSubtractLine } from "react-icons/ri";
-import { formatPrice, IconAddCircleFilled, IconClose, IconRoundChat, IconTrashFilled } from "takeat-design-system-ui-kit";
+import { formatPrice, getComplementsPrice, IconAddCircleFilled, IconClose, IconRoundChat, IconTrashFilled } from "takeat-design-system-ui-kit";
 import Placeholder from '../../../assets/placeholder.svg';
 import { ProductInternalContainer } from "./products.style";
+import { IComplementCategoryDrawer, IComplementDrawer } from "./types";
 
 interface IDrawerProps {
   openDrawer: boolean;
@@ -34,7 +35,7 @@ export default function ProductDrawer({ openDrawer, setOpenDrawer, products, par
   const [lastQuantities, setLastQuantities] = useState<{ [key: string]: number }>({});
   const [observation, setObservation] = useState<string>('');
   const [quantityProduct, setQuantityProduct] = useState(1);
-  const [valueProduct, setValueProduct] = useState(products?.delivery_price || 0);
+  const [valueProduct, setValueProduct] = useState(products?.delivery_price || products?.price);
   const [complements, setComplements] = useState<ComplementItem[]>([]);
   const [highlightedCategory, setHighlightedCategory] = useState<string | null>(null);
   const router = useRouter();
@@ -70,6 +71,37 @@ export default function ProductDrawer({ openDrawer, setOpenDrawer, products, par
     setValueProduct(products.delivery_price || 0);
     setComplements([]);
   };
+
+  const weightProduct = products.use_weight ? quantityProduct : undefined
+
+  const mapToComplement = (categoryId: string): IComplementDrawer[] => {
+    return complements
+      .filter(item => item.categoryId === categoryId)
+      .map(item => ({
+        price: item.price,
+        amount: item.qtd,
+      }));
+  };
+
+  const mapToComplementCategories = (): IComplementCategoryDrawer[] => {
+    if (!products.complement_categories) return [];
+
+    return products.complement_categories.map((category) => {
+      return {
+        additional: category.additional,
+        more_expensive_only: category.more_expensive_only,
+        use_average: category.use_average,
+        complements: mapToComplement(`${category.id}`)
+      }
+    })
+  };
+
+  const finishValue = getComplementsPrice({
+    amount: quantityProduct,
+    price: String(products.delivery_price || products.price),
+    weight: weightProduct,
+    complement_categories: mapToComplementCategories(),
+  })
 
   const getCategoryCounts = (
     selectedQuantities: Record<string, { qtd: number; categoryId: string; complementId: string; price: string }>,
@@ -182,10 +214,10 @@ export default function ProductDrawer({ openDrawer, setOpenDrawer, products, par
     const payloadProduct = {
       name: products.name,
       categoryId: products.id,
-      oldPrice: products.delivery_price,
-      price: valueProduct,
+      delivery_price: products.delivery_price,
+      price: finishValue / quantityProduct,
       img: image,
-      observation,
+      observation: observation,
       complements,
       qtd: quantityProduct,
       use_weight: products.use_weight
@@ -359,8 +391,9 @@ export default function ProductDrawer({ openDrawer, setOpenDrawer, products, par
                                 disabled={quantity === 0}
                                 className={`w-7 h-7 flex items-center justify-center text-takeat-primary-default rounded-full font-bold text-lg transition-all ${quantity === 0 ? "hidden" : ""
                                   }`}
-                                onClick={() =>
-                                  handleQuantityChange(`${complement.price}`, complement.limit, `${complement.name}`, `${category.id}`, `${complement.id}`, - 1)
+                                onClick={() => {
+                                  handleQuantityChange(`${complement.price}`, complement.limit, `${complement.name}`, `${category.id}`, `${complement.id}`, -1)
+                                }
                                 }
                               >
                                 {quantity === 1 ? <IconTrashFilled className="fill-takeat-primary-default w-full h-full" /> : <RiSubtractLine className="fill-takeat-primary-default w-full h-full" />}
@@ -472,7 +505,7 @@ export default function ProductDrawer({ openDrawer, setOpenDrawer, products, par
                     exit={{ x: 20, opacity: 0 }}
                     transition={{ duration: .3, ease: "easeInOut" }}
                   >
-                    {formatPrice(Number(valueProduct) * quantityProduct)}
+                    {formatPrice(finishValue || 0)}
                   </motion.span>
                 </AnimatePresence>
               </TextAddProductsQuantity>

@@ -3,8 +3,12 @@ import { Drawer, DrawerClose, DrawerContent, DrawerFooter, DrawerHeader, DrawerT
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ChangeEvent, useState } from "react";
+import { useDelivery } from "@/context/DeliveryContext";
+import axios from "axios";
+import { useParams } from "next/navigation";
+import { ChangeEvent, useEffect, useState } from "react";
 import { formatPrice, IconChevronDown } from "takeat-design-system-ui-kit";
+import { ICashbackDrawer } from "./types";
 
 interface ICashProps {
   openDrawer?: boolean;
@@ -12,7 +16,21 @@ interface ICashProps {
 }
 
 export default function CashbackDrawer({ openDrawer, setOpenDrawer }: ICashProps) {
+  const params = useParams()
   const [birthdate, setBirthdate] = useState('');
+  const [cashbackDrawer, setCashbackDrawer] = useState<ICashbackDrawer[]>([]);
+  const [cuponSelect, setCuponSelect] = useState<ICashbackDrawer>({} as ICashbackDrawer);
+
+  const { setCuponValue } = useDelivery()
+
+  useEffect(() => {
+    const restaurant = `@deliveryTakeatRestaurant:${params.restaurants}`
+    const getRestaurantId = localStorage.getItem(restaurant)
+    if (getRestaurantId) {
+      const parsedRestaurant = JSON.parse(getRestaurantId)
+      axios.get(`https://backend-gd.takeat.app/public/discount-coupons/restaurant/${parsedRestaurant.id}/delivery`).then(res => setCashbackDrawer(res.data)).catch(err => console.log(err))
+    }
+  }, [])
 
   const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
     // Remove todos os caracteres que não sejam dígitos
@@ -29,6 +47,12 @@ export default function CashbackDrawer({ openDrawer, setOpenDrawer }: ICashProps
     // Limita para 10 caracteres (DD/MM/AAAA)
     setBirthdate(input.slice(0, 10));
   };
+
+  const handleSelect = (item: ICashbackDrawer) => {
+    setCuponSelect(item)
+  };
+
+  const handleAddCupom = () => cuponSelect.id && setCuponValue(cuponSelect)
 
   return (
     <Drawer open={openDrawer} onOpenChange={setOpenDrawer}>
@@ -66,29 +90,52 @@ export default function CashbackDrawer({ openDrawer, setOpenDrawer }: ICashProps
             </TabsContent>
 
             <TabsContent value="cupons">
-              <div className="overflow-y-scroll h-full">
+              <div>
                 <span>Cupons disponíveis:</span>
 
-                <div className="flex flex-col gap-1">
+                <div className="flex flex-col gap-1 overflow-y-scroll h-[700px]">
                   {
-                    Array.from({ length: 5 }, (_, index) => {
+                    cashbackDrawer.map((item, index) => {
+                      const isSelected = cuponSelect.id === item.id;
+                      console.log(item.discount)
+                      const DiscountTypes = () => {
+                        if (item.discount_type === 'percentage') {
+                          return `Desconto ${item.discount}%`
+                        } else if (item.discount_type === 'absolute') {
+                          return `Desconto ${formatPrice(item.discount)}`
+                        } else {
+                          return `FRETE GRATIS`
+                        }
+                      }
+
                       return (
-                        <div key={index} className="bg-takeat-neutral-white p-4 rounded-xl border">
-                          <RadioGroup>
-                            <label htmlFor={`${index}`}>
+                        <div
+                          key={index}
+                          className={`bg-takeat-neutral-white p-4 rounded-xl border ${isSelected ? 'border-takeat-primary-default' : 'border-gray-300'}`}
+                        >
+                          <RadioGroup onClick={() => handleSelect(item)}>
+                            <label htmlFor={`radio-${index}`} className="cursor-pointer">
                               <div className="flex items-center justify-between">
                                 <div className="flex flex-col">
-                                  <span className="font-semibold">BEMVINDO15</span>
-                                  <span>Desconto 15%</span>
+                                  <span className="font-semibold">{item.code}</span>
+                                  <span>{DiscountTypes()}</span>
                                 </div>
                                 <div>
-                                  <RadioGroupItem value={`${index}`} id={`${index}`} />
+                                  <RadioGroupItem
+                                    id={`radio-${index}`}
+                                    value={item.code}
+                                    checked={isSelected}
+                                    className={isSelected ? 'border-takeat-primary-default text-takeat-primary-default' : 'border-gray-300'}
+                                    aria-readonly
+                                  />
                                 </div>
                               </div>
                             </label>
                           </RadioGroup>
-                          <div className="pt-1 border-t">
-                            <span className="flex items-center justify-start gap-2">Ver regras <IconChevronDown /></span>
+                          <div className="pt-1 border-t border-gray-300">
+                            <span className="flex items-center justify-start gap-2">
+                              Ver regras <IconChevronDown />
+                            </span>
                           </div>
                         </div>
                       )
@@ -105,7 +152,9 @@ export default function CashbackDrawer({ openDrawer, setOpenDrawer }: ICashProps
           <DrawerClose asChild>
             <Button variant="outline" className="w-2/4 text-[16px]">Cancelar</Button>
           </DrawerClose>
-          <Button className="w-full disabled:bg-takeat-neutral-lighter disabled:text-takeat-neutral-darker text-[16px]" disabled>Resgatar</Button>
+          <DrawerClose asChild onClick={handleAddCupom} disabled={!cuponSelect.id}>
+            <Button className="w-full disabled:bg-takeat-neutral-lighter disabled:text-takeat-neutral-darker text-[16px]">Resgatar</Button>
+          </DrawerClose>
         </DrawerFooter>
       </DrawerContent>
     </Drawer>

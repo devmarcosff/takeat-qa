@@ -1,4 +1,5 @@
 "use client";
+import { ICashbackDrawer } from "@/app/[restaurants]/(pages)/confirmar-pedido/types";
 import { Category } from "@/types/categories.types";
 import { Restaurant } from "@/types/restaurant.types";
 import { api_categories_delivery, api_delivery } from "@/utils/apis";
@@ -10,6 +11,8 @@ interface DeliveryContextType {
   getCategories: Category[];
   setGetCategories: React.Dispatch<React.SetStateAction<Category[]>>;
   fetchInitialData: (restaurant: string) => Promise<void>;
+  cuponValue: ICashbackDrawer;
+  setCuponValue: React.Dispatch<React.SetStateAction<ICashbackDrawer>>;
 }
 
 const DeliveryContext = createContext<DeliveryContextType | undefined>(undefined);
@@ -17,13 +20,13 @@ const DeliveryContext = createContext<DeliveryContextType | undefined>(undefined
 export const DeliveryProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [getRestaurants, setGetRestaurants] = useState<Restaurant | null>(null);
   const [getCategories, setGetCategories] = useState<Category[]>([]);
+  const [cuponValue, setCuponValue] = useState({} as ICashbackDrawer);
 
   const fetchInitialData = async (restaurant: string) => {
     try {
       const res = await api_delivery.get(`/${restaurant}`);
       setGetRestaurants(res.data);
       localStorage.setItem(`@deliveryTakeatRestaurant:${restaurant}`, JSON.stringify(res.data));
-      // localStorage.setItem(`@deliveryTakeatInfo:${restaurant}`, JSON.stringify(res.data.delivery_info));
       localStorage.setItem(`@deliveryTakeat:${restaurant}`, res.data.delivery_info.delivery_minimum_price);
       const catRes = await api_categories_delivery.get(`/${res.data.id}?gd=true`);
       setGetCategories(catRes.data);
@@ -41,6 +44,8 @@ export const DeliveryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         getCategories,
         setGetCategories,
         fetchInitialData,
+        cuponValue,
+        setCuponValue
       }}
     >
       {children}

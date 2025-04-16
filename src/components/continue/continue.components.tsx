@@ -1,4 +1,5 @@
 import { IAgendamento } from '@/app/[restaurants]/(pages)/confirmar-pedido/page';
+import { useDelivery } from '@/context/DeliveryContext';
 import { api_confirm_pix, api_create_order, api_scheduling } from '@/utils/apis';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Copy, Loader2 } from 'lucide-react';
@@ -36,7 +37,7 @@ type CartRef = { products: Product[] };
 type MethodPaymentRef = { keyword: string; id?: number };
 
 
-export default function ContinueComponents({ params, route, clear, textButon, taxservice, desconto, finishOrder }: Props) {
+export default function ContinueComponents({ params, route, clear, textButon, desconto, finishOrder }: Props) {
   const MethodPaymentTakeat = `@methodPaymentTakeat:${params}`;
   const takeatBagKey = `@deliveryTakeat:${params}TakeatBag`;
   const deliveryTakeatRestaurant = `@deliveryTakeatRestaurant:${params}`;
@@ -54,13 +55,15 @@ export default function ContinueComponents({ params, route, clear, textButon, ta
   const [modalGen, setModalGen] = useState<{ qrcode: string, zoop_id: string }>()
   const [openErrorModal, setOpenErrorModal] = useState<boolean>()
   const [errorInfo, setErrorInfo] = useState<string>('')
-  const [taxService, setTaxService] = useState<number>()
   const [parseAddress, setParseAddress] = useState<number>(0)
   const [isMethodDelivery, setIsMethodDelivery] = useState<IAgendamento>({})
   const [loading, setLoading] = useState<boolean>(false)
   const [scheduling, setScheduling] = useState<IAgendamento>({})
   const [troco, setTroco] = useState<number>(0)
+  // const [cupomValue, setCupomValue] = useState<number>(0)
   const { push } = useRouter();
+
+  const { cuponValue } = useDelivery()
 
   const updateStorageData = useCallback(() => {
     const storedBag = localStorage.getItem(takeatBagKey);
@@ -151,7 +154,7 @@ export default function ContinueComponents({ params, route, clear, textButon, ta
       with_withdrawal: isMethodDelivery.method === 'Agendamento Retirada' || isMethodDelivery.method === 'retirarBalcao' ? true : false, // Se for agendamento de entrega
       will_receive_sms: true, // Se receber SMS
       details: "", // Detalhes do pedido
-      coupon_code: "", // Código do cupom
+      coupon_code: cuponValue.code || '', // Código do cupom
       rescue: 0, // Resgate
       scheduled_time: scheduling.hour || '', // Se for agendamento de retirada
       user_change: troco || 0, // Se existir troco
@@ -173,7 +176,7 @@ export default function ContinueComponents({ params, route, clear, textButon, ta
               localStorage.removeItem(storageTakeat);
               localStorage.removeItem(useChange);
               // setLoading(false)
-            }, 700)
+            }, 1000)
           }
         })
         .catch(err => {
@@ -229,7 +232,6 @@ export default function ContinueComponents({ params, route, clear, textButon, ta
         setParseAddress(intTax);
       }
 
-      setTaxService(taxservice);
       updateStorageData();
 
       const handleStorageChange = (event: StorageEvent) => {
@@ -252,14 +254,17 @@ export default function ContinueComponents({ params, route, clear, textButon, ta
     addressClientDelivery,
     storageTakeat,
     takeatBagKey,
-    taxservice,
     updateStorageData,
   ]);
 
 
   const HeightCheckout = () => {
     if (isMethodDelivery.method === "delivery" || isMethodDelivery.method === "Agendamento Delivery") {
-      return 170
+      if (cuponValue.code) {
+        return 200
+      } else {
+        return 170
+      }
     } else {
       return 120
     }
@@ -282,6 +287,18 @@ export default function ContinueComponents({ params, route, clear, textButon, ta
     }).catch(() => setConfirmPix(false))
   }
 
+  const handleAddCupom = () => {
+    if (cuponValue.discount_type === 'percentage') {
+      return formatPrice((totalPrice + parseAddress) - (totalPrice * cuponValue.discount / 100))
+    } else if (cuponValue.discount_type === 'absolute') {
+      return formatPrice((totalPrice + parseAddress) - cuponValue.discount)
+    } else if (cuponValue.discount_type === 'free-shipping') {
+      return formatPrice(totalPrice)
+    }
+
+    return formatPrice(totalPrice + parseAddress)
+  };
+
   return (
     <AddProductsContainer flex_direction={"column"} height={HeightCheckout()}>
       <AddProductsPriceItem>
@@ -293,8 +310,32 @@ export default function ContinueComponents({ params, route, clear, textButon, ta
             </AddProductsPriceInfoItem>
             <AddProductsPriceInfoItem textsize={16}>
               <span>Taxa de entrega:</span>
-              <span>{formatPrice(parseAddress)}</span>
+              <span>
+                {cuponValue.discount_type === 'free-shipping' ? (
+                  formatPrice(0)
+                ) : (
+                  formatPrice(parseAddress)
+                )}
+              </span>
             </AddProductsPriceInfoItem>
+            {
+              cuponValue.code && (
+                <AddProductsPriceInfoItem textsize={16}>
+                  <span>Cupom</span>
+                  {
+                    cuponValue.discount_type === 'percentage' ? (
+                      <span>{formatPrice((totalPrice * cuponValue.discount) / 100)}</span>
+                    ) : cuponValue.discount_type === 'absolute' ? (
+                      <span>{totalPrice - cuponValue.discount < 0 ? `- ${formatPrice(totalPrice)}` : `- ${formatPrice(cuponValue.discount)}`}</span>
+                    ) : (
+                      <span>FRETE GRATIS</span>
+                    )
+                  }
+                </AddProductsPriceInfoItem>
+              )
+            }
+
+            {/* {cuponValue.code && handleAddCupom()} */}
           </>
         ) : isMethodDelivery.method === "Agendamento Delivery" ? (
           <>
@@ -309,6 +350,7 @@ export default function ContinueComponents({ params, route, clear, textButon, ta
           </>
         ) : ''
         }
+
         <AddProductsPriceInfoItem weight={"600"}>
           <span>Total:</span>
           <AnimatePresence mode="popLayout">
@@ -319,10 +361,12 @@ export default function ContinueComponents({ params, route, clear, textButon, ta
               exit={{ x: -20, opacity: 0 }}
               transition={{ duration: 0.3, ease: "backInOut" }}
             >
-              {isMethodDelivery.method === "delivery" || isMethodDelivery.method === "Agendamento Delivery" ? formatPrice(totalPrice + parseAddress) : formatPrice(totalPrice)}
+              {handleAddCupom()}
+              {/* {isMethodDelivery.method === "delivery" || isMethodDelivery.method === "Agendamento Delivery" ? formatPrice(totalPrice + parseAddress) : formatPrice(totalPrice)} */}
             </motion.span>
           </AnimatePresence>
         </AddProductsPriceInfoItem>
+
       </AddProductsPriceItem>
 
       {!!desconto ? (
