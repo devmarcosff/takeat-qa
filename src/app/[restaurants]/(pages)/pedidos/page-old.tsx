@@ -106,7 +106,7 @@ type OrderBasketItem = NonNullable<IBills["order_baskets"]>[number];
 const CardComponent = ({ basket, userChange, restaurant }: { basket: OrderBasketItem, userChange?: string, restaurant: string }) => {
   const statusMap = {
     canceled: 'Pedido cancelado',
-    pending: 'Aguardando o restaurante aceitar',
+    pending: 'Aguardando confirmação da loja',
     accepted: 'Pedido em preparo',
     ready: 'Pedido pronto',
     delivered: 'Pedido está a caminho',

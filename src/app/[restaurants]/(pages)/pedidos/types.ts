@@ -1,4 +1,4 @@
-type OrderStatus = 'pending' | 'accepted' | 'ready' | 'delivered' | 'finished' | 'canceled' | 'canceled_waiting_payment' | string;
+export type OrderStatus = 'pending' | 'accepted' | 'ready' | 'delivered' | 'finished' | 'canceled' | 'canceled_waiting_payment' | string;
 
 export interface PixPayment {
     id: number;

@@ -1,3 +1,5 @@
+import { OrderStatus } from "../types";
+
 export interface IProduct2 {
   id: number;
   key: string;
@@ -109,7 +111,7 @@ export interface IProduct2 {
     waiter: string | null;
     order_baskets: Array<{
       id: number;
-      order_status: string;
+      order_status: OrderStatus;
       basket_id: string;
       total_price: string;
       total_service_price: string;

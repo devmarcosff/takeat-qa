@@ -165,8 +165,8 @@ export const ProductInternalWrapper = styled.div`
     width: 100%;
     padding: 20px;
     height: 100%;
-    margin-top: 250px;
-    margin-bottom: 75px;
+    margin-top: 360px;
+    /* margin-bottom: 75px; */
     border-radius: 30px 30px 0 0;
 
     animation: ${CartFadeUp} .3s ease-in-out;

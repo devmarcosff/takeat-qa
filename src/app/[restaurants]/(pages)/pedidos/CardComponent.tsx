@@ -21,7 +21,7 @@ export const CardComponent = ({ basket, pedido, restaurant, userChange, pixPayme
   const statusMap = {
     canceled: 'Pedido cancelado',
     canceled_waiting_payment: 'Tempo de espera excedido',
-    pending: 'Aguardando o restaurante aceitar',
+    pending: 'Aguardando confirmação da loja',
     accepted: 'Pedido em preparo',
     ready: 'Pedido pronto',
     delivered: 'Pedido está a caminho',
@@ -97,17 +97,17 @@ export const CardComponent = ({ basket, pedido, restaurant, userChange, pixPayme
                 const status = basket.order_status;
                 const isActive =
                   (step === 0 && ['accepted', 'ready', 'finished', 'delivered'].includes(status || '')) ||
-                  (step === 1 && ['ready', 'finished', 'delivered'].includes(status || '')) ||
-                  (step === 2 && ['finished', 'delivered'].includes(status || ''));
+                  (step === 1 && ['accepted', 'ready', 'finished', 'delivered'].includes(status || '')) ||
+                  (step === 2 && ['ready', 'finished', 'delivered'].includes(status || ''));
 
                 const shouldAnimate =
-                  (status === 'accepted' && step === 0) ||
-                  (status === 'ready' && step === 1) ||
-                  (status === 'delivered' && step === 2);
+                  (status === 'accepted' && step === 1) ||
+                  (status === 'ready' && step === 2) ||
+                  (status === 'delivered' && step === 1);
 
                 const solidBg =
                   (status === 'accepted' && step < 1) ||
-                  (status === 'ready' && step < 1) ||
+                  (status === 'ready' && step < 2) ||
                   (status === 'delivered' && step < 2) ||
                   (status === 'finished' && step <= 2);
 
