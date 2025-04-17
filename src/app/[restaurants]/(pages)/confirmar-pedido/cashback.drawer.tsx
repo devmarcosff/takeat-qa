@@ -134,7 +134,7 @@ export default function CashbackDrawer({ openDrawer, setOpenDrawer, isClientClub
               <div>
                 <span>Cupons disponíveis:</span>
 
-                <div className="flex flex-col gap-1 overflow-y-scroll h-[700px] my-2 pt-2 border-t">
+                <div className="flex flex-col gap-1 overflow-y-scroll max-h-[350px] my-2 pt-2 border-t">
                   {
                     cashbackDrawer.map((item, index) => {
                       const isSelected = cuponSelect.id === item.id;
