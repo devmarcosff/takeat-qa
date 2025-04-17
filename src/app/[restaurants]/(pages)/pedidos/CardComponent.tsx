@@ -5,16 +5,17 @@ import { motion, MotionProps } from 'framer-motion';
 import { CheckCircle, ChevronRight } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { formatPrice } from 'takeat-design-system-ui-kit';
-import { OrderBasket, PixPayment } from './types';
+import { IPedidos, OrderBasket, PixPayment } from './types';
 
 interface Props {
+  pedido: IPedidos;
   basket: OrderBasket;
   restaurant: string;
   userChange?: string;
   pixPayments?: PixPayment[];
 }
 
-export const CardComponent = ({ basket, restaurant, userChange, pixPayments }: Props) => {
+export const CardComponent = ({ basket, pedido, restaurant, userChange, pixPayments }: Props) => {
   const { push } = useRouter();
 
   const statusMap = {
@@ -41,7 +42,7 @@ export const CardComponent = ({ basket, restaurant, userChange, pixPayments }: P
   return (
     <div
       className="max-w-3xl rounded-2xl bg-white shadow-md overflow-hidden cursor-pointer my-4 border"
-      onClick={() => push(`/${restaurant}/pedidos/${basket.id}`)}
+      onClick={() => push(`/${restaurant}/pedidos/${pedido.id}`)}
     >
       <div className="flex justify-between items-center w-full bg-takeat-neutral-lighter p-3">
         <h2 className="font-bold text-gray-800">
@@ -50,7 +51,7 @@ export const CardComponent = ({ basket, restaurant, userChange, pixPayments }: P
         <p className="text-sm text-gray-800 font-semibold">Senha {basket.basket_id}</p>
       </div>
 
-      <div className="p-4" onClick={() => localStorage.setItem(`@infoPedidosTakeat:${restaurant}`, JSON.stringify(basket))}>
+      <div className="p-4" onClick={() => localStorage.setItem(`@infoPedidosTakeat:${restaurant}`, JSON.stringify(pedido))}>
         {/* STATUS */}
         <div className="mb-4">
           <div className="flex items-center gap-2">
@@ -71,6 +72,7 @@ export const CardComponent = ({ basket, restaurant, userChange, pixPayments }: P
               className={`w-6 h-6 text-green-500 ${basket.order_status !== 'finished' ? 'hidden' : 'flex'
                 }`}
             />
+
             <div className="flex items-center justify-between w-full">
               <p className="font-medium text-gray-800 w-full text-sm truncate">
                 {statusMap[basket.order_status as keyof typeof statusMap] || 'Status desconhecido'}
@@ -85,57 +87,61 @@ export const CardComponent = ({ basket, restaurant, userChange, pixPayments }: P
         </div>
 
         {/* ETAPAS */}
-        <div
-          className={`w-full justify-between gap-1 items-center ${basket.order_status !== 'finished' ? 'flex' : 'hidden'
-            }`}
-        >
-          {[0, 1, 2].map((step) => {
-            const status = basket.order_status;
-            const isActive =
-              (step === 0 && ['accepted', 'ready', 'finished', 'delivered'].includes(status || '')) ||
-              (step === 1 && ['ready', 'finished', 'delivered'].includes(status || '')) ||
-              (step === 2 && ['finished', 'delivered'].includes(status || ''));
+        {
+          basket.order_status !== 'canceled' && (
+            <div
+              className={`w-full justify-between gap-1 items-center ${basket.order_status !== 'finished' ? 'flex' : 'hidden'
+                }`}
+            >
+              {[0, 1, 2].map((step) => {
+                const status = basket.order_status;
+                const isActive =
+                  (step === 0 && ['accepted', 'ready', 'finished', 'delivered'].includes(status || '')) ||
+                  (step === 1 && ['ready', 'finished', 'delivered'].includes(status || '')) ||
+                  (step === 2 && ['finished', 'delivered'].includes(status || ''));
 
-            const shouldAnimate =
-              (status === 'accepted' && step === 0) ||
-              (status === 'ready' && step === 1) ||
-              (status === 'delivered' && step === 2);
+                const shouldAnimate =
+                  (status === 'accepted' && step === 0) ||
+                  (status === 'ready' && step === 1) ||
+                  (status === 'delivered' && step === 2);
 
-            const solidBg =
-              (status === 'accepted' && step < 1) ||
-              (status === 'ready' && step < 1) ||
-              (status === 'delivered' && step < 2) ||
-              (status === 'finished' && step <= 2);
+                const solidBg =
+                  (status === 'accepted' && step < 1) ||
+                  (status === 'ready' && step < 1) ||
+                  (status === 'delivered' && step < 2) ||
+                  (status === 'finished' && step <= 2);
 
-            const isCanceledOrPending = ['pending', 'canceled'].includes(status || '');
+                const isCanceledOrPending = ['pending', 'canceled'].includes(status || '');
 
-            const getMotionBg = () => {
-              if (isCanceledOrPending) return 'bg-gray-200';
-              if (solidBg) return 'bg-takeat-primary-default';
-              if (isActive) return 'bg-gradient-to-r from-takeat-primary-default to-transparent';
-              return 'bg-gray-200';
-            };
+                const getMotionBg = () => {
+                  if (isCanceledOrPending) return 'bg-gray-200';
+                  if (solidBg) return 'bg-takeat-primary-default';
+                  if (isActive) return 'bg-gradient-to-r from-takeat-primary-default to-transparent';
+                  return 'bg-gray-200';
+                };
 
-            return (
-              <MotionDiv
-                key={step}
-                initial={{ opacity: 0.3, scaleX: 0.9 }}
-                animate={{ opacity: 1, scaleX: 1 }}
-                transition={{ duration: 0.4, delay: step * 0.1 }}
-                className={`h-2 w-1/3 rounded-full relative overflow-hidden mx-${step === 1 ? '1' : '0'} ${getMotionBg()}`}
-              >
-                {shouldAnimate && basket.order_status !== 'finished' && (
+                return (
                   <MotionDiv
-                    className='absolute inset-0 bg-gradient-to-r from-transparent via-takeat-primary-default to-transparent'
-                    initial={{ x: '-100%' }}
-                    animate={{ x: '100%' }}
-                    transition={{ duration: 2.5, repeat: Infinity, ease: 'linear' }}
-                  />
-                )}
-              </MotionDiv>
-            );
-          })}
-        </div>
+                    key={step}
+                    initial={{ opacity: 0.3, scaleX: 0.9 }}
+                    animate={{ opacity: 1, scaleX: 1 }}
+                    transition={{ duration: 0.4, delay: step * 0.1 }}
+                    className={`h-2 w-1/3 rounded-full relative overflow-hidden mx-${step === 1 ? '1' : '0'} ${getMotionBg()}`}
+                  >
+                    {shouldAnimate && basket.order_status !== 'finished' && (
+                      <MotionDiv
+                        className='absolute inset-0 bg-gradient-to-r from-transparent via-takeat-primary-default to-transparent'
+                        initial={{ x: '-100%' }}
+                        animate={{ x: '100%' }}
+                        transition={{ duration: 2.5, repeat: Infinity, ease: 'linear' }}
+                      />
+                    )}
+                  </MotionDiv>
+                );
+              })}
+            </div>
+          )
+        }
 
         {/* FINALIZADO - ITENS */}
         {basket.order_status === 'finished' && (
@@ -167,7 +173,7 @@ export const CardComponent = ({ basket, restaurant, userChange, pixPayments }: P
               <div>
                 <p className="font-medium text-gray-800">{paymentMethod}</p>
                 <div className="flex items-center mt-2">
-                  <p className="font-semibold text-gray-800">{formatPrice(`${basket.total_price}`)}</p>
+                  <p className="font-semibold text-gray-800">{formatPrice(`${pedido.total_delivery_price}`)}</p>
                   <span className="text-gray-500 ml-2">
                     / {basket.orders?.length ?? 0} {basket.orders?.length > 1 ? 'itens' : 'item'}
                   </span>

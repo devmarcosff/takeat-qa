@@ -108,9 +108,9 @@ export default function ProductPage({ params }: Props) {
 
         {isDisabled && (
           <div className="w-full flex justify-end text-center mt-5">
-            <SelectAddProducts width={200} style={{ height: 48 }}>
-              <button type="button" onClick={handleClearData}>
-                <span className='text-takeat-primary-default font-semibold w-full'>Limpar dados</span>
+            <SelectAddProducts width={200} style={{ height: 48 }} className="flex !justify-center !items-center w-full">
+              <button type="button" onClick={handleClearData} className="flex justify-center items-center text-center">
+                <span className='text-takeat-primary-default font-semibold w-full flex justify-center items-center  text-center'>Limpar dados</span>
               </button>
             </SelectAddProducts>
           </div>

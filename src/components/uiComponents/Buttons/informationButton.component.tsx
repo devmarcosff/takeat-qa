@@ -26,7 +26,7 @@ const ICONS_MAP = {
 };
 
 export default function InformationButton({ onClick, value, title, description, time, icon, fill }: { onClick?: () => void, value?: string, title: string, description?: string, time?: number, icon?: IconNames | undefined, fill?: string, arrow?: boolean }) {
-  const { cuponValue, setCuponValue } = useDelivery()
+  const { cuponValue, setCuponValue, cashbackValue, setCashbackValue } = useDelivery()
 
   const handleRemoveContext = () => {
     setCuponValue({
@@ -56,6 +56,8 @@ export default function InformationButton({ onClick, value, title, description, 
       updatedAt: "",
       restaurant_id: 0,
     })
+
+    setCashbackValue('')
   }
 
   const DiscountTypes = () => {
@@ -63,32 +65,36 @@ export default function InformationButton({ onClick, value, title, description, 
       return `${description} - ${cuponValue.discount}%`
     } else if (cuponValue.discount_type === 'absolute') {
       return `${description} - ${formatPrice(cuponValue.discount)}`
-    } else {
+    } else if (cuponValue.discount_type === 'free-shipping') {
       return `${description} - FRETE GRATIS`
+    } else {
+      return `${formatPrice(description || '')}`
     }
   }
 
   const RemoveOrIcon = () => {
     return (
-      !cuponValue.code ? (
-        <InfoContainerButton>
-          <MdKeyboardArrowRight className="text-2xl" />
-        </InfoContainerButton>
-      ) : (
+      cuponValue.code ? (
         <InfoContainerButton>
           <span className="text-sm font-semibold" onClick={handleRemoveContext}>Remover</span>
         </InfoContainerButton>
-      )
+      ) : cashbackValue ? (
+        <InfoContainerButton>
+          <span className="text-sm font-semibold" onClick={handleRemoveContext}>Remover</span>
+        </InfoContainerButton>
+      ) : <InfoContainerButton>
+        <MdKeyboardArrowRight className="text-2xl" />
+      </InfoContainerButton>
     )
   }
 
   return (
-    <InfoButton onClick={!cuponValue.code ? onClick : () => null} value={value}>
+    <InfoButton onClick={!cuponValue.code && !cashbackValue ? onClick : () => null} value={value}>
       <InfoContainerButton>
         <CustomIcon name={icon || null} fill={fill} />
         <div className="flex flex-col justify-start items-start">
-          <span className={`${cuponValue.code ? 'text-takeat-green-default text-sm font-semibold' : 'text-takeat-neutral-darker'}`}>{title}</span>
-          <span className={`${cuponValue.code ? 'text-sm font-semibold' : 'text-takeat-neutral-darker'}`}>{cuponValue.code && DiscountTypes()}</span>
+          <span className={`${cuponValue.code || cashbackValue ? 'text-takeat-green-default text-sm font-semibold' : 'text-takeat-neutral-darker'}`}>{title}</span>
+          <span className={`${cuponValue.code || cashbackValue ? 'text-sm font-semibold' : 'text-takeat-neutral-darker'}`}>{cuponValue.code || cashbackValue ? DiscountTypes() : ''}</span>
         </div>
       </InfoContainerButton>
       {

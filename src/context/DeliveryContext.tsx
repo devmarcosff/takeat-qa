@@ -13,6 +13,8 @@ interface DeliveryContextType {
   fetchInitialData: (restaurant: string) => Promise<void>;
   cuponValue: ICashbackDrawer;
   setCuponValue: React.Dispatch<React.SetStateAction<ICashbackDrawer>>;
+  cashbackValue: string | undefined;
+  setCashbackValue: React.Dispatch<React.SetStateAction<string | undefined>>;
 }
 
 const DeliveryContext = createContext<DeliveryContextType | undefined>(undefined);
@@ -21,6 +23,7 @@ export const DeliveryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const [getRestaurants, setGetRestaurants] = useState<Restaurant | null>(null);
   const [getCategories, setGetCategories] = useState<Category[]>([]);
   const [cuponValue, setCuponValue] = useState({} as ICashbackDrawer);
+  const [cashbackValue, setCashbackValue] = useState<string>();
 
   const fetchInitialData = async (restaurant: string) => {
     try {
@@ -45,7 +48,9 @@ export const DeliveryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         setGetCategories,
         fetchInitialData,
         cuponValue,
-        setCuponValue
+        setCuponValue,
+        cashbackValue,
+        setCashbackValue
       }}
     >
       {children}

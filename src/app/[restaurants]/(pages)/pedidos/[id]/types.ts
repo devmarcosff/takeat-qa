@@ -1,49 +1,185 @@
-export interface IInfoPedidos {
+export interface IProduct2 {
   id: number;
-  order_status: string;
-  basket_id: string;
+  key: string;
   total_price: string;
   total_service_price: string;
   start_time: string;
-  close_time: string | null;
-  canceled_at: string | null;
-  orders: {
+  end_time: string | null;
+  ready_at: string | null;
+  accepted_at: string;
+  ongoing_at: string | null;
+  completed_at: string | null;
+  status: string;
+  old_total_price: string | null;
+  discount_percent: string | null;
+  discount_total: string | null;
+  discount_obs: string;
+  discount_at: string | null;
+  has_tax: boolean;
+  nfce_allowed: boolean;
+  rescued_clube: boolean;
+  menew_send: boolean;
+  is_delivery: boolean;
+  with_withdrawal: boolean;
+  will_receive_sms: boolean;
+  restaurant_paid_sms: boolean;
+  user_change: string;
+  sms_service_price: string;
+  delivery_tax_price: string;
+  total_delivery_price: string;
+  attendance_password: number;
+  delivery_canceled_at: string | null;
+  sales_channel: string;
+  ifood_id: string | null;
+  ifood_paid: boolean;
+  ifood_discount: string | null;
+  ifood_delivery_time: string | null;
+  merchant_discount: string | null;
+  additional_fees: string | null;
+  delivery_by: string | null;
+  ifood_document: string | null;
+  menew_tried: boolean;
+  nfce_ref: string | null;
+  is_nfce_issue: boolean;
+  scheduled_to: string | null;
+  is_prepaid: boolean;
+  details: string;
+  people_at_table: string;
+  delivery_fee_discount: string;
+  ifood_on_demand_id: string | null;
+  total_paid: string;
+  neemo_id: string | null;
+  foody_delivery_session_id: string | null;
+  tip: string | null;
+  createdAt: string;
+  updatedAt: string;
+  motoboy_id: string | null;
+  restaurant_id: number;
+  table_id: number;
+  discount_by_user: string | null;
+  discount_by_waiter: string | null;
+  client_id: string | null;
+  buyer_delivery_address_id: number;
+  intended_payment_method_id: number;
+  ifood_restaurant_id: string | null;
+  responsible_waiter_id: string | null;
+  table: {
+    table_number: number;
+    table_type: string;
+  };
+  buyer_address: {
     id: number;
-    details: string | null;
-    observation: string,
-    amount: number;
-    price: string;
+    country: string;
+    state: string;
+    city: string;
+    neighborhood: string;
+    street: string;
+    number: string;
+    complement: string;
+    reference: string;
+    zip_code: string;
+    latitude: string | null;
+    longitude: string | null;
+    request_counter: number;
+    distance: string;
+    deleted_at: string | null;
+    createdAt: string;
+    updatedAt: string;
+    buyer_id: number;
+    restaurant_id: number;
+  };
+  payment_method: {
+    id: number;
+    keyword: string;
+    name: string;
+  };
+  bills: Array<{
+    id: number;
     total_price: string;
     total_service_price: string;
-    weight: string;
-    use_weight: boolean;
-    product: {
-      id: number;
+    status: string;
+    service_tax: boolean;
+    start_time: string;
+    close_time: string | null;
+    buyer: {
+      phone: string;
       name: string;
+      created_by_waiter: string | null;
     };
-    complement_categories: {
+    waiter: string | null;
+    order_baskets: Array<{
       id: number;
-      complement_category: {
+      order_status: string;
+      basket_id: string;
+      total_price: string;
+      total_service_price: string;
+      start_time: string;
+      close_time: string | null;
+      canceled_at: string | null;
+      command_table_number: string | null;
+      ifood_id: string | null;
+      schedule: string | null;
+      ifood_table: string | null;
+      transfer: string | null;
+      scheduled_to: string | null;
+      neemo_id: string | null;
+      channel: string;
+      createdAt: string;
+      updatedAt: string;
+      bill_id: number;
+      waiter_id: string | null;
+      orders: Array<{
         id: number;
-        name: string;
-        available: boolean;
-        question: string;
-      };
-      order_complements: {
-        id: number;
+        details: string;
         amount: number;
         price: string;
-        complement: {
+        total_price: string;
+        total_service_price: string;
+        weight: string;
+        use_weight: boolean;
+        product: {
           id: number;
           name: string;
+          description: string;
           price: string;
+          price_promotion: string | null;
+          use_weight: boolean;
+          available: boolean;
+          available_in_delivery: boolean;
+          delivery_price: string;
+          delivery_price_promotion: string | null;
+          image: {
+            url: string;
+            url_thumb: string;
+            id: number;
+            name: string;
+            path: string;
+            path_thumb: string;
+            createdAt: string;
+            updatedAt: string;
+          };
         };
-      }[];
-    }[];
-  }[];
-  attendance_password: number;
-  fantasy_name: string;
-  delivery_tax_price: string;
-  with_withdrawal: boolean;
-  motoboy: string | null;
+        complement_categories: Array<{
+          id: number;
+          complement_category: {
+            id: number;
+            name: string;
+            available: boolean;
+            available_in_delivery: boolean;
+            question: string;
+          };
+          order_complements: Array<{
+            id: number;
+            amount: number;
+            complement: {
+              id: number;
+              name: string;
+              price: string;
+              available: boolean;
+            };
+          }>;
+        }>;
+      }>;
+    }>;
+  }>;
 }

@@ -85,8 +85,6 @@ export default function PagamentoPage({ params }: Props) {
       const parsedCardClient = JSON.parse(`${storageClientCard}`)
       if (storageClientCard) setState(parsedCardClient)
 
-      console.log(parsedCardClient)
-
       try {
         const res = await api_delivery.get(`/${restaurant}`);
         setMethodPayment(res.data.payment_methods);

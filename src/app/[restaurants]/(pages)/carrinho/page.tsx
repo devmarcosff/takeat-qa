@@ -38,8 +38,6 @@ export default function ProductPage({ params }: Props) {
     setBag([]);
   };
 
-  console.log(bag)
-
   const updateQuantity = ({ index, newQuantity }: { index: number, newQuantity: number }) => {
     setBag((prevBag) => {
       const updatedBag = prevBag.map((item, i) => {

@@ -6,6 +6,7 @@ import InformationButton from "@/components/uiComponents/Buttons/informationButt
 import InternalPages from "@/components/uiComponents/InternalPageHeader/internal_pages.header";
 import { useDelivery } from "@/context/DeliveryContext";
 import { Restaurant } from "@/types/restaurant.types";
+import { api_public } from "@/utils/apis";
 import { AnimatePresence, motion } from "framer-motion";
 import Link from "next/link";
 import { use, useEffect, useState } from "react";
@@ -30,7 +31,7 @@ export interface IAddress {
 };
 
 export interface IClienteTakeat {
-  name: string,
+  name?: string,
   tel: string
 }
 
@@ -39,6 +40,15 @@ export interface IAgendamento {
   hour?: string,
   method?: string,
   month?: number,
+}
+
+export interface IClientClube {
+  clientExist: boolean,
+  clientEmail: string | null,
+  clientBelongsToStore: boolean,
+  minimum_rescue: string,
+  totalClientCashback: string,
+  totalClientPoints: null
 }
 
 export default function ConfirmarPedidoPage({ params }: Props) {
@@ -57,6 +67,7 @@ export default function ConfirmarPedidoPage({ params }: Props) {
   const [methodDelivery, setMethodDelivery] = useState<IAgendamento>({});
   const [addressDeliveryRestaurant, setAddressDeliveryRestaurant] = useState<Restaurant>()
   const [troco, setTroco] = useState<number>(0)
+  const [isClientClube, setIsClientClube] = useState<IClientClube>({} as IClientClube)
   const [openDrawer, setOpenDrawer] = useState<boolean>(false)
   const [addressDelivery, setAddressDelivery] = useState<IAddress>({
     state: ``,
@@ -70,7 +81,7 @@ export default function ConfirmarPedidoPage({ params }: Props) {
     delivery_tax_price: ''
   });
 
-  const { cuponValue } = useDelivery()
+  const { cuponValue, cashbackValue } = useDelivery()
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -87,6 +98,26 @@ export default function ConfirmarPedidoPage({ params }: Props) {
         setAddressDeliveryRestaurant(parsedGetTakeatBag);
       }
 
+      if (getClienteTakeat) {
+        const parsedGetClienteTakeat = JSON.parse(getClienteTakeat);
+        setIsClienteTakeat(parsedGetClienteTakeat);
+      }
+
+      if (getClienteTakeat && addressDeliveryRestaurant) {
+        const parsedGetClienteTakeat = JSON.parse(getClienteTakeat);
+        const parsedGetTakeatBag = JSON.parse(addressDeliveryRestaurant);
+        const tel = parsedGetClienteTakeat?.tel.replace(/[-\s]/g, '');
+        const restaurantId = parsedGetTakeatBag.id;
+        const fetchClube = async () => {
+          await api_public.get(`/clube/client/${tel}/${restaurantId}`).then(res => {
+            setIsClientClube(res.data)
+            localStorage.setItem(`@takeatIsClientClube:${restaurant}`, JSON.stringify(res.data))
+          }).catch(err => console.log(err))
+        }
+
+        fetchClube()
+      }
+
       if (getTakeatBag) {
         const parsedGetTakeatBag = JSON.parse(getTakeatBag);
         setResumeCart(parsedGetTakeatBag.products);
@@ -100,11 +131,6 @@ export default function ConfirmarPedidoPage({ params }: Props) {
       if (getMethodDeliveryTakeat) {
         const parsedGetMethodDeliveryTakeat = JSON.parse(getMethodDeliveryTakeat);
         setMethodDelivery(parsedGetMethodDeliveryTakeat);
-      }
-
-      if (getClienteTakeat) {
-        const parsedGetClienteTakeat = JSON.parse(getClienteTakeat);
-        setIsClienteTakeat(parsedGetClienteTakeat);
       }
 
       if (getAddressDelivery) {
@@ -224,7 +250,7 @@ export default function ConfirmarPedidoPage({ params }: Props) {
               <span>{PaymentInfo()}</span>
             </div>
 
-            <InformationButton onClick={() => setOpenDrawer(!openDrawer)} title={`${cuponValue.code ? 'Cupom aplicado!' : 'Adicionar desconto'}`} description={cuponValue.code} icon={`${cuponValue.code ? 'Nothing' : 'IconTicketFilled'}`} fill="#7a7a7a" arrow />
+            <InformationButton onClick={() => setOpenDrawer(!openDrawer)} title={`${cuponValue.code ? 'Cupom aplicado!' : cashbackValue ? 'Cashback resgatado!' : 'Adicionar desconto'}`} description={cuponValue.code || cashbackValue} icon={`${cuponValue.code || cashbackValue ? 'Nothing' : 'IconTicketFilled'}`} fill="#7a7a7a" />
           </div>
         </div>
 
@@ -283,7 +309,7 @@ export default function ConfirmarPedidoPage({ params }: Props) {
       </div>
 
       <ContinueComponents params={restaurant} route="pedido-realizado" finishOrder textButon="Enviar Pedido" />
-      <CashbackDrawer openDrawer={openDrawer} setOpenDrawer={() => setOpenDrawer(!openDrawer)} />
+      <CashbackDrawer isClienteTakeat={isClienteTakeat} isClientClube={isClientClube} openDrawer={openDrawer} setOpenDrawer={() => setOpenDrawer(!openDrawer)} />
     </InternalPages>
   );
 } 

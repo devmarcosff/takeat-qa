@@ -4,30 +4,37 @@ import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useDelivery } from "@/context/DeliveryContext";
+import { api_Club } from "@/utils/apis";
 import axios from "axios";
 import { useParams } from "next/navigation";
 import { ChangeEvent, useEffect, useState } from "react";
 import { formatPrice, IconChevronDown } from "takeat-design-system-ui-kit";
+import { IClientClube, IClienteTakeat } from "./page";
 import { ICashbackDrawer } from "./types";
 
 interface ICashProps {
   openDrawer?: boolean;
   setOpenDrawer?: () => void;
+  isClientClube: IClientClube,
+  isClienteTakeat?: IClienteTakeat
 }
 
-export default function CashbackDrawer({ openDrawer, setOpenDrawer }: ICashProps) {
+export default function CashbackDrawer({ openDrawer, setOpenDrawer, isClientClube, isClienteTakeat }: ICashProps) {
   const params = useParams()
   const [birthdate, setBirthdate] = useState('');
   const [cashbackDrawer, setCashbackDrawer] = useState<ICashbackDrawer[]>([]);
   const [cuponSelect, setCuponSelect] = useState<ICashbackDrawer>({} as ICashbackDrawer);
+  const [confirmCashback, setConfirmCashback] = useState<ICashbackDrawer>({} as ICashbackDrawer);
+  const [isRescue, setIsRescue] = useState<boolean>(false);
 
-  const { setCuponValue } = useDelivery()
+  const { setCuponValue, setCashbackValue } = useDelivery()
 
   useEffect(() => {
     const restaurant = `@deliveryTakeatRestaurant:${params.restaurants}`
     const getRestaurantId = localStorage.getItem(restaurant)
     if (getRestaurantId) {
       const parsedRestaurant = JSON.parse(getRestaurantId)
+      setConfirmCashback(parsedRestaurant)
       axios.get(`https://backend-gd.takeat.app/public/discount-coupons/restaurant/${parsedRestaurant.id}/delivery`).then(res => setCashbackDrawer(res.data)).catch(err => console.log(err))
     }
   }, [])
@@ -52,7 +59,33 @@ export default function CashbackDrawer({ openDrawer, setOpenDrawer }: ICashProps
     setCuponSelect(item)
   };
 
+  const handleCashbackSelect = () => isRescue && setCashbackValue(isClientClube.totalClientCashback)
+
   const handleAddCupom = () => cuponSelect.id && setCuponValue(cuponSelect)
+
+  const ViewTab = () => {
+    if (isClientClube.clientExist === true && isClientClube.clientBelongsToStore === true) {
+      if (isClientClube.totalClientCashback > isClientClube.minimum_rescue) {
+        const tel = isClienteTakeat ? isClienteTakeat.tel.replace(/[-\s]/g, '') : ''
+        const payload = {
+          birthday: birthdate,
+          phone: tel,
+          token: confirmCashback.token_clube
+        }
+        api_Club.post('/takeat/confirm-birthday', payload).then(res => setIsRescue(res.data.success ? true : false)).catch(err => console.log(err))
+        return (
+          <>
+            <TabsTrigger value="cashback" className="w-full py-2 m-0 border border-takeat-neutral-darker rounded-r-none data-[state=active]:!bg-takeat-neutral-darker data-[state=active]:!text-white">Cashback</TabsTrigger>
+            <TabsTrigger value="cupons" className="w-full py-2 m-0 border border-takeat-neutral-darker rounded-l-none data-[state=active]:!bg-takeat-neutral-darker data-[state=active]:!text-white">Cupons</TabsTrigger>
+          </>
+        )
+      } else {
+        return (
+          <TabsTrigger value="cupons" className="w-full py-2 m-0 border border-takeat-neutral-darker data-[state=active]:!bg-takeat-neutral-darker data-[state=active]:!text-white">Cupons</TabsTrigger>
+        )
+      }
+    }
+  }
 
   return (
     <Drawer open={openDrawer} onOpenChange={setOpenDrawer}>
@@ -62,17 +95,16 @@ export default function CashbackDrawer({ openDrawer, setOpenDrawer }: ICashProps
         </DrawerHeader>
 
         <div className="w-full px-4">
-          <Tabs defaultValue="cashback" className="w-full flex flex-col">
+          <Tabs defaultValue={Number(isClientClube.totalClientCashback) != 0 ? 'cashback' : 'cupons'} className="w-full flex flex-col">
 
             <TabsList className="bg-transparent">
-              <TabsTrigger value="cashback" className="w-full py-2 m-0 border border-takeat-neutral-darker rounded-r-none data-[state=active]:!bg-takeat-neutral-darker data-[state=active]:!text-white">Cashback</TabsTrigger>
-              <TabsTrigger value="cupons" className="w-full py-2 m-0 border border-takeat-neutral-darker rounded-l-none data-[state=active]:!bg-takeat-neutral-darker data-[state=active]:!text-white">Cupons</TabsTrigger>
+              {ViewTab()}
             </TabsList>
 
             <TabsContent value="cashback">
               <div className="bg-takeat-neutral-lightest py-5 rounded-xl flex flex-col px-4 gap-2">
                 <span>Saldo de Cashback:</span>
-                <span className="text-takeat-green-default font-semibold">{formatPrice(10)}</span>
+                <span className="text-takeat-green-default font-semibold">{formatPrice(isClientClube.totalClientCashback)}</span>
               </div>
 
               <div>
@@ -87,17 +119,25 @@ export default function CashbackDrawer({ openDrawer, setOpenDrawer }: ICashProps
                   placeholder="DD/MM/AAAA"
                   className="w-full border border-gray-500 rounded-xl py-2 px-4" />
               </div>
+
+              <DrawerFooter className="flex flex-row w-full justify-between items-center">
+                <DrawerClose asChild>
+                  <Button variant="outline" className="w-2/4 text-[16px]">Cancelar</Button>
+                </DrawerClose>
+                <DrawerClose asChild onClick={handleCashbackSelect} disabled={!isRescue && !cuponSelect.id}>
+                  <Button className="w-full disabled:bg-takeat-neutral-lighter disabled:text-takeat-neutral-darker text-[16px]">Resgatar</Button>
+                </DrawerClose>
+              </DrawerFooter>
             </TabsContent>
 
             <TabsContent value="cupons">
               <div>
                 <span>Cupons disponíveis:</span>
 
-                <div className="flex flex-col gap-1 overflow-y-scroll h-[700px]">
+                <div className="flex flex-col gap-1 overflow-y-scroll h-[700px] my-2 pt-2 border-t">
                   {
                     cashbackDrawer.map((item, index) => {
                       const isSelected = cuponSelect.id === item.id;
-                      console.log(item.discount)
                       const DiscountTypes = () => {
                         if (item.discount_type === 'percentage') {
                           return `Desconto ${item.discount}%`
@@ -143,19 +183,19 @@ export default function CashbackDrawer({ openDrawer, setOpenDrawer }: ICashProps
                   }
                 </div>
               </div>
+
+              <DrawerFooter className="flex flex-row w-full justify-between items-center">
+                <DrawerClose asChild>
+                  <Button variant="outline" className="w-2/4 text-[16px]">Cancelar</Button>
+                </DrawerClose>
+                <DrawerClose asChild onClick={handleAddCupom} disabled={!isRescue && !cuponSelect.id}>
+                  <Button className="w-full disabled:bg-takeat-neutral-lighter disabled:text-takeat-neutral-darker text-[16px]">Resgatar</Button>
+                </DrawerClose>
+              </DrawerFooter>
             </TabsContent>
 
           </Tabs>
         </div>
-
-        <DrawerFooter className="flex flex-row w-full justify-between items-center">
-          <DrawerClose asChild>
-            <Button variant="outline" className="w-2/4 text-[16px]">Cancelar</Button>
-          </DrawerClose>
-          <DrawerClose asChild onClick={handleAddCupom} disabled={!cuponSelect.id}>
-            <Button className="w-full disabled:bg-takeat-neutral-lighter disabled:text-takeat-neutral-darker text-[16px]">Resgatar</Button>
-          </DrawerClose>
-        </DrawerFooter>
       </DrawerContent>
     </Drawer>
   )

@@ -18,6 +18,7 @@ export interface Product {
     promotion: string;
     use_weight: boolean;
     has_starting_price: boolean;
+    combo_delivery_price: string;
     is_combo: boolean;
     available: boolean;
     available_in_delivery: boolean;

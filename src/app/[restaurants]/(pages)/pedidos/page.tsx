@@ -38,6 +38,7 @@ export default function Pedidos({ params }: Props) {
             !['finished', 'canceled', 'canceled_waiting_payment'].includes(basket.order_status)
           )
           .map(basket => ({
+            pedido,
             basket,
             pix_payments: pedido.pix_payments,
             user_change: pedido.user_change,
@@ -50,6 +51,7 @@ export default function Pedidos({ params }: Props) {
     .flatMap(pedido =>
       pedido.bills.flatMap(bill =>
         bill.order_baskets.map(basket => ({
+          pedido,
           basket,
           pix_payments: pedido.pix_payments,
           user_change: pedido.user_change,
@@ -65,6 +67,7 @@ export default function Pedidos({ params }: Props) {
             ['finished', 'canceled', 'canceled_waiting_payment'].includes(basket.order_status)
           )
           .map(basket => ({
+            pedido,
             basket,
             pix_payments: pedido.pix_payments,
             user_change: pedido.user_change,
@@ -101,6 +104,7 @@ export default function Pedidos({ params }: Props) {
               {andamentoCards.length ? andamentoCards.map((item, i) => (
                 <CardComponent
                   key={i}
+                  pedido={item.pedido}
                   basket={item.basket}
                   restaurant={restaurant}
                   userChange={item.user_change}
@@ -115,6 +119,7 @@ export default function Pedidos({ params }: Props) {
               {agendadosCards.length ? agendadosCards.map((item, i) => (
                 <CardComponent
                   key={i}
+                  pedido={item.pedido}
                   basket={item.basket}
                   restaurant={restaurant}
                   userChange={item.user_change}
@@ -129,6 +134,7 @@ export default function Pedidos({ params }: Props) {
               {finalizadosCards.length ? finalizadosCards.map((item, i) => (
                 <CardComponent
                   key={i}
+                  pedido={item.pedido}
                   basket={item.basket}
                   restaurant={restaurant}
                   userChange={item.user_change}

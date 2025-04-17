@@ -314,7 +314,7 @@ export default function ProductDrawer({ openDrawer, setOpenDrawer, products, par
                   <p className="text-takeat-neutral-dark">{products.description}</p>
                 </div>
                 <div className="flex items-center gap-2">
-                  <p className="text-takeat-green-dark font-semibold">{formatPrice(products.delivery_price || products.price)}</p>
+                  <p className="text-takeat-green-dark font-semibold">{products.is_combo == true ? formatPrice(products.combo_delivery_price) : formatPrice(products.delivery_price_promotion || products.delivery_price)}</p>
                   <p className="text-takeat-neutral-dark line-through">{products.delivery_price_promotion && formatPrice(products.delivery_price_promotion)}</p>
                 </div>
               </div>
@@ -327,7 +327,7 @@ export default function ProductDrawer({ openDrawer, setOpenDrawer, products, par
                   key={category.id}>
                   <div className={`flex transition-all duration-300 justify-between items-start px-4 py-2 mt-3 bg-takeat-neutral-lightest shadow rounded-xl ${highlightedCategory === String(category.id) ? 'ring-2 ring-takeat-primary-default bg-animation-slide-up-fade' : ''}`}>
                     <div>
-                      <h3 className="text-lg font-semibold text-takeat-neutral-dark">{category.name}</h3>
+                      <h3 className="text-lg font-semibold text-takeat-neutral-dark">{category.question}</h3>
                       <p className="text-takeat-neutral-dark text-sm">
                         Escolha até {category.limit === 1 ? `${category.limit} opção` : `${category.limit} opções`}
                       </p>
@@ -505,7 +505,7 @@ export default function ProductDrawer({ openDrawer, setOpenDrawer, products, par
                     exit={{ x: 20, opacity: 0 }}
                     transition={{ duration: .3, ease: "easeInOut" }}
                   >
-                    {formatPrice(finishValue || 0)}
+                    {formatPrice(finishValue || products.combo_delivery_price)}
                   </motion.span>
                 </AnimatePresence>
               </TextAddProductsQuantity>

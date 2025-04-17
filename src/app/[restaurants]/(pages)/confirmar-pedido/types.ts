@@ -24,4 +24,5 @@ export interface ICashbackDrawer {
     createdAt: string;
     updatedAt: string;
     restaurant_id: number;
+    token_clube?: string
 }

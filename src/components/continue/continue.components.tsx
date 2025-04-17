@@ -60,10 +60,9 @@ export default function ContinueComponents({ params, route, clear, textButon, de
   const [loading, setLoading] = useState<boolean>(false)
   const [scheduling, setScheduling] = useState<IAgendamento>({})
   const [troco, setTroco] = useState<number>(0)
-  // const [cupomValue, setCupomValue] = useState<number>(0)
   const { push } = useRouter();
 
-  const { cuponValue } = useDelivery()
+  const { cuponValue, cashbackValue } = useDelivery()
 
   const updateStorageData = useCallback(() => {
     const storedBag = localStorage.getItem(takeatBagKey);
@@ -155,11 +154,13 @@ export default function ContinueComponents({ params, route, clear, textButon, de
       will_receive_sms: true, // Se receber SMS
       details: "", // Detalhes do pedido
       coupon_code: cuponValue.code || '', // Código do cupom
-      rescue: 0, // Resgate
+      rescue: cashbackValue || '', // Resgate
       scheduled_time: scheduling.hour || '', // Se for agendamento de retirada
       user_change: troco || 0, // Se existir troco
       order: orders, // Objeto de produtos
     };
+
+    // console.log(payload)
 
     if (scheduling.method === 'Agendamento Delivery' || scheduling.method === 'Agendamento Retirada') {
       api_scheduling.post('/orders', payload, config)
@@ -175,7 +176,6 @@ export default function ContinueComponents({ params, route, clear, textButon, de
               localStorage.removeItem(methodDeliveryTakeat);
               localStorage.removeItem(storageTakeat);
               localStorage.removeItem(useChange);
-              // setLoading(false)
             }, 1000)
           }
         })
