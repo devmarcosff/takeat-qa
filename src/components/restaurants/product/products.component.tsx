@@ -123,7 +123,6 @@ export default function ProductsRestaurant({ categories = [], params, searchTerm
             return (
               <CategoryContainer key={index}>
                 <CategoryHeader
-                  // onClick={() => toggleShow(index)}
                   id={item.name}>
                   <CategoryImageContainer>
                     <CategoryImage
@@ -169,7 +168,7 @@ export default function ProductsRestaurant({ categories = [], params, searchTerm
                               <p className="line-clamp-3">{product.description}</p>
                               <ProductPrice delivery_price={product.delivery_price_promotion ? `${product.delivery_price_promotion}` : undefined}>
                                 {!!product.delivery_price
-                                  ? formatPrice(product.delivery_price)
+                                  ? formatPrice(product.combo_delivery_price ? product.combo_delivery_price : product.delivery_price)
                                   : formatPrice(product.price)}
                                 {!!product.delivery_price_promotion && (
                                   <span>

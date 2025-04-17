@@ -352,7 +352,7 @@ export default function InfoPedidos() {
                   </div>
                   <div className="flex flex-col gap-2 justify-between items-end">
                     <span className="text-sm">Total</span>
-                    <span className="font-semibold">{pedidos2?.total_delivery_price}</span>
+                    <span className="font-semibold">{formatPrice(`${pedidos2?.total_delivery_price || 0}`)}</span>
                   </div>
                 </div>
               </div>
