@@ -24,12 +24,6 @@ export default function Restaurant({ params }: Props) {
 
   if (isLoading) return;
 
-  // ANALISA SE O RESTAURANTE ACEITA CLUBE CASHBASCK - SE VERDADEIRO(TRUE)
-  // console.log(getRestaurants?.has_clube)
-
-  // SALVA O TOKEN_CLUBE EM CACHE PARA ANALISE FUTURA
-  // console.log(getRestaurants?.token_clube)
-
   return (
     <div>
       <PageWrapper>

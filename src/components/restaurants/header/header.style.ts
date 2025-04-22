@@ -59,7 +59,7 @@ ${({ scrolling, height }) => css`
 
 export const HeaderContainer = styled.header<HeaderStickyProps>`  
   ${({ theme, scrolling }) => css`
-    color: ${theme};
+    color: ${theme.colors.neutral.default};
     position: relative;
     width: 100%;
     background: ${scrolling ? theme.colors.neutral.lightest : 'white'};

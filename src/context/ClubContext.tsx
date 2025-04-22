@@ -24,6 +24,7 @@ interface IClubContext {
     canUseCashback: boolean;
     isLoading: boolean;
     error: string | null;
+    checkRestaurantClub: (restaurantId: string) => Promise<void>;
 }
 
 const ClubContext = createContext<IClubContext | undefined>(undefined);
@@ -133,7 +134,8 @@ export function ClubProvider({ children }: { children: ReactNode }) {
         confirmBirthday,
         canUseCashback,
         isLoading,
-        error
+        error,
+        checkRestaurantClub
     }), [
         hasClub,
         tokenClub,
@@ -142,7 +144,8 @@ export function ClubProvider({ children }: { children: ReactNode }) {
         confirmBirthday,
         canUseCashback,
         isLoading,
-        error
+        error,
+        checkRestaurantClub
     ]);
 
     return (

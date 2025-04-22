@@ -64,7 +64,7 @@ export default function ConfirmarPedidoPage({ params }: Props) {
   const [resumeCart, setResumeCart] = useState<ICart[]>();
   const [isClienteTakeat, setIsClienteTakeat] = useState<IClienteTakeat>();
   const [parsedMethodPayment, setParsedMethodPayment] = useState<IPaymentsProps>();
-  const [methodDelivery, setMethodDelivery] = useState<IAgendamento>({});
+  const [methodDelivery, setMethodDelivery] = useState<IAgendamento | null>(null);
   const [addressDeliveryRestaurant, setAddressDeliveryRestaurant] = useState<Restaurant>()
   const [troco, setTroco] = useState<number>(0)
   const [isClientClube, setIsClientClube] = useState<IClientClube>({} as IClientClube)
@@ -80,6 +80,7 @@ export default function ConfirmarPedidoPage({ params }: Props) {
     zip_code: ``,
     delivery_tax_price: ''
   });
+  // const [addressRestaurantState, setAddressRestaurantState] = useState<IAddress | null>(null);
 
   const { cuponValue, cashbackValue } = useDelivery()
 
@@ -150,6 +151,34 @@ export default function ConfirmarPedidoPage({ params }: Props) {
     deliveryTakeat,
     MethodPaymentTakeat,
   ]);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const getMethodDelivery = localStorage.getItem(methodDeliveryTakeat);
+      if (getMethodDelivery) {
+        const parsedMethodDelivery = JSON.parse(getMethodDelivery);
+        setMethodDelivery(parsedMethodDelivery);
+      }
+
+      // const getAddressRestaurant = localStorage.getItem(addressRestaurant);
+      // if (getAddressRestaurant) {
+      //   const parsedAddressRestaurant = JSON.parse(getAddressRestaurant);
+      //   setAddressRestaurantState(parsedAddressRestaurant);
+      // }
+
+      // const getRestaurant = localStorage.getItem(restaurant);
+      // if (getRestaurant) {
+      //   const parsedRestaurant = JSON.parse(getRestaurant);
+      //   setRestaurant(parsedRestaurant);
+      // }
+
+      // const getUseChange = localStorage.getItem(useChange);
+      // if (getUseChange) {
+      //   const parsedUseChange = JSON.parse(getUseChange);
+      //   setUseChange(parsedUseChange);
+      // }
+    }
+  }, [methodDeliveryTakeat, restaurant, useChange]);
 
   const TitleMethodPayment = (title: string, url: string) => {
     return (
@@ -255,8 +284,8 @@ export default function ConfirmarPedidoPage({ params }: Props) {
         </div>
 
         <div className="pt-3">
-          {TitleMethodPayment(`${methodDelivery.method === 'retirarBalcao' ? 'Retirada' : methodDelivery.method === 'delivery' ? 'Delivery' : methodDelivery.method}`, `${methodDelivery.method === 'retirarBalcao' || methodDelivery.method === 'Agendamento Retirada' ? 'entrega' : 'endereco'}`)}
-          {methodDelivery.method === 'delivery' || methodDelivery.method === 'Agendamento Delivery' ? (
+          {TitleMethodPayment(`${methodDelivery?.method === 'retirarBalcao' ? 'Retirada' : methodDelivery?.method === 'delivery' ? 'Delivery' : methodDelivery?.method}`, `${methodDelivery?.method === 'retirarBalcao' || methodDelivery?.method === 'Agendamento Retirada' ? 'entrega' : 'endereco'}`)}
+          {methodDelivery?.method === 'delivery' || methodDelivery?.method === 'Agendamento Delivery' ? (
             <div className="border-b pb-3">
               {!!addressDelivery.city && (
                 <div className="flex items-center gap-2 font-semibold">

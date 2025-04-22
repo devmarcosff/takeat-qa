@@ -36,7 +36,12 @@ type AddressRef = { id: string; delivery_tax_price: string }; // ajuste conforme
 type CartRef = { products: Product[] };
 type MethodPaymentRef = { keyword: string; id?: number };
 
-export default function ContinueComponents({ params, route, clear, textButon, desconto, finishOrder }: Props) {
+export default function ContinueComponent({
+  params,
+  textButon,
+  desconto,
+  finishOrder
+}: Props) {
   const MethodPaymentTakeat = `@methodPaymentTakeat:${params}`;
   const takeatBagKey = `@deliveryTakeat:${params}TakeatBag`;
   const deliveryTakeatRestaurant = `@deliveryTakeatRestaurant:${params}`;
