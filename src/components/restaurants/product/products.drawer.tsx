@@ -35,7 +35,7 @@ export default function ProductDrawer({ openDrawer, setOpenDrawer, products, par
   const [lastQuantities, setLastQuantities] = useState<{ [key: string]: number }>({});
   const [observation, setObservation] = useState<string>('');
   const [quantityProduct, setQuantityProduct] = useState(1);
-  const [valueProduct, setValueProduct] = useState(products?.delivery_price || products?.price);
+  const [valueProduct, setValueProduct] = useState(products?.delivery_price || 0);
   const [complements, setComplements] = useState<ComplementItem[]>([]);
   const [highlightedCategory, setHighlightedCategory] = useState<string | null>(null);
   const router = useRouter();
@@ -194,7 +194,7 @@ export default function ProductDrawer({ openDrawer, setOpenDrawer, products, par
 
   const finishValue = getComplementsPrice({
     amount: quantityProduct,
-    price: String(products.delivery_price || products.price),
+    price: String(products.combo_delivery_price || products.delivery_price_promotion || products.delivery_price || products.price),
     weight: weightProduct,
     complement_categories: mapToComplementCategories(),
   })
@@ -214,7 +214,7 @@ export default function ProductDrawer({ openDrawer, setOpenDrawer, products, par
     const payloadProduct = {
       name: products.name,
       categoryId: products.id,
-      delivery_price: products.combo_delivery_price || products.delivery_price,
+      delivery_price: products.combo_delivery_price || products.delivery_price_promotion || products.delivery_price || products.price,
       price: finishValue / quantityProduct,
       img: image,
       observation: observation,
@@ -314,8 +314,8 @@ export default function ProductDrawer({ openDrawer, setOpenDrawer, products, par
                   <p className="text-takeat-neutral-dark">{products.description}</p>
                 </div>
                 <div className="flex items-center gap-2">
-                  <p className="text-takeat-green-dark font-semibold">{formatPrice(products.combo_delivery_price || products.price || products.delivery_price)}</p>
-                  <p className="text-takeat-neutral-dark line-through">{products.delivery_price_promotion && formatPrice(products.delivery_price_promotion)}</p>
+                  <p className="text-takeat-green-dark font-semibold">{formatPrice(products.combo_delivery_price || products.delivery_price_promotion || products.delivery_price || products.price)}</p>
+                  <p className="text-takeat-neutral-dark line-through">{products.delivery_price_promotion && formatPrice(products.delivery_price)}</p>
                 </div>
               </div>
             </div>
@@ -348,14 +348,14 @@ export default function ProductDrawer({ openDrawer, setOpenDrawer, products, par
                         >
                           <div className="flex flex-col">
                             <span className="text-md font-medium">{complement.name}</span>
-                            <span className={`text-md font-semibold text-sm ${Number(complement.price) == 0 && 'hidden'}`}>{formatPrice(complement.price)}</span>
+                            <span className={`text-md font-semibold text-sm ${Number(complement.delivery_price) == 0 && 'hidden'}`}>{formatPrice(complement.delivery_price)}</span>
                           </div>
                           <input
                             type="radio"
                             name={`category-${category.id}`}
                             value={complement.id}
                             checked={selectedComplements[category.id] === String(complement.id)}
-                            onChange={() => handleSelectComplement(`${complement.price}`, `${complement.name}`, category.limit, `${category.id}`, `${complement.id}`)}
+                            onChange={() => handleSelectComplement(`${complement.delivery_price}`, `${complement.name}`, category.limit, `${category.id}`, `${complement.id}`)}
                             className="hidden"
                           />
                           <span
@@ -384,7 +384,7 @@ export default function ProductDrawer({ openDrawer, setOpenDrawer, products, par
                             className="transition-all flex items-center cursor-pointer justify-between p-2 rounded-lg">
                             <div className="flex flex-col">
                               <span className="text-md font-medium">{complement.name}</span>
-                              <span className={`text-md font-semibold text-sm ${Number(complement.price) == 0 && 'hidden'}`}>{formatPrice(complement.price)}</span>
+                              <span className={`text-md font-semibold text-sm ${Number(complement.delivery_price) == 0 && 'hidden'}`}>{formatPrice(complement.delivery_price)}</span>
                             </div>
                             <div className="flex items-center gap-1">
                               <button
@@ -392,7 +392,7 @@ export default function ProductDrawer({ openDrawer, setOpenDrawer, products, par
                                 className={`w-7 h-7 flex items-center justify-center text-takeat-primary-default rounded-full font-bold text-lg transition-all ${quantity === 0 ? "hidden" : ""
                                   }`}
                                 onClick={() => {
-                                  handleQuantityChange(`${complement.price}`, complement.limit, `${complement.name}`, `${category.id}`, `${complement.id}`, -1)
+                                  handleQuantityChange(`${complement.delivery_price}`, complement.limit, `${complement.name}`, `${category.id}`, `${complement.id}`, -1)
                                 }
                                 }
                               >
@@ -421,7 +421,7 @@ export default function ProductDrawer({ openDrawer, setOpenDrawer, products, par
                                         ${quantity === complement.limit ? "opacity-50 cursor-not-allowed" : ""}
                                       `}
                                 onClick={() =>
-                                  handleQuantityChange(`${complement.price}`, complement.limit, `${complement.name}`, `${category.id}`, `${complement.id}`, 1)
+                                  handleQuantityChange(`${complement.delivery_price}`, complement.limit, `${complement.name}`, `${category.id}`, `${complement.id}`, 1)
                                 }
                               >
                                 <IconAddCircleFilled className="fill-takeat-primary-default w-full h-full" />
@@ -505,7 +505,7 @@ export default function ProductDrawer({ openDrawer, setOpenDrawer, products, par
                     exit={{ x: 20, opacity: 0 }}
                     transition={{ duration: .3, ease: "easeInOut" }}
                   >
-                    {formatPrice(finishValue || products.combo_delivery_price)}
+                    {formatPrice(finishValue)}
                   </motion.span>
                 </AnimatePresence>
               </TextAddProductsQuantity>

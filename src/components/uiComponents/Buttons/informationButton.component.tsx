@@ -62,7 +62,7 @@ export default function InformationButton({ onClick, value, title, description, 
 
   const DiscountTypes = () => {
     if (cuponValue.discount_type === 'percentage') {
-      return `${description} - ${cuponValue.discount}%`
+      return `${description} - ${cuponValue.discount * 100}%`
     } else if (cuponValue.discount_type === 'absolute') {
       return `${description} - ${formatPrice(cuponValue.discount)}`
     } else if (cuponValue.discount_type === 'free-shipping') {
@@ -94,7 +94,7 @@ export default function InformationButton({ onClick, value, title, description, 
         <CustomIcon name={icon || null} fill={fill} />
         <div className="flex flex-col justify-start items-start">
           <span className={`${cuponValue.code || cashbackValue ? 'text-takeat-green-default text-sm font-semibold' : 'text-takeat-neutral-darker'}`}>{title}</span>
-          <span className={`${cuponValue.code || cashbackValue ? 'text-sm font-semibold' : 'text-takeat-neutral-darker'}`}>{cuponValue.code || cashbackValue ? DiscountTypes() : ''}</span>
+          <span className={`${cuponValue.code || cashbackValue ? 'text-sm font-semibold' : 'text-takeat-neutral-darker'}`}>{cashbackValue || cuponValue.code ? DiscountTypes() : ''}</span>
         </div>
       </InfoContainerButton>
       {

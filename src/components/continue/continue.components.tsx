@@ -7,7 +7,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { formatPrice, IconChevronRight, IconTicketFilled, Modal } from 'takeat-design-system-ui-kit';
-import { ActionProducts, AddProductsContainer, AddProductsPriceInfoItem, AddProductsPriceItem, AddProductsQuantity, ButtonProductsDiscount, ProductsDiscount, ProductsDiscountContainer, ProductsDiscountText, SelectAddProducts, TextAddProductsQuantity } from '../addProducts/addProducts.style';
+import { ActionProducts, AddProductsContainer, AddProductsPriceInfoItem, AddProductsPriceItem, AddProductsQuantity, ButtonProductsDiscount, ProductsDiscount, ProductsDiscountContainer, ProductsDiscountText, TextAddProductsQuantity } from '../addProducts/addProducts.style';
 import { ICart } from '../addProducts/addProducts.types';
 import { ComplementCategory, OrderItem, Product } from './continue.types';
 
@@ -35,7 +35,6 @@ type AddressRef = { id: string; delivery_tax_price: string }; // ajuste conforme
 // };
 type CartRef = { products: Product[] };
 type MethodPaymentRef = { keyword: string; id?: number };
-
 
 export default function ContinueComponents({ params, route, clear, textButon, desconto, finishOrder }: Props) {
   const MethodPaymentTakeat = `@methodPaymentTakeat:${params}`;
@@ -160,8 +159,6 @@ export default function ContinueComponents({ params, route, clear, textButon, de
       order: orders, // Objeto de produtos
     };
 
-    // console.log(payload)
-
     if (scheduling.method === 'Agendamento Delivery' || scheduling.method === 'Agendamento Retirada') {
       api_scheduling.post('/orders', payload, config)
         .then(res => {
@@ -257,16 +254,15 @@ export default function ContinueComponents({ params, route, clear, textButon, de
     updateStorageData,
   ]);
 
-
   const HeightCheckout = () => {
-    if (isMethodDelivery.method === "delivery" || isMethodDelivery.method === "Agendamento Delivery") {
-      if (cuponValue.code) {
-        return 200
-      } else {
-        return 170
-      }
-    } else {
-      return 120
+    if (isMethodDelivery.method === 'retirarBalcao' || isMethodDelivery.method === 'Agendamento Retirada') {
+      if (cuponValue.code || cashbackValue) return 170;
+      return 150
+    }
+
+    if (isMethodDelivery.method === 'delivery' || isMethodDelivery.method === 'Agendamento Delivery') {
+      if (cuponValue.code || cashbackValue) return 200;
+      return 170
     }
   }
 
@@ -288,21 +284,34 @@ export default function ContinueComponents({ params, route, clear, textButon, de
   }
 
   const handleAddCupom = () => {
-    if (cuponValue.discount_type === 'percentage') {
-      return formatPrice((totalPrice + parseAddress) - (totalPrice * cuponValue.discount / 100))
-    } else if (cuponValue.discount_type === 'absolute') {
-      return formatPrice((totalPrice + parseAddress) - cuponValue.discount)
-    } else if (cuponValue.discount_type === 'free-shipping') {
-      return formatPrice(totalPrice)
+    // Se for delivery ou agendamento delivery, inclui taxa de entrega
+    const includeDeliveryTax = isMethodDelivery.method === "delivery" || isMethodDelivery.method === "Agendamento Delivery";
+    let total = includeDeliveryTax ? totalPrice + parseAddress : totalPrice;
+
+    // Aplica desconto do cupom se existir
+    if (cuponValue.code) {
+      if (cuponValue.discount_type === 'percentage') {
+        total = total - (totalPrice * (cuponValue.discount * 100) / 100);
+      } else if (cuponValue.discount_type === 'absolute') {
+        total = total - cuponValue.discount;
+      } else if (cuponValue.discount_type === 'free-shipping') {
+        total = totalPrice;
+      }
     }
 
-    return formatPrice(totalPrice + parseAddress)
+    // Aplica desconto do cashback se existir
+    if (cashbackValue) {
+      total = total - Number(cashbackValue);
+    }
+
+    return formatPrice(total);
   };
 
   return (
     <AddProductsContainer flex_direction={"column"} height={HeightCheckout()}>
       <AddProductsPriceItem>
-        {isMethodDelivery.method === "delivery" ? (
+        {/* Delivery e Agendamento Delivery */}
+        {(isMethodDelivery.method === "delivery" || isMethodDelivery.method === "Agendamento Delivery") && (
           <>
             <AddProductsPriceInfoItem textsize={16}>
               <span>Subtotal:</span>
@@ -318,38 +327,52 @@ export default function ContinueComponents({ params, route, clear, textButon, de
                 )}
               </span>
             </AddProductsPriceInfoItem>
-            {
-              cuponValue.code && (
-                <AddProductsPriceInfoItem textsize={16}>
-                  <span>Cupom</span>
-                  {
-                    cuponValue.discount_type === 'percentage' ? (
-                      <span>{formatPrice((totalPrice * cuponValue.discount) / 100)}</span>
-                    ) : cuponValue.discount_type === 'absolute' ? (
-                      <span>{totalPrice - cuponValue.discount < 0 ? `- ${formatPrice(totalPrice)}` : `- ${formatPrice(cuponValue.discount)}`}</span>
-                    ) : (
-                      <span>FRETE GRATIS</span>
-                    )
-                  }
-                </AddProductsPriceInfoItem>
-              )
-            }
-
-            {/* {cuponValue.code && handleAddCupom()} */}
+            {cuponValue.code && (
+              <AddProductsPriceInfoItem textsize={16}>
+                <span>Cupom</span>
+                {cuponValue.discount_type === 'percentage' ? (
+                  <span className="text-takeat-red-default">-{formatPrice((totalPrice * cuponValue.discount) / 100)}</span>
+                ) : cuponValue.discount_type === 'absolute' ? (
+                  <span className="text-takeat-red-default">-{formatPrice(cuponValue.discount)}</span>
+                ) : (
+                  <span className="text-takeat-green-default">FRETE GRATIS</span>
+                )}
+              </AddProductsPriceInfoItem>
+            )}
+            {cashbackValue && (
+              <AddProductsPriceInfoItem textsize={16}>
+                <span>Resgate de cashback</span>
+                <span className="text-takeat-red-default">-{formatPrice(Number(cashbackValue))}</span>
+              </AddProductsPriceInfoItem>
+            )}
           </>
-        ) : isMethodDelivery.method === "Agendamento Delivery" ? (
+        )}
+
+        {/* Retirada no Balcão e Agendamento Retirada */}
+        {(isMethodDelivery.method === "retirarBalcao" || isMethodDelivery.method === "Agendamento Retirada") && (
           <>
             <AddProductsPriceInfoItem textsize={16}>
               <span>Subtotal:</span>
               <span>{formatPrice(totalPrice)}</span>
             </AddProductsPriceInfoItem>
-            <AddProductsPriceInfoItem textsize={16}>
-              <span>Taxa de entrega:</span>
-              <span>{formatPrice(parseAddress)}</span>
-            </AddProductsPriceInfoItem>
+            {cuponValue.code && (
+              <AddProductsPriceInfoItem textsize={16}>
+                <span>Cupom</span>
+                {cuponValue.discount_type === 'percentage' ? (
+                  <span className="text-takeat-red-default">-{formatPrice((totalPrice * (cuponValue.discount * 100)) / 100)}</span>
+                ) : cuponValue.discount_type === 'absolute' ? (
+                  <span className="text-takeat-red-default">-{formatPrice(cuponValue.discount)}</span>
+                ) : <span className="text-takeat-green-default">FRETE GRATIS</span>}
+              </AddProductsPriceInfoItem>
+            )}
+            {cashbackValue && (
+              <AddProductsPriceInfoItem textsize={16}>
+                <span>Resgate de cashback</span>
+                <span className="text-takeat-red-default">-{formatPrice(Number(cashbackValue))}</span>
+              </AddProductsPriceInfoItem>
+            )}
           </>
-        ) : ''
-        }
+        )}
 
         <AddProductsPriceInfoItem weight={"600"}>
           <span>Total:</span>
@@ -362,14 +385,12 @@ export default function ContinueComponents({ params, route, clear, textButon, de
               transition={{ duration: 0.3, ease: "backInOut" }}
             >
               {handleAddCupom()}
-              {/* {isMethodDelivery.method === "delivery" || isMethodDelivery.method === "Agendamento Delivery" ? formatPrice(totalPrice + parseAddress) : formatPrice(totalPrice)} */}
             </motion.span>
           </AnimatePresence>
         </AddProductsPriceInfoItem>
-
       </AddProductsPriceItem>
 
-      {!!desconto ? (
+      {!!desconto && (
         <ProductsDiscount>
           <ButtonProductsDiscount onClick={() => alert("Desconto inesistente!!!")}>
             <ProductsDiscountContainer>
@@ -379,17 +400,10 @@ export default function ContinueComponents({ params, route, clear, textButon, de
             <IconChevronRight className="fill-takeat-neutral-dark text-lg" />
           </ButtonProductsDiscount>
         </ProductsDiscount>
-      ) : ''}
+      )}
 
       <ActionProducts>
-        {!!clear && (
-          <SelectAddProducts style={{ height: 48 }}>
-            <button onClick={() => localStorage.removeItem(takeatBagKey)}>
-              <span className='text-takeat-primary-default font-semibold'>Limpar</span>
-            </button>
-          </SelectAddProducts>
-        )}
-        {!!finishOrder ? (
+        {!!finishOrder && (
           <AddProductsQuantity style={{ height: 48 }}>
             <TextAddProductsQuantity disabled={loading} onClick={handleCreateOrder}>
               {
@@ -397,12 +411,6 @@ export default function ContinueComponents({ params, route, clear, textButon, de
                   : <>
                     {loading ? <Loader2 className='animate-spin flex w-full justify-center items-center' /> : textButon}
                   </>}
-            </TextAddProductsQuantity>
-          </AddProductsQuantity>
-        ) : (
-          <AddProductsQuantity disabled={!(totalPrice > Number(active))} style={{ height: 48 }}>
-            <TextAddProductsQuantity disabled={!(totalPrice > Number(active))} onClick={() => push(`/${params}/${route}`)}>
-              {!(totalPrice > Number(active)) ? `Pedido mín: ${formatPrice(`${active}`)}` : `${textButon || 'Continuar Pedido'}`}
             </TextAddProductsQuantity>
           </AddProductsQuantity>
         )

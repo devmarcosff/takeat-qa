@@ -1,3 +1,4 @@
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
 import { Drawer, DrawerClose, DrawerContent, DrawerFooter, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
 import { Label } from "@/components/ui/label";
@@ -8,7 +9,7 @@ import { api_Club } from "@/utils/apis";
 import axios from "axios";
 import { useParams } from "next/navigation";
 import { ChangeEvent, useEffect, useState } from "react";
-import { formatPrice, IconChevronDown } from "takeat-design-system-ui-kit";
+import { formatPrice } from "takeat-design-system-ui-kit";
 import { IClientClube, IClienteTakeat } from "./page";
 import { ICashbackDrawer } from "./types";
 
@@ -64,27 +65,43 @@ export default function CashbackDrawer({ openDrawer, setOpenDrawer, isClientClub
   const handleAddCupom = () => cuponSelect.id && setCuponValue(cuponSelect)
 
   const ViewTab = () => {
-    if (isClientClube.clientExist === true && isClientClube.clientBelongsToStore === true) {
-      if (isClientClube.totalClientCashback > isClientClube.minimum_rescue) {
-        const tel = isClienteTakeat ? isClienteTakeat.tel.replace(/[-\s]/g, '') : ''
-        const payload = {
-          birthday: birthdate,
-          phone: tel,
-          token: confirmCashback.token_clube
-        }
-        api_Club.post('/takeat/confirm-birthday', payload).then(res => setIsRescue(res.data.success ? true : false)).catch(err => console.log(err))
-        return (
-          <>
-            <TabsTrigger value="cashback" className="w-full py-2 m-0 border border-takeat-neutral-darker rounded-r-none data-[state=active]:!bg-takeat-neutral-darker data-[state=active]:!text-white">Cashback</TabsTrigger>
-            <TabsTrigger value="cupons" className="w-full py-2 m-0 border border-takeat-neutral-darker rounded-l-none data-[state=active]:!bg-takeat-neutral-darker data-[state=active]:!text-white">Cupons</TabsTrigger>
-          </>
-        )
-      } else {
-        return (
-          <TabsTrigger value="cupons" className="w-full py-2 m-0 border border-takeat-neutral-darker data-[state=active]:!bg-takeat-neutral-darker data-[state=active]:!text-white">Cupons</TabsTrigger>
-        )
-      }
+    const hasCashback = isClientClube.clientExist === true &&
+      isClientClube.clientBelongsToStore === true &&
+      Number(isClientClube.totalClientCashback) > Number(isClientClube.minimum_rescue);
+    const hasCoupons = cashbackDrawer.length > 0;
+
+    if (!hasCashback && !hasCoupons) {
+      return (
+        <div className="w-full text-center py-4">
+          <p className="text-takeat-neutral-darker">Não existem cupons disponíveis.</p>
+        </div>
+      );
     }
+
+    if (hasCashback) {
+      const tel = isClienteTakeat ? isClienteTakeat.tel.replace(/[-\s]/g, '') : ''
+      const payload = {
+        birthday: birthdate,
+        phone: tel,
+        token: confirmCashback.token_clube
+      }
+      api_Club.post('/takeat/confirm-birthday', payload).then(res => setIsRescue(res.data.success ? true : false)).catch(err => console.log(err))
+    }
+
+    return (
+      <>
+        {hasCashback && (
+          <TabsTrigger value="cashback" className="w-full py-2 m-0 border border-takeat-neutral-darker rounded-r-none data-[state=active]:!bg-takeat-neutral-darker data-[state=active]:!text-white">
+            Cashback
+          </TabsTrigger>
+        )}
+        {hasCoupons && (
+          <TabsTrigger value="cupons" className={`w-full py-2 m-0 border border-takeat-neutral-darker ${hasCashback ? 'rounded-l-none' : ''} data-[state=active]:!bg-takeat-neutral-darker data-[state=active]:!text-white`}>
+            Cupons
+          </TabsTrigger>
+        )}
+      </>
+    );
   }
 
   return (
@@ -140,7 +157,7 @@ export default function CashbackDrawer({ openDrawer, setOpenDrawer, isClientClub
                       const isSelected = cuponSelect.id === item.id;
                       const DiscountTypes = () => {
                         if (item.discount_type === 'percentage') {
-                          return `Desconto ${item.discount}%`
+                          return `Desconto ${item.discount * 100}%`
                         } else if (item.discount_type === 'absolute') {
                           return `Desconto ${formatPrice(item.discount)}`
                         } else {
@@ -173,9 +190,24 @@ export default function CashbackDrawer({ openDrawer, setOpenDrawer, isClientClub
                             </label>
                           </RadioGroup>
                           <div className="pt-1 border-t border-gray-300">
-                            <span className="flex items-center justify-start gap-2">
-                              Ver regras <IconChevronDown />
-                            </span>
+                            <Accordion type="single" collapsible>
+                              <AccordionItem value="rules" className="border-none">
+                                <AccordionTrigger className="py-2 hover:no-underline">
+                                  <span className="flex items-center justify-start gap-2 text-sm text-takeat-neutral-darker">
+                                    Ver regras
+                                  </span>
+                                </AccordionTrigger>
+                                <AccordionContent>
+                                  <div className="text-sm text-takeat-neutral-darker">
+                                    <ul className="list-disc pl-6 space-y-1">
+                                      <li>{'Apenas para primeira compra'}</li>
+                                      {item.maximum_discount && <li>Máximo de desconto de {formatPrice(item.maximum_discount)}</li>}
+                                      {item.minimum_price && <li>{`Pedidos a partir de ${formatPrice(item.minimum_price)}`}</li>}
+                                    </ul>
+                                  </div>
+                                </AccordionContent>
+                              </AccordionItem>
+                            </Accordion>
                           </div>
                         </div>
                       )

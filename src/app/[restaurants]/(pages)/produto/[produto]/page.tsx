@@ -207,8 +207,6 @@ export default function ProductPage({ params }: Props) {
 
   if (loading) return <LoadingTakeat />
 
-  // console.log(storage)
-
   return (
     <ProductInternalContainer>
       {showStickyHeader ? (
@@ -243,8 +241,8 @@ export default function ProductPage({ params }: Props) {
             <p className="text-takeat-neutral-dark">{storage?.description}</p>
           </div>
           <div className="flex items-center gap-2">
-            <p className="text-takeat-green-dark font-semibold">{storage?.price}</p>
-            <p className="text-takeat-neutral-dark line-through">{storage?.price_promotion}</p>
+            <p className="text-takeat-green-dark font-semibold">{storage?.delivery_price}</p>
+            <p className="text-takeat-neutral-dark line-through">{storage?.delivery_price_promotion}</p>
           </div>
         </div>
 

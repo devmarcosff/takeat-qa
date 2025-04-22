@@ -88,9 +88,7 @@ export default function ProductsRestaurant({ categories = [], params, searchTerm
                     <h2>{product.name}</h2>
                     <p className="line-clamp-3">{product.description}</p>
                     <ProductPrice>
-                      {!!product.delivery_price
-                        ? formatPrice(product.delivery_price)
-                        : formatPrice(product.price)}
+                      {formatPrice(product.combo_delivery_price || product.delivery_price_promotion || product.delivery_price || product.price)}
                       {!!product.delivery_price_promotion && (
                         <span>{formatPrice(product.delivery_price_promotion)}</span>
                       )}
@@ -166,20 +164,18 @@ export default function ProductsRestaurant({ categories = [], params, searchTerm
                             <ProductDetails>
                               <h2>{product.name}</h2>
                               <p className="line-clamp-3">{product.description}</p>
-                              <ProductPrice delivery_price={product.delivery_price_promotion ? `${product.delivery_price_promotion}` : undefined}>
-                                {!!product.delivery_price
-                                  ? formatPrice(product.combo_delivery_price ? product.combo_delivery_price : product.delivery_price)
-                                  : formatPrice(product.price)}
+                              <ProductPrice delivery_price={product.delivery_price_promotion ? product.delivery_price_promotion : undefined}>
+                                {/* {product.is_combo ? <span className="!no-underline">A partir de </span> : null} */}
+                                {formatPrice(product.combo_delivery_price || product.delivery_price_promotion || product.delivery_price || product.price)}
                                 {!!product.delivery_price_promotion && (
-                                  <span>
-                                    {formatPrice(product.delivery_price_promotion)}
-                                  </span>
+                                  <span>{formatPrice(product.delivery_price_promotion)}</span>
                                 )}
                               </ProductPrice>
                             </ProductDetails>
 
                             <ProductImage
-                              src={product.image?.url}
+                              src={
+                                product.image?.url}
                               width={1000}
                               height={1000}
                               alt={product.name}
