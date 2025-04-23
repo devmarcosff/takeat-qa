@@ -7,9 +7,8 @@ import { ICart } from "../addProducts/addProducts.types";
 import { BottomMenu } from "./bottomMenu.tags.component";
 import { AnimationMenu, CartUpdate, CircleNotificationMenu, MenuContainer, MenuTags, NotificationIconMenu, NotificationMenuContainer, NotificationMenuInfo } from "./menu.style";
 
-
 interface Props {
-  params: string
+  params: string;
 }
 
 export default function MenuComponent({ params }: Props) {
@@ -23,8 +22,6 @@ export default function MenuComponent({ params }: Props) {
     const parsedBag = storedBag ? JSON.parse(storedBag)?.products || [] : [];
 
     const total = parsedBag.reduce((acc: number, item: ICart) => acc + (item.price * item.qtd), 0);
-    // const qtd = parsedBag.reduce((acc: number, item: ICart) => acc + (item.qtd), 0);
-    // const qtd = parsedBag.reduce((acc: number, item: ICart) => acc + Math.ceil(item.qtd), 0);
     setCart(total);
     setQtd(parsedBag.length)
   }, [takeatBagKey]);
@@ -82,7 +79,7 @@ export default function MenuComponent({ params }: Props) {
       }
 
       <MenuTags>
-        {BottomMenu({ params })}
+        <BottomMenu params={params} />
       </MenuTags>
     </MenuContainer>
   )
