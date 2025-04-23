@@ -1,3 +1,5 @@
+import CashbackDrawer from "@/app/[restaurants]/(pages)/confirmar-pedido/cashback.drawer";
+import { IClientClube, IClienteTakeat } from "@/app/[restaurants]/(pages)/confirmar-pedido/page";
 import PromocaoModal from "@/components/v2/promocao/promocao.modal";
 import { Category } from "@/types/categories.types";
 import Link from "next/link";
@@ -14,16 +16,30 @@ import {
 interface BottomMenuProps {
   params: string;
   categories?: Category[];
+  isClienteTakeat?: IClienteTakeat;
+  isClientClube?: IClientClube;
 }
 
-export const BottomMenu = ({ params }: BottomMenuProps) => {
+export const BottomMenu = ({
+  params,
+  isClienteTakeat = { tel: '' },
+  isClientClube = {
+    clientExist: false,
+    clientEmail: null,
+    clientBelongsToStore: false,
+    minimum_rescue: '0',
+    totalClientCashback: '0',
+    totalClientPoints: null
+  }
+}: BottomMenuProps) => {
   const pathname = usePathname();
   const [openModal, setOpenModal] = useState(false);
+  const [openDrawer, setOpenDrawer] = useState(false);
 
   const links = [
     { href: `/${params}`, label: "Início", icon: IconTHome },
-    { href: "#", label: "Promoções", icon: IconTDiscount, onClick: () => setOpenModal(true) },
-    { href: `/${params}/desconto`, label: "Desconto", icon: IconTFilled },
+    { href: `/${params}/promocoes`, label: "Promoções", icon: IconTDiscount, onClick: () => setOpenModal(true) },
+    { href: `/${params}/descontos`, label: "Desconto", icon: IconTFilled, onClick: () => setOpenDrawer(true) },
     { href: `/${params}/pedidos`, label: "Pedidos", icon: IconTClipboard },
   ];
 
@@ -52,6 +68,12 @@ export const BottomMenu = ({ params }: BottomMenuProps) => {
         openModal={openModal}
         setOpenModal={setOpenModal}
         params={params}
+      />
+      <CashbackDrawer
+        isClienteTakeat={isClienteTakeat}
+        isClientClube={isClientClube}
+        openDrawer={openDrawer}
+        setOpenDrawer={() => setOpenDrawer(!openDrawer)}
       />
     </>
   );

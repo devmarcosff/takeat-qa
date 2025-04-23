@@ -1,4 +1,5 @@
 "use client"
+import { IClientClube, IClienteTakeat } from "@/app/[restaurants]/(pages)/confirmar-pedido/page";
 import { AnimatePresence, motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
@@ -13,9 +14,13 @@ interface Props {
 
 export default function MenuComponent({ params }: Props) {
   const takeatBagKey = `@deliveryTakeat:${params}TakeatBag`;
+  const clienteTakeat = `@clienteTakeat:${params}`;
+  const isClientClube = `@takeatIsClientClube:${params}`;
   const { push } = useRouter()
   const [cart, setCart] = useState(0)
   const [qtd, setQtd] = useState(0)
+  const [isClienteTakeat, setIsClienteTakeat] = useState<IClienteTakeat | undefined>();
+  const [clientClube, setClientClube] = useState<IClientClube | undefined>();
 
   const updateStorageData = useCallback(() => {
     const storedBag = localStorage.getItem(takeatBagKey);
@@ -49,6 +54,21 @@ export default function MenuComponent({ params }: Props) {
     }
   }, [takeatBagKey, updateStorageData]);
 
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const getClienteTakeat = localStorage.getItem(clienteTakeat);
+      const getClientClube = localStorage.getItem(isClientClube);
+
+      if (getClienteTakeat) {
+        setIsClienteTakeat(JSON.parse(getClienteTakeat));
+      }
+
+      if (getClientClube) {
+        setClientClube(JSON.parse(getClientClube));
+      }
+    }
+  }, [clienteTakeat, isClientClube]);
+
   return (
     <MenuContainer>
       {
@@ -79,7 +99,11 @@ export default function MenuComponent({ params }: Props) {
       }
 
       <MenuTags>
-        <BottomMenu params={params} />
+        <BottomMenu
+          params={params}
+          isClienteTakeat={isClienteTakeat}
+          isClientClube={clientClube}
+        />
       </MenuTags>
     </MenuContainer>
   )

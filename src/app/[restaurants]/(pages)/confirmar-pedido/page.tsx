@@ -80,6 +80,7 @@ export default function ConfirmarPedidoPage({ params }: Props) {
     zip_code: ``,
     delivery_tax_price: ''
   });
+
   // const [addressRestaurantState, setAddressRestaurantState] = useState<IAddress | null>(null);
 
   const { cuponValue, cashbackValue } = useDelivery()
@@ -195,6 +196,9 @@ export default function ConfirmarPedidoPage({ params }: Props) {
 
   const PaymentInfo = () => {
     if (parsedMethodPayment?.keyword == 'dinheiro') {
+      if (troco <= 0) {
+        return `Sem troco`
+      }
       return `Troco para: ${formatPrice(troco || 0)}`
     } else if (parsedMethodPayment?.keyword !== 'credit_card_auto' && parsedMethodPayment?.keyword !== 'pix_auto') {
       return `Pagamento na entrega`
@@ -294,7 +298,7 @@ export default function ConfirmarPedidoPage({ params }: Props) {
                 </div>
               )}
               <div className="flex flex-col font-medium text-takeat-neutral-default">
-                <span>{`${addressDelivery?.neighborhood || 'Nenhuma informação adicionada'} ${addressDelivery?.city && `, ${addressDelivery?.city || 'Não informado'} -`} ${addressDelivery?.state}`}</span>
+                <span>{`${addressDelivery?.neighborhood || 'Nenhuma informação adicionada'} ${addressDelivery?.city && `, ${addressDelivery?.city || 'Não informado'} -`} ${addressDelivery.state}`}</span>
                 <span>{`${addressDelivery?.complement}${addressDelivery?.reference && `, ${addressDelivery?.reference}`}`}</span>
                 <span>{addressDelivery?.zip_code}</span>
               </div>

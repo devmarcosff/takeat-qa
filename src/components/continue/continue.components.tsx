@@ -336,7 +336,7 @@ export default function ContinueComponent({
               <AddProductsPriceInfoItem textsize={16}>
                 <span>Cupom</span>
                 {cuponValue.discount_type === 'percentage' ? (
-                  <span className="text-takeat-red-default">-{formatPrice((totalPrice * cuponValue.discount) / 100)}</span>
+                  <span className="text-takeat-red-default">-{formatPrice((totalPrice * cuponValue.discount))}</span>
                 ) : cuponValue.discount_type === 'absolute' ? (
                   <span className="text-takeat-red-default">-{formatPrice(cuponValue.discount)}</span>
                 ) : (

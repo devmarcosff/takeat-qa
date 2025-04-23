@@ -57,24 +57,44 @@ export default function AgendamentoDrawerComponent({ openDrawer, setOpenDrawer, 
     if (!date) return;
 
     const restaurantId = localStorage.getItem(deliveryTakeatRestaurant);
-    const parsedRestaurantId = restaurantId ? JSON.parse(restaurantId) : null;
+    if (!restaurantId) {
+      console.error("No restaurant ID found in localStorage");
+      return;
+    }
 
-    const token = localStorage.getItem(tokenClient);
-    const config = {
-      headers: { Authorization: `Bearer ${token}` }
-    };
+    try {
+      const parsedRestaurantId = JSON.parse(restaurantId);
+      if (!parsedRestaurantId?.id) {
+        console.error("Invalid restaurant ID format");
+        return;
+      }
 
-    const formattedDay = date.toISOString();
+      const token = localStorage.getItem(tokenClient);
+      if (!token) {
+        console.error("No token found");
+        return;
+      }
 
-    api_token_card
-      .get(`/order-scheduling/available-times?restaurant_id=${parsedRestaurantId?.id}&day=${formattedDay}&with_withdrawal=false`, config)
-      .then((response) => {
-        setIsScheduling(response.data.times);
-      })
-      .catch((error) => {
-        console.log("Erro ao buscar horários:", error);
-      });
-  }, [date]);
+      const config = {
+        headers: { Authorization: `Bearer ${token}` }
+      };
+
+      const formattedDay = date.toISOString();
+
+      api_token_card
+        .get(`/order-scheduling/available-times?restaurant_id=${parsedRestaurantId.id}&day=${formattedDay}&with_withdrawal=${title === 'Agendamento Retirada'}`, config)
+        .then((response) => {
+          setIsScheduling(response.data.times);
+        })
+        .catch((error) => {
+          console.error("Erro ao buscar horários:", error);
+          setIsScheduling([]);
+        });
+    } catch (error) {
+      console.error("Error parsing restaurant data:", error);
+      setIsScheduling([]);
+    }
+  }, [date, deliveryTakeatRestaurant, tokenClient, title]);
 
   return (
     <Drawer open={openDrawer} onOpenChange={() => setOpenDrawer(!openDrawer)}>

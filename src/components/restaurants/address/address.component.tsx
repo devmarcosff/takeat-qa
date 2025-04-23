@@ -1,6 +1,6 @@
 "use client";
-import { methodDeliveryProps } from "@/app/[restaurants]/(pages)/endereco/page";
 import { ButtonTakeatBottom, ButtonTakeatContainer, TextButtonTakeat } from "@/app/[restaurants]/(pages)/informacao/informacao.style";
+import { Restaurant } from "@/types/restaurant.types";
 import { api_delivery_address, api_validate_address } from "@/utils/apis";
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -14,18 +14,26 @@ import Select, { SingleValue } from 'react-select';
 import { DEFAULT_THEME, getAddressByCep, IconLocationFilled, IconPencilFilled, Modal } from "takeat-design-system-ui-kit";
 import { ButtonTakeatModal } from "./address.style";
 
+interface Neighborhood {
+  name: string;
+  delivery_tax_price?: number;
+}
+
 interface SelectStateProps {
   value: string;
   label: string;
-  cities?: { name: string }[];
+  cities?: {
+    name: string;
+    neighborhoods?: Neighborhood[];
+  }[];
+  neighborhoods?: Neighborhood[];
 };
 
 interface Props {
   params: Promise<{ restaurants: string }>;
-  methodDelivery: methodDeliveryProps
 }
 
-export default function AddressClientComponent({ params, methodDelivery }: Props) {
+export default function AddressClientComponent({ params }: Props) {
   const restaurant = React.use(params)?.restaurants;
   const addressClientDeliveryTakeat = `@addressClientDeliveryTakeat:${restaurant}`;
   const tokenUserTakeat = `@tokenUserTakeat:${restaurant}`;
@@ -45,15 +53,19 @@ export default function AddressClientComponent({ params, methodDelivery }: Props
   const [getInfoBairro, setGetInfoBairro] = useState('');
   const [getInfoComplemento, setGetInfoComplemento] = useState('');
   const [getInfoReferencia, setGetInfoReferencia] = useState('');
+  const [clientAddress, setClientAddress] = useState();
+  const [neighborhoods, setNeighborhoods] = useState<{ value: string; label: string }[]>([]);
   const [openModalStreetMap, setOpenModalStreetMap] = useState<boolean>(false);
   const [latLong, setLatLong] = useState<MapProps>({ lat: 0, lng: 0 });
+  const [methodDelivery, setMethodDelivery] = useState<Restaurant>({} as Restaurant);
 
   const { handleSubmit } = useForm<FormData>();
 
   const { push } = useRouter();
-  const addressMethodDelivery = methodDelivery.delimit_by_area || methodDelivery.is_delivery_by_distance;
+  const addressMethodDelivery = methodDelivery?.delivery_info?.delimit_by_area || methodDelivery?.delivery_info?.is_delivery_by_distance || false;
 
-  const onSubmit = () => {
+  const onSubmit = async () => {
+    if (!methodDelivery?.id) return;
 
     const token = localStorage.getItem(tokenUserTakeat)
 
@@ -75,18 +87,21 @@ export default function AddressClientComponent({ params, methodDelivery }: Props
         Authorization: `Bearer ${token}`
       }
     }).then((res) => {
-      if (res.data.address.latitude && res.data.address.longitude) {
+      const valid_address = res.data.valid_address
+      const address = res.data.address
+      setClientAddress(address)
+      if (address.latitude && address.longitude) {
         setOpenModalStreetMap(true)
-        setLatLong({ lat: res.data.address.latitude, lng: res.data.address.longitude })
+        setLatLong({
+          lat: parseFloat(address.latitude) || 0,
+          lng: parseFloat(address.longitude) || 0
+        })
       } else {
-        const valid_address = res.data.valid_address
-        const address = res.data.address
         if (valid_address == true) {
           localStorage.setItem(addressClientDeliveryTakeat, JSON.stringify(address));
           push(`/${restaurant}/pagamento`)
         }
       }
-
     }).catch(() => setModalOpen(true)).finally(() => setIsDisabled(false))
   };
 
@@ -96,18 +111,36 @@ export default function AddressClientComponent({ params, methodDelivery }: Props
         setGetInfoCity(res.localidade)
         setGetInfoBairro(res.bairro)
         setGetInfoLogradouro(res.logradouro)
+        setSelectedState({ value: res.uf, label: res.uf })
       })
     } catch (err) { return err }
   };
 
   useEffect(() => {
+    const methodDelivery = localStorage.getItem(`@deliveryTakeatRestaurant:${restaurant}`);
+    if (methodDelivery) {
+      try {
+        const parsedMethodDelivery = JSON.parse(methodDelivery);
+        if (parsedMethodDelivery?.id) {
+          setMethodDelivery(parsedMethodDelivery)
+        }
+      } catch (error) {
+        console.error("Error parsing methodDelivery:", error);
+      }
+    }
+
     const fetchRestaurant = async () => {
-      const restaurantTest = localStorage.getItem(`@deliveryTakeatRestaurant:${restaurant}`);
-      const parsedRestaurantTest = JSON.parse(restaurantTest || '');
-      if (!restaurantTest) return;
+      const methodDelivery = localStorage.getItem(`@deliveryTakeatRestaurant:${restaurant}`);
+      if (!methodDelivery) return;
 
       try {
-        const response = await api_delivery_address.get(`/${parsedRestaurantTest.id}`);
+        const parsedMethodDelivery = JSON.parse(methodDelivery);
+        if (!parsedMethodDelivery?.id) {
+          console.error("No restaurant ID found in methodDelivery");
+          return;
+        }
+
+        const response = await api_delivery_address.get(`/${parsedMethodDelivery.id}`);
 
         const formattedStates = response.data.countries.flatMap((country: { states: { name: string, cities: string }[] }) =>
           country.states.map((state) => ({
@@ -123,25 +156,46 @@ export default function AddressClientComponent({ params, methodDelivery }: Props
     };
 
     fetchRestaurant();
-  }, [addressClientDeliveryTakeat, restaurant]);
+  }, [addressClientDeliveryTakeat, restaurant])
 
   const handleStateChange = (newValue: SingleValue<SelectStateProps>) => {
-    const selectedOption = newValue ?? undefined;
-    setSelectedState(selectedOption);
+    const selectedOption = newValue ?? undefined
+    setSelectedState(selectedOption)
 
     const formattedCities = selectedOption?.cities?.map(city => ({
       value: city.name,
-      label: city.name
+      label: city.name,
+      neighborhoods: city.neighborhoods
     })) || [];
 
-    setCityOptions(formattedCities);
-  };
+    setCityOptions(formattedCities)
+  }
 
   const cityChange = (newValue: SingleValue<SelectStateProps>) => {
     if (newValue) {
-      setGetInfoCity(newValue.value);
+      setGetInfoCity(newValue.value)
+      setGetInfoBairro('')
+
+      // Se a cidade tiver bairros, formata e seta no estado
+      if (newValue.neighborhoods && newValue.neighborhoods.length > 0) {
+        const formattedNeighborhoods = newValue.neighborhoods.map(neighborhood => ({
+          value: neighborhood.name,
+          label: `${neighborhood.name}`
+        }));
+        setNeighborhoods(formattedNeighborhoods);
+      } else {
+        setNeighborhoods([]);
+      }
     }
-  };
+  }
+
+  const handleNeighborhoodChange = (newValue: SingleValue<{ value: string; label: string }>) => {
+    if (newValue) {
+      setGetInfoBairro(newValue.value)
+    } else {
+      setGetInfoBairro('')
+    }
+  }
 
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
@@ -200,18 +254,42 @@ export default function AddressClientComponent({ params, methodDelivery }: Props
 
               <div className="mt-3">
                 <label htmlFor="bairro" className="font-semibold">Bairro</label>
-                <input
-                  value={getInfoBairro}
-                  onChange={e => setGetInfoBairro(e.target.value)}
-                  id="bairro"
-                  placeholder="Digite o bairro"
-                  required
-                  className="
-                  peer w-full h-12 bg-transparent placeholder:text-slate-400 text-md
-                  text-slate-700 border border-takeat-neutral-default rounded-xl
-                  px-3 py-2transition duration-300 ease shadow-sm
-                  focus:outline-none focus:border-takeat-blue-darker hover:border-takeat-blue-darker focus:shadow"
-                />
+                {neighborhoods.length > 0 ? (
+                  <Select
+                    className="basic-single text-md"
+                    classNamePrefix="select"
+                    placeholder="Selecione o bairro"
+                    name="bairro"
+                    id="bairro"
+                    required
+                    isSearchable={true}
+                    options={neighborhoods}
+                    value={neighborhoods.find(option => option.value === getInfoBairro)}
+                    onChange={handleNeighborhoodChange}
+                    styles={{
+                      control: (baseStyles, state) => ({
+                        borderRadius: 12,
+                        display: 'flex',
+                        height: 48,
+                        border: "solid 1px",
+                        borderColor: state.isFocused ? '#016999' : '#7A7A7A',
+                      })
+                    }}
+                  />
+                ) : (
+                  <input
+                    value={getInfoBairro}
+                    onChange={e => setGetInfoBairro(e.target.value)}
+                    required
+                    id="bairro"
+                    placeholder="Informe seu bairro"
+                    className="
+                    peer w-full h-12 bg-transparent placeholder:text-slate-400
+                    text-slate-700 border border-takeat-neutral-default rounded-xl
+                    px-3 py-2transition duration-300 ease shadow-sm
+                    focus:outline-none focus:border-takeat-blue-darker hover:border-takeat-blue-darker focus:shadow"
+                  />
+                )}
               </div>
 
               <div className="flex gap-3 items-center w-full justify-between">
@@ -287,20 +365,26 @@ export default function AddressClientComponent({ params, methodDelivery }: Props
                     <label htmlFor="cep" className="font-semibold">CEP</label>
                     <input
                       id="cep"
-                      placeholder="00.000-0000"
+                      placeholder="00.000-000"
                       value={getInfoCep}
                       required
                       onChange={(e) => {
-                        setGetInfoCep(e.target.value)
-                        getAddressWithCep(e.target.value)
+                        let value = e.target.value.replace(/\D/g, '');
+                        if (value.length <= 8) {
+                          value = value.replace(/^(\d{5})(\d)/, '$1-$2');
+                          setGetInfoCep(value);
+                          if (value.length === 9) {
+                            getAddressWithCep(value.replace(/\D/g, ''));
+                          }
+                        }
                       }}
                       className={`
-                    ${!getInfoCity ? '' : 'border-takeat-green-default'}
-                      transition-all peer w-full h-12 bg-transparent placeholder:text-slate-400
-                      text-slate-700 border border-takeat-neutral-default rounded-xl
-                      px-3 py-2 duration-300 ease shadow-sm
-                      focus:outline-none focus:border-takeat-blue-darker hover:border-takeat-blue-darker focus:shadow
-                    `}
+                        ${!getInfoCity ? '' : 'border-takeat-green-default'}
+                        transition-all peer w-full h-12 bg-transparent placeholder:text-slate-400
+                        text-slate-700 border border-takeat-neutral-default rounded-xl
+                        px-3 py-2 duration-300 ease shadow-sm
+                        focus:outline-none focus:border-takeat-blue-darker hover:border-takeat-blue-darker focus:shadow
+                      `}
                     />
                   </div>
                 )}
@@ -316,10 +400,10 @@ export default function AddressClientComponent({ params, methodDelivery }: Props
                 <label htmlFor="localidade" className="font-semibold">Cidade</label>
                 <input
                   id="localidade"
-                  value={getInfoCity ?? ""}
+                  value={getInfoCity}
                   onChange={(e) => setGetInfoCity(e.target.value)}
                   placeholder="Informe sua cidade"
-                  readOnly={!!isNotZipCode}
+                  // readOnly={!!isNotZipCode}
                   required
                   className="
                   peer w-full h-12 bg-transparent placeholder:text-slate-400
@@ -331,18 +415,42 @@ export default function AddressClientComponent({ params, methodDelivery }: Props
 
               <div className="mt-3">
                 <label htmlFor="bairro" className="font-semibold">Bairro</label>
-                <input
-                  value={getInfoBairro}
-                  onChange={e => setGetInfoBairro(e.target.value)}
-                  required
-                  id="bairro"
-                  placeholder="Informe seu bairro"
-                  className="
-                  peer w-full h-12 bg-transparent placeholder:text-slate-400
-                  text-slate-700 border border-takeat-neutral-default rounded-xl
-                  px-3 py-2transition duration-300 ease shadow-sm
-                  focus:outline-none focus:border-takeat-blue-darker hover:border-takeat-blue-darker focus:shadow"
-                />
+                {neighborhoods.length > 0 ? (
+                  <Select
+                    className="basic-single text-md"
+                    classNamePrefix="select"
+                    placeholder="Selecione o bairro"
+                    name="bairro"
+                    id="bairro"
+                    required
+                    isSearchable={true}
+                    options={neighborhoods}
+                    value={neighborhoods.find(option => option.value === getInfoBairro)}
+                    onChange={handleNeighborhoodChange}
+                    styles={{
+                      control: (baseStyles, state) => ({
+                        borderRadius: 12,
+                        display: 'flex',
+                        height: 48,
+                        border: "solid 1px",
+                        borderColor: state.isFocused ? '#016999' : '#7A7A7A',
+                      })
+                    }}
+                  />
+                ) : (
+                  <input
+                    value={getInfoBairro}
+                    onChange={e => setGetInfoBairro(e.target.value)}
+                    required
+                    id="bairro"
+                    placeholder="Informe seu bairro"
+                    className="
+                    peer w-full h-12 bg-transparent placeholder:text-slate-400
+                    text-slate-700 border border-takeat-neutral-default rounded-xl
+                    px-3 py-2transition duration-300 ease shadow-sm
+                    focus:outline-none focus:border-takeat-blue-darker hover:border-takeat-blue-darker focus:shadow"
+                  />
+                )}
               </div>
 
               <div className="flex gap-3 items-center w-full justify-between">
@@ -369,7 +477,8 @@ export default function AddressClientComponent({ params, methodDelivery }: Props
                     id="numero"
                     type="text"
                     required
-                    inputMode="numeric" pattern="[0-9]"
+                    inputMode="numeric"
+                    // pattern="[0-9]"
                     placeholder="N°"
                     className="
                     peer w-full h-12 bg-transparent placeholder:text-slate-400
@@ -453,12 +562,17 @@ export default function AddressClientComponent({ params, methodDelivery }: Props
             <span className="font-semibold">Confirme seu endereço</span>
 
             <div className="mt-3">
-              <MapPreview lat={latLong.lat} lng={latLong.lng} />
+              <MapPreview
+                lat={latLong.lat}
+                lng={latLong.lng}
+                restaurantLat={methodDelivery?.latitude ? parseFloat(methodDelivery.latitude) : undefined}
+                restaurantLng={methodDelivery?.longitude ? parseFloat(methodDelivery.longitude) : undefined}
+              />
             </div>
           </Modal.Body>
           <Modal.Footer>
             <ButtonTakeatModal className="flex items-center gap-2" width={50} textcolor={DEFAULT_THEME.colors.primary.default} color="white" onClick={() => setOpenModalStreetMap(false)}><IconPencilFilled className="fill-takeat-primary-default" /> Editar</ButtonTakeatModal>
-            <Link href={`/${restaurant}/pagamento`} className={`h-12 w-full flex items-center justify-center rounded-lg font-semibold border border-takeat-primary-default bg-takeat-primary-default text-takeat-neutral-white`}>
+            <Link onClick={() => localStorage.setItem(addressClientDeliveryTakeat, JSON.stringify(clientAddress))} href={`/${restaurant}/pagamento`} className={`h-12 w-full flex items-center justify-center rounded-lg font-semibold border border-takeat-primary-default bg-takeat-primary-default text-takeat-neutral-white`}>
               Confirmar
             </Link>
           </Modal.Footer>
@@ -472,8 +586,6 @@ interface LeafletDefaultIconPrototype {
   _getIconUrl?: () => string;
 }
 
-// Corrige o ícone padrão no Leaflet que quebra no Next.js/Vite
-// delete (L.Icon.Default as LeafletDefaultIconPrototype).prototype._getIconUrl;
 delete (L.Icon.Default.prototype as LeafletDefaultIconPrototype)._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconUrl: 'https://unpkg.com/leaflet@1.9.3/dist/images/marker-icon.png',
@@ -481,21 +593,24 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'https://unpkg.com/leaflet@1.9.3/dist/images/marker-shadow.png',
 });
 
-// L.Icon.Default.mergeOptions({
-//   iconUrl: 'https://unpkg.com/leaflet@1.9.3/dist/images/marker-icon.png',
-//   iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.3/dist/images/marker-icon-2x.png',
-//   shadowUrl: 'https://unpkg.com/leaflet@1.9.3/dist/images/marker-shadow.png',
-// });
-
 interface MapProps {
   lat: number;
   lng: number;
+  restaurantLat?: number;
+  restaurantLng?: number;
 }
 
-const MapPreview = ({ lat, lng }: MapProps) => {
+const MapPreview = ({ lat, lng, restaurantLat, restaurantLng }: MapProps) => {
+  // Usa as coordenadas do restaurante como valores padrão
+  const defaultLat = restaurantLat || -23.5505; // Latitude de São Paulo como fallback
+  const defaultLng = restaurantLng || -46.6333; // Longitude de São Paulo como fallback
+
+  const validLat = lat || defaultLat;
+  const validLng = lng || defaultLng;
+
   return (
     <MapContainer
-      center={[lat, lng]}
+      center={[validLat, validLng]}
       zoom={16}
       scrollWheelZoom={false}
       style={{ height: '300px', width: '100%', borderRadius: '10px' }}
@@ -504,7 +619,7 @@ const MapPreview = ({ lat, lng }: MapProps) => {
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         attribution="&copy; OpenStreetMap contributors"
       />
-      <Marker position={[lat, lng]}>
+      <Marker position={[validLat, validLng]}>
         <Popup>Endereço selecionado</Popup>
       </Marker>
     </MapContainer>
