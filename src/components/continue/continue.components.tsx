@@ -134,7 +134,6 @@ export default function ContinueComponent({
       return orderItem;
     });
 
-    const config = { headers: { Authorization: `Bearer ${token}` } };
 
     const payload = {
       payment_method: parsedMethodPayment?.keyword, // Método de pagamento
@@ -151,6 +150,8 @@ export default function ContinueComponent({
       user_change: troco || 0, // Se existir troco
       order: orders, // Objeto de produtos
     };
+
+    const config = { headers: { Authorization: `Bearer ${token}` } };
 
     if (scheduling.method === 'Agendamento Delivery' || scheduling.method === 'Agendamento Retirada') {
       api_scheduling.post('/orders', payload, config)
