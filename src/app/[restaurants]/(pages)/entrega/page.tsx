@@ -1,5 +1,6 @@
 "use client";
 import InternalPages from "@/components/uiComponents/InternalPageHeader/internal_pages.header";
+import { AddMethodDelivery } from "@/components/v2-components/functions/methodDelivery.add";
 import AgendamentoDrawerComponent from "@/components/v2/entregas/agendamento.drawer";
 import Link from "next/link";
 import React, { useState } from "react";
@@ -7,19 +8,6 @@ import { IconClock, IconDeliveryBag, IconDeliveryBagSchedule, IconDeliverySchedu
 
 interface Props {
   params: Promise<{ restaurants: string }>;
-}
-
-interface TestProps {
-  restaurantId: string;
-  method: string;
-}
-
-export const Test = ({ restaurantId, method }: TestProps) => {
-  const methodDeliveryTakeat = `@methodDeliveryTakeat:${restaurantId}`;
-  const parsedValue = {
-    method: method
-  }
-  localStorage.setItem(methodDeliveryTakeat, JSON.stringify(parsedValue))
 }
 
 export default function EntregaPage({ params }: Props) {
@@ -30,7 +18,7 @@ export default function EntregaPage({ params }: Props) {
   return (
     <InternalPages title="Entrega" button description="Escolha uma opção de entrega">
       <div style={{ display: 'flex', alignItems: 'center', flexDirection: 'column', gap: 12, marginTop: 20 }}>
-        <Link href={`/${restaurant}/endereco`} onClick={() => Test({ restaurantId: restaurant, method: 'delivery' })}
+        <Link href={`/${restaurant}/endereco`} onClick={() => AddMethodDelivery({ restaurantId: restaurant, method: 'delivery' })}
           className="
           flex items-center justify-between w-full h-[60px]
           border border-takeat-neutral-light rounded-xl px-4
@@ -44,7 +32,7 @@ export default function EntregaPage({ params }: Props) {
             <span>13 min.</span>
           </div>
         </Link>
-        <Link href={`/${restaurant}/pagamento`} onClick={() => Test({ restaurantId: restaurant, method: 'retirarBalcao' })}
+        <Link href={`/${restaurant}/pagamento`} onClick={() => AddMethodDelivery({ restaurantId: restaurant, method: 'retirarBalcao' })}
           className="
           flex items-center justify-between w-full h-[60px]
           border border-takeat-neutral-light rounded-xl px-4">

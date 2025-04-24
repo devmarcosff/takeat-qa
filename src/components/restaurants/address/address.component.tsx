@@ -1,6 +1,6 @@
 "use client";
-import { Test } from "@/app/[restaurants]/(pages)/entrega/page";
 import { ButtonTakeatBottom, ButtonTakeatContainer, TextButtonTakeat } from "@/app/[restaurants]/(pages)/informacao/informacao.style";
+import { AddMethodDelivery } from "@/components/v2-components/functions/methodDelivery.add";
 import { Restaurant } from "@/types/restaurant.types";
 import { api_delivery_address, api_validate_address } from "@/utils/apis";
 import L from 'leaflet';
@@ -38,7 +38,6 @@ export default function AddressClientComponent({ params }: Props) {
   const restaurant = React.use(params)?.restaurants;
   const addressClientDeliveryTakeat = `@addressClientDeliveryTakeat:${restaurant}`;
   const tokenUserTakeat = `@tokenUserTakeat:${restaurant}`;
-  const methodDeliveryTakeat = `@methodDeliveryTakeat:${restaurant}`;
 
   const [isDisabled, setIsDisabled] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
@@ -550,7 +549,7 @@ export default function AddressClientComponent({ params }: Props) {
           </Modal.Body>
           <Modal.Footer>
             <ButtonTakeatModal width={50} textcolor={DEFAULT_THEME.colors.primary.default} color="white" onClick={() => setModalOpen(!modalOpen)}>Fechar</ButtonTakeatModal>
-            <Link href={`/${restaurant}/pagamento`} onClick={() => Test({ restaurantId: restaurant, method: 'retirarBalcao' })} className={`h-12 w-full flex items-center justify-center rounded-lg font-semibold border border-takeat-primary-default bg-takeat-primary-default text-takeat-neutral-white`}>
+            <Link href={`/${restaurant}/pagamento`} onClick={() => AddMethodDelivery({ restaurantId: restaurant, method: 'retirarBalcao' })} className={`h-12 w-full flex items-center justify-center rounded-lg font-semibold border border-takeat-primary-default bg-takeat-primary-default text-takeat-neutral-white`}>
               Retirar no Balcão
             </Link>
           </Modal.Footer>
@@ -602,9 +601,9 @@ interface MapProps {
 }
 
 const MapPreview = ({ lat, lng, restaurantLat, restaurantLng }: MapProps) => {
-  // Usa as coordenadas do restaurante como valores padrão
-  const defaultLat = restaurantLat || -23.5505; // Latitude de São Paulo como fallback
-  const defaultLng = restaurantLng || -46.6333; // Longitude de São Paulo como fallback
+  // Usa as coordenadas do restaurante como valores padrão ou fallback
+  const defaultLat = restaurantLat || -20.3194400; // Latitude de Vitória - ES como fallback
+  const defaultLng = restaurantLng || -40.3377800; // Longitude de Vitória - ES como fallback
 
   const validLat = lat || defaultLat;
   const validLng = lng || defaultLng;
