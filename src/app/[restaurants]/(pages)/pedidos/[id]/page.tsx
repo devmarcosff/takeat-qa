@@ -103,10 +103,10 @@ export default function InfoPedidos() {
 
   const MotionDiv: React.FC<React.HTMLAttributes<HTMLDivElement> & MotionProps> = motion.div;
 
-  if (isLoading) return;
+  if (isLoading) return null;
 
   const allStatuses: string[] =
-    pedidos2?.bills[0].order_baskets.map(item => item.order_status) ?? []
+    pedidos2?.bills?.[0]?.order_baskets?.map(item => item.order_status) ?? []
 
   const statusMap = {
     canceled: 'Pedido cancelado',
@@ -124,7 +124,7 @@ export default function InfoPedidos() {
         : allStatuses[0] === 'delivered' ? in_delivery
           : allStatuses[0] === 'finished' ? ready_to_withdrawal
             : allStatuses[0] === 'canceled' ? canceled
-              : allStatuses[0] === 'canceled_waiting_payment' ? canceled : waiting_confirm
+              : allStatuses[0] === 'canceled_waiting_payment' ? canceled : preparing
 
   return (
     <div>
@@ -140,9 +140,9 @@ export default function InfoPedidos() {
                 allStatuses[0] !== 'finished' ? (
                   <>
                     <div className="relative flex size-2.5">
-                      <span className={`absolute inline-flex h-full w-full animate-ping rounded-full opacity-75
-                  ${allStatuses[0] !== 'finished' ? 'animate-pulse' : ''
-                        } ${['canceled'].includes(allStatuses[0] ?? '')
+                      <div className={`absolute inline-flex h-full w-full animate-ping rounded-full opacity-75
+                        ${allStatuses[0] !== 'finished' ? 'animate-pulse' : ''}
+                        ${['canceled'].includes(allStatuses[0] ?? '')
                           ? 'bg-takeat-red-default'
                           : ['pending', 'delivered'].includes(allStatuses[0] ?? '')
                             ? 'bg-takeat-orange-default'
@@ -151,11 +151,10 @@ export default function InfoPedidos() {
                               : allStatuses[0] === 'finished'
                                 ? 'hidden'
                                 : 'bg-takeat-red-default'
-                        }
-                  `}></span>
+                        }`} />
                       <span className={`relative inline-flex size-2.5 rounded-full
-                  ${allStatuses[0] !== 'finished' ? 'animate-pulse' : ''
-                        } ${['canceled'].includes(allStatuses[0] ?? '')
+                        ${allStatuses[0] !== 'finished' ? 'animate-pulse' : ''}
+                        ${['canceled'].includes(allStatuses[0] ?? '')
                           ? 'bg-takeat-red-default'
                           : ['pending', 'delivered'].includes(allStatuses[0] ?? '')
                             ? 'bg-takeat-orange-default'
@@ -171,13 +170,15 @@ export default function InfoPedidos() {
                       {statusMap[allStatuses[0] as keyof typeof statusMap] || 'Status desconhecido'}
                     </p>
                   </>
-                ) : (<>
-                  <CheckCircle className={`w-6 h-6 text-green-500`} />
-                  <p className="font-medium text-gray-800 w-full text-sm truncate">
-                    {statusMap[allStatuses[0] as keyof typeof statusMap] || 'Status desconhecido'}
-                  </p>
-                </>
-                )}
+                ) : (
+                  <>
+                    <CheckCircle className="w-6 h-6 text-green-500" />
+                    <p className="font-medium text-gray-800 w-full text-sm truncate">
+                      {statusMap[allStatuses[0] as keyof typeof statusMap] || 'Status desconhecido'}
+                    </p>
+                  </>
+                )
+              }
             </div>
 
             <div>
