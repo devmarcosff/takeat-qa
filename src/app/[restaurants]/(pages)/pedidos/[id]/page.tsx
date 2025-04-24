@@ -124,7 +124,7 @@ export default function InfoPedidos() {
         : allStatuses[0] === 'delivered' ? in_delivery
           : allStatuses[0] === 'finished' ? ready_to_withdrawal
             : allStatuses[0] === 'canceled' ? canceled
-              : allStatuses[0] === 'canceled_waiting_payment' ? canceled : ''
+              : allStatuses[0] === 'canceled_waiting_payment' ? canceled : waiting_confirm
 
   return (
     <div>
@@ -255,7 +255,7 @@ export default function InfoPedidos() {
         </div>
 
         <div className="px-6 flex justify-center items-center w-full">
-          <Image className="" alt="statusImage" src={`${statusImage || '_'}`} width={260} height={260} />
+          <Image alt="statusImage" src={`${statusImage}`} width={260} height={260} />
         </div>
       </div>
 

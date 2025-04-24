@@ -54,7 +54,7 @@ export default function ContinueComponent({
   const [scheduling, setScheduling] = useState<IAgendamento>({})
   const [troco, setTroco] = useState<number>(0)
   const { push } = useRouter();
-  const { cuponValue, cashbackValue } = useDelivery()
+  const { cuponValue, cashbackValue, setPaymentOrderId } = useDelivery()
 
   const cardTokenRef = useRef<string | null>(null);
   const restaurantIdRef = useRef<RestaurantRef | null>(null);
@@ -156,11 +156,12 @@ export default function ContinueComponent({
     if (scheduling.method === 'Agendamento Delivery' || scheduling.method === 'Agendamento Retirada') {
       api_scheduling.post('/orders', payload, config)
         .then(res => {
+          setPaymentOrderId(res.data.data.session.id);
           setModalGen(res.data.pix_info);
           if (res.data.pix_info) {
             setOpenModal(true);
           } else {
-            push(`/${params}/pedido-realizado/${res.data.data.session.id}`);
+            push(`/${params}/pedido-realizado`);
             setTimeout(() => {
               localStorage.removeItem(takeatBagKey);
               localStorage.removeItem(MethodPaymentTakeat);
@@ -178,11 +179,12 @@ export default function ContinueComponent({
     } else {
       api_create_order.post('/orders', payload, config)
         .then(res => {
+          setPaymentOrderId(res.data.data.session.id);
           setModalGen(res.data.pix_info);
           if (res.data.pix_info) {
             setOpenModal(true);
           } else {
-            push(`/${params}/pedido-realizado/${res.data.data.session.id}`);
+            push(`/${params}/pedido-realizado`);
             setTimeout(() => {
               localStorage.removeItem(takeatBagKey);
               localStorage.removeItem(MethodPaymentTakeat);
