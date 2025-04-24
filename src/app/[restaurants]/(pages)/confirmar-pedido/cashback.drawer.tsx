@@ -27,6 +27,7 @@ export default function CashbackDrawer({ openDrawer, setOpenDrawer, isClientClub
   const [cuponSelect, setCuponSelect] = useState<ICashbackDrawer>({} as ICashbackDrawer);
   const [confirmCashback, setConfirmCashback] = useState<ICashbackDrawer>({} as ICashbackDrawer);
   const [isRescue, setIsRescue] = useState<boolean>(false);
+  const [totalPrice, setTotalPrice] = useState<number>(0);
 
   const { setCuponValue, setCashbackValue } = useDelivery()
 
@@ -36,14 +37,26 @@ export default function CashbackDrawer({ openDrawer, setOpenDrawer, isClientClub
     if (getRestaurantId) {
       const parsedRestaurant = JSON.parse(getRestaurantId)
       setConfirmCashback(parsedRestaurant)
-      axios.get(`https://backend-gd.takeat.app/public/discount-coupons/restaurant/${parsedRestaurant.id}/delivery`).then(res => setCashbackDrawer(res.data)).catch(err => console.log(err))
+      axios.get(`https://backend-gd.takeat.app/public/discount-coupons/restaurant/${parsedRestaurant.id}/delivery`).then(res => {
+        // Filtra apenas cupons ativos
+        const activeCoupons = res.data.filter((coupon: ICashbackDrawer) => coupon.is_active);
+        setCashbackDrawer(activeCoupons);
+      }).catch(err => console.log(err))
+    }
+
+    // Pega o preço total do carrinho
+    const takeatBagKey = `@deliveryTakeat:${params.restaurants}TakeatBag`;
+    const storedBag = localStorage.getItem(takeatBagKey);
+    if (storedBag) {
+      const parsedBag = JSON.parse(storedBag)?.products || [];
+      const total = parsedBag.reduce((acc: number, item: { price: number, qtd: number }) => acc + (item.price * item.qtd), 0);
+      setTotalPrice(Number(total.toFixed(2)));
     }
   }, [])
 
   const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
     // Remove todos os caracteres que não sejam dígitos
     let input = e.target.value.replace(/\D/g, '');
-
     // Insere a barra após os 2 primeiros dígitos (dia)
     if (input.length > 2) {
       input = input.slice(0, 2) + '/' + input.slice(2);
@@ -57,12 +70,36 @@ export default function CashbackDrawer({ openDrawer, setOpenDrawer, isClientClub
   };
 
   const handleSelect = (item: ICashbackDrawer) => {
-    setCuponSelect(item)
+    // Verifica se o preço total atende ao preço mínimo do cupom
+    if (item.minimum_price && Number(totalPrice) < Number(item.minimum_price)) {
+      alert(`Este cupom só pode ser aplicado em pedidos acima de ${formatPrice(item.minimum_price)}`);
+      return;
+    }
+    setCuponSelect(item);
   };
 
   const handleCashbackSelect = () => isRescue && setCashbackValue(isClientClube.totalClientCashback)
 
-  const handleAddCupom = () => cuponSelect.id && setCuponValue(cuponSelect)
+  const handleAddCupom = () => {
+    if (!cuponSelect.id) return;
+
+    // Verifica se o preço total atende ao preço mínimo do cupom
+    if (cuponSelect.minimum_price && Number(totalPrice) < Number(cuponSelect.minimum_price)) {
+      alert(`Este cupom só pode ser aplicado em pedidos acima de ${formatPrice(cuponSelect.minimum_price)}`);
+      return;
+    }
+
+    // Verifica se o desconto não ultrapassa o máximo permitido
+    if (cuponSelect.discount_type === 'percentage' && cuponSelect.maximum_discount) {
+      const discountValue = totalPrice * cuponSelect.discount;
+      if (discountValue > Number(cuponSelect.maximum_discount)) {
+        alert(`O desconto máximo para este cupom é de ${formatPrice(cuponSelect.maximum_discount)}`);
+        return;
+      }
+    }
+
+    setCuponValue(cuponSelect);
+  };
 
   const ViewTab = () => {
     const hasCashback = isClientClube.clientExist === true &&
@@ -152,9 +189,15 @@ export default function CashbackDrawer({ openDrawer, setOpenDrawer, isClientClub
                 <span>Cupons disponíveis:</span>
 
                 <div className="flex flex-col gap-1 overflow-y-scroll max-h-[350px] my-2 pt-2 border-t">
-                  {
+                  {cashbackDrawer.length === 0 ? (
+                    <div className="text-center py-4 text-takeat-neutral-darker">
+                      Não há cupons disponíveis no momento.
+                    </div>
+                  ) : (
                     cashbackDrawer.map((item, index) => {
                       const isSelected = cuponSelect.id === item.id;
+                      const isDisabled = item.minimum_price && Number(totalPrice) < Number(item.minimum_price);
+
                       const DiscountTypes = () => {
                         if (item.discount_type === 'percentage') {
                           return `Desconto ${item.discount * 100}%`
@@ -168,14 +211,25 @@ export default function CashbackDrawer({ openDrawer, setOpenDrawer, isClientClub
                       return (
                         <div
                           key={index}
-                          className={`bg-takeat-neutral-white p-4 rounded-xl border ${isSelected ? 'border-takeat-primary-default' : 'border-gray-300'}`}
+                          className={`bg-takeat-neutral-white p-4 rounded-xl border ${isSelected ? 'border-takeat-primary-default' : 'border-gray-300'
+                            } ${isDisabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
                         >
-                          <RadioGroup onClick={() => handleSelect(item)}>
+                          <RadioGroup onClick={() => !isDisabled && handleSelect(item)}>
                             <label htmlFor={`radio-${index}`} className="cursor-pointer">
                               <div className="flex items-center justify-between">
                                 <div className="flex flex-col">
                                   <span className="font-semibold">{item.code}</span>
                                   <span>{DiscountTypes()}</span>
+                                  {isDisabled && (
+                                    <span className="text-sm text-takeat-neutral-darker">
+                                      Pedido mínimo: {formatPrice(item.minimum_price)}
+                                    </span>
+                                  )}
+                                  {item.maximum_discount && (
+                                    <span className="text-sm text-takeat-neutral-darker">
+                                      Desconto máximo: {formatPrice(item.maximum_discount)}
+                                    </span>
+                                  )}
                                 </div>
                                 <div>
                                   <RadioGroupItem
@@ -200,7 +254,6 @@ export default function CashbackDrawer({ openDrawer, setOpenDrawer, isClientClub
                                 <AccordionContent>
                                   <div className="text-sm text-takeat-neutral-darker">
                                     <ul className="list-disc pl-6 space-y-1">
-                                      <li>{'Apenas para primeira compra'}</li>
                                       {item.maximum_discount && <li>Máximo de desconto de {formatPrice(item.maximum_discount)}</li>}
                                       {item.minimum_price && <li>{`Pedidos a partir de ${formatPrice(item.minimum_price)}`}</li>}
                                     </ul>
@@ -212,7 +265,7 @@ export default function CashbackDrawer({ openDrawer, setOpenDrawer, isClientClub
                         </div>
                       )
                     })
-                  }
+                  )}
                 </div>
               </div>
 

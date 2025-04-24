@@ -45,10 +45,8 @@ export default function AgendamentoDrawerComponent({ openDrawer, setOpenDrawer, 
     localStorage.setItem(methodDeliveryTakeat, JSON.stringify(mountedAgendamento))
     setOpenDrawer(false)
     if (title === 'Agendamento Retirada') {
-      // console.log('Agendamento Retirada')
       push(`/${restaurant}/pagamento`)
     } else {
-      // console.log('Agendamento Delivery')
       push(`/${restaurant}/endereco`)
     }
   }

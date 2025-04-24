@@ -20,19 +20,8 @@ interface Props {
   desconto?: boolean,
   finishOrder?: boolean,
 }
-type RestaurantRef = { id: string }; // ou o que vier do seu localStorage
-type AddressRef = { id: string; delivery_tax_price: string }; // ajuste conforme necessário
-// type Product = {
-//   categoryId: number;
-//   qtd: number;
-//   complements?: {
-//     categoryId: number;
-//     complementId: number;
-//     name: string;
-//     price: number;
-//     qtd: number;
-//   }[];
-// };
+type RestaurantRef = { id: string };
+type AddressRef = { id: string; delivery_tax_price: string };
 type CartRef = { products: Product[] };
 type MethodPaymentRef = { keyword: string; id?: number };
 
@@ -65,8 +54,13 @@ export default function ContinueComponent({
   const [scheduling, setScheduling] = useState<IAgendamento>({})
   const [troco, setTroco] = useState<number>(0)
   const { push } = useRouter();
-
   const { cuponValue, cashbackValue } = useDelivery()
+
+  const cardTokenRef = useRef<string | null>(null);
+  const restaurantIdRef = useRef<RestaurantRef | null>(null);
+  const addressClientRef = useRef<AddressRef | null>(null);
+  const cartRef = useRef<CartRef | null>(null);
+  const methodPaymentRef = useRef<MethodPaymentRef | null>(null);
 
   const updateStorageData = useCallback(() => {
     const storedBag = localStorage.getItem(takeatBagKey);
@@ -75,12 +69,6 @@ export default function ContinueComponent({
     const total = parsedBag.reduce((acc: number, item: ICart) => acc + (item.price * item.qtd), 0);
     setTotalPrice(Number(total.toFixed(2)));
   }, [takeatBagKey]);
-
-  const cardTokenRef = useRef<string | null>(null);
-  const restaurantIdRef = useRef<RestaurantRef | null>(null);
-  const addressClientRef = useRef<AddressRef | null>(null);
-  const cartRef = useRef<CartRef | null>(null);
-  const methodPaymentRef = useRef<MethodPaymentRef | null>(null);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -158,7 +146,7 @@ export default function ContinueComponent({
       will_receive_sms: true, // Se receber SMS
       details: "", // Detalhes do pedido
       coupon_code: cuponValue.code || '', // Código do cupom
-      rescue: cashbackValue || '', // Resgate
+      rescue: cashbackValue || '', // Cashback
       scheduled_time: scheduling.hour || '', // Se for agendamento de retirada
       user_change: troco || 0, // Se existir troco
       order: orders, // Objeto de produtos
@@ -171,7 +159,7 @@ export default function ContinueComponent({
           if (res.data.pix_info) {
             setOpenModal(true);
           } else {
-            push(`/${params}/pedido-realizado`);
+            push(`/${params}/pedido-realizado/${res.data.data.session.id}`);
             setTimeout(() => {
               localStorage.removeItem(takeatBagKey);
               localStorage.removeItem(MethodPaymentTakeat);
@@ -193,12 +181,14 @@ export default function ContinueComponent({
           if (res.data.pix_info) {
             setOpenModal(true);
           } else {
-            push(`/${params}/pedido-realizado`);
-            localStorage.removeItem(takeatBagKey);
-            localStorage.removeItem(MethodPaymentTakeat);
-            localStorage.removeItem(methodDeliveryTakeat);
-            localStorage.removeItem(storageTakeat);
-            localStorage.removeItem(useChange);
+            push(`/${params}/pedido-realizado/${res.data.data.session.id}`);
+            setTimeout(() => {
+              localStorage.removeItem(takeatBagKey);
+              localStorage.removeItem(MethodPaymentTakeat);
+              localStorage.removeItem(methodDeliveryTakeat);
+              localStorage.removeItem(storageTakeat);
+              localStorage.removeItem(useChange);
+            }, 1000)
           }
         })
         .catch(err => {
@@ -296,7 +286,7 @@ export default function ContinueComponent({
     // Aplica desconto do cupom se existir
     if (cuponValue.code) {
       if (cuponValue.discount_type === 'percentage') {
-        total = total - (totalPrice * (cuponValue.discount * 100) / 100);
+        total = total - (totalPrice * cuponValue.discount);
       } else if (cuponValue.discount_type === 'absolute') {
         total = total - cuponValue.discount;
       } else if (cuponValue.discount_type === 'free-shipping') {
@@ -336,7 +326,7 @@ export default function ContinueComponent({
               <AddProductsPriceInfoItem textsize={16}>
                 <span>Cupom</span>
                 {cuponValue.discount_type === 'percentage' ? (
-                  <span className="text-takeat-red-default">-{formatPrice((totalPrice * cuponValue.discount))}</span>
+                  <span className="text-takeat-red-default">-{formatPrice(totalPrice * cuponValue.discount)}</span>
                 ) : cuponValue.discount_type === 'absolute' ? (
                   <span className="text-takeat-red-default">-{formatPrice(cuponValue.discount)}</span>
                 ) : (
