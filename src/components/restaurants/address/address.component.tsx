@@ -1,4 +1,5 @@
 "use client";
+import { Test } from "@/app/[restaurants]/(pages)/entrega/page";
 import { ButtonTakeatBottom, ButtonTakeatContainer, TextButtonTakeat } from "@/app/[restaurants]/(pages)/informacao/informacao.style";
 import { Restaurant } from "@/types/restaurant.types";
 import { api_delivery_address, api_validate_address } from "@/utils/apis";
@@ -549,7 +550,7 @@ export default function AddressClientComponent({ params }: Props) {
           </Modal.Body>
           <Modal.Footer>
             <ButtonTakeatModal width={50} textcolor={DEFAULT_THEME.colors.primary.default} color="white" onClick={() => setModalOpen(!modalOpen)}>Fechar</ButtonTakeatModal>
-            <Link href={`/${restaurant}/pagamento`} onClick={() => localStorage.setItem(methodDeliveryTakeat, JSON.stringify('retirarBalcao'))} className={`h-12 w-full flex items-center justify-center rounded-lg font-semibold border border-takeat-primary-default bg-takeat-primary-default text-takeat-neutral-white`}>
+            <Link href={`/${restaurant}/pagamento`} onClick={() => Test({ restaurantId: restaurant, method: 'retirarBalcao' })} className={`h-12 w-full flex items-center justify-center rounded-lg font-semibold border border-takeat-primary-default bg-takeat-primary-default text-takeat-neutral-white`}>
               Retirar no Balcão
             </Link>
           </Modal.Footer>

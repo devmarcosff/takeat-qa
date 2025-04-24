@@ -25,7 +25,10 @@ export default function Pedidos({ params }: Props) {
 
   useEffect(() => {
     api_create_order.get('/sessions', config)
-      .then(res => setResumeCart(res.data))
+      .then(res => {
+        console.log(res.data)
+        setResumeCart(res.data)
+      })
       .catch(error => console.log(error));
   }, []);
 

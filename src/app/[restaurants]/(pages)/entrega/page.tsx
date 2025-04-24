@@ -9,22 +9,28 @@ interface Props {
   params: Promise<{ restaurants: string }>;
 }
 
+interface TestProps {
+  restaurantId: string;
+  method: string;
+}
+
+export const Test = ({ restaurantId, method }: TestProps) => {
+  const methodDeliveryTakeat = `@methodDeliveryTakeat:${restaurantId}`;
+  const parsedValue = {
+    method: method
+  }
+  localStorage.setItem(methodDeliveryTakeat, JSON.stringify(parsedValue))
+}
+
 export default function EntregaPage({ params }: Props) {
   const restaurant = React.use(params)?.restaurants;
-  const methodDeliveryTakeat = `@methodDeliveryTakeat:${restaurant}`;
   const [openDrawer, setOpenDrawer] = useState(false)
   const [title, setTitle] = useState<string>('')
-  const add = (e: string) => {
-    const parsedValue = {
-      method: e
-    }
-    localStorage.setItem(methodDeliveryTakeat, JSON.stringify(parsedValue))
-  }
 
   return (
     <InternalPages title="Entrega" button description="Escolha uma opção de entrega">
       <div style={{ display: 'flex', alignItems: 'center', flexDirection: 'column', gap: 12, marginTop: 20 }}>
-        <Link href={`/${restaurant}/endereco`} onClick={() => add('delivery')}
+        <Link href={`/${restaurant}/endereco`} onClick={() => Test({ restaurantId: restaurant, method: 'delivery' })}
           className="
           flex items-center justify-between w-full h-[60px]
           border border-takeat-neutral-light rounded-xl px-4
@@ -38,7 +44,7 @@ export default function EntregaPage({ params }: Props) {
             <span>13 min.</span>
           </div>
         </Link>
-        <Link href={`/${restaurant}/pagamento`} onClick={() => add('retirarBalcao')}
+        <Link href={`/${restaurant}/pagamento`} onClick={() => Test({ restaurantId: restaurant, method: 'retirarBalcao' })}
           className="
           flex items-center justify-between w-full h-[60px]
           border border-takeat-neutral-light rounded-xl px-4">
