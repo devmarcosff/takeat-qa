@@ -380,7 +380,6 @@ export default function ProductDrawer({ openDrawer, setOpenDrawer, products, par
           const nextElement = categoryRefs.current[nextCategory.id];
           if (nextElement) {
             requestAnimationFrame(() => {
-              nextElement.style.scrollMarginBottom = '256px';
               nextElement.scrollIntoView({ behavior: "smooth", block: "nearest" });
             });
           }
