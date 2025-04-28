@@ -53,6 +53,7 @@ export const ButtonTakeatBottom = styled.button`
     display: flex;
     align-items: center;
     justify-content: center;
+    gap: 12px;
     margin: 0 auto;
     width: 90%;
     border-radius: 12px;

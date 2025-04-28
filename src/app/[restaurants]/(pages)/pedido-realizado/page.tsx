@@ -2,7 +2,7 @@
 import InternalPages from "@/components/uiComponents/InternalPageHeader/internal_pages.header";
 import { useDelivery } from "@/context/DeliveryContext";
 import Image from "next/image";
-import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { use } from "react";
 
 interface Props {
@@ -12,6 +12,7 @@ interface Props {
 export default function PedidoRealizadoPage({ params }: Props) {
   const restaurant = use(params)?.restaurants;
   const finalizar_pedido = "/assets/pedido-finalizado.svg"
+  const { push } = useRouter()
 
   const { paymentOrderId } = useDelivery()
 
@@ -28,12 +29,12 @@ export default function PedidoRealizadoPage({ params }: Props) {
         </div>
 
         <div className="flex flex-col gap-3 w-full p-4">
-          <Link href={`/${restaurant}/pedidos/${paymentOrderId}`} className="bg-takeat-primary-default p-3 shadow-md rounded-lg text-white font-semibold">
+          <button onClick={() => push(`/${restaurant}/pedidos/${paymentOrderId}`)} className="bg-takeat-primary-default p-3 shadow-md rounded-lg text-white font-semibold">
             <span>Detalhes do pedido</span>
-          </Link>
-          <Link href={`/${restaurant}`} className="text-takeat-primary-default font-semibold">
+          </button>
+          <button onClick={() => push(`/${restaurant}`)} className="text-takeat-primary-default font-semibold">
             <span>Página inicial</span>
-          </Link>
+          </button>
         </div>
       </div>
     </InternalPages>

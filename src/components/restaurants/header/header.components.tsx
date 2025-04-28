@@ -42,8 +42,10 @@ export default function HeaderComponent({ restaurant, categories, searchTerm }: 
     <HeaderContainer scrolling={scrolling}>
       <HeaderWrapper scrolling={scrolling}>
         <HeaderRow>
-          <LogoContainer>
-            <Image width={DENSITY} height={DENSITY} src={Logo} alt="Takeat" />
+          <LogoContainer className="w-16 h-16 rounded-full overflow-hidden">
+            <Image width={DENSITY} height={DENSITY}
+              className="w-full h-full flex items-center justify-center"
+              src={`${restaurant?.avatar.url_thumb}`} alt="Takeat" />
           </LogoContainer>
           <RestaurantInfo>
             <div className="flex relative items-center justify-between">

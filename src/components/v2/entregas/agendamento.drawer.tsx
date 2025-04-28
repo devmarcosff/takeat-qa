@@ -114,6 +114,11 @@ export default function AgendamentoDrawerComponent({ openDrawer, setOpenDrawer, 
               selected={date}
               onSelect={setDate}
               className="rounded-md border shadow w-full"
+              disabled={(date) => {
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                return date < today;
+              }}
             />
           </div>
 
@@ -142,7 +147,11 @@ export default function AgendamentoDrawerComponent({ openDrawer, setOpenDrawer, 
         </div>
 
         <DrawerFooter>
-          <Button onClick={() => add()} className="w-full">
+          <Button
+            onClick={() => add()}
+            className="w-full"
+            disabled={!hour || isScheduling.length === 0}
+          >
             Agendar
           </Button>
           <DrawerClose asChild>

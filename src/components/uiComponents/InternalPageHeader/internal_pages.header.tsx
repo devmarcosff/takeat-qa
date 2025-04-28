@@ -6,14 +6,14 @@ import { IconArrowBack } from 'takeat-design-system-ui-kit';
 import { TakeatHeaderInternalPage, TakeatInternalContainer } from './internal_pages.style';
 
 export default function InternalPages(
-  { children, title, description, button, help }: Readonly<{ children?: React.ReactNode, title?: string, description?: string, button?: boolean, help?: boolean }>) {
-  const { back } = useRouter();
+  { children, title, description, button, help, restaurant, backPage }: Readonly<{ children?: React.ReactNode, title?: string, description?: string, button?: boolean, help?: boolean, restaurant?: string, backPage?: boolean }>) {
+  const { back, push } = useRouter();
 
   return (
     <TakeatInternalContainer>
       <TakeatHeaderInternalPage className={`${!!help && 'flex justify-between'}`}>
         {button && (
-          <button type="button" onClick={() => back()}>
+          <button type="button" onClick={() => backPage ? push(`/${restaurant}/pedidos`) : back()}>
             <IconArrowBack style={{ fill: '#c8131b', fontSize: 28 }} />
           </button>
         )}

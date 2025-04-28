@@ -82,7 +82,7 @@ export default function InfoPedidos() {
       <>
         <div className={`flex items-center justify-between ${!date && 'pb-1'}`}>
           <h2 className="font-semibold text-lg">{title}</h2>
-          {!!url && <Link className="font-semibold !text-sm text-takeat-primary-default" href={`/${restaurant}/${url}`}>Alterar</Link>}
+          {!!url && <Link className="font-semibold !text-sm text-takeat-primary-default" href={`/${restaurant}/${url}`}>Editar</Link>}
         </div>
         {!!date && <span className="flex items-center gap-2"><IconDeliverySchedule className="text-2xl" /> {dayjs(pedidos2?.scheduled_to).format('DD/MM/YY - HH:mm[h]')}</span>}
       </>
@@ -129,7 +129,7 @@ export default function InfoPedidos() {
   return (
     <div>
       <div className="sticky top-0 bg-white w-full h-full z-50">
-        <InternalPages title="" button help />
+        <InternalPages title="" restaurant={restaurant} button help backPage={true} />
       </div>
 
       <div className="fixed w-full">

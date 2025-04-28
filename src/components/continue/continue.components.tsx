@@ -2,7 +2,7 @@ import { IAgendamento } from '@/app/[restaurants]/(pages)/confirmar-pedido/page'
 import { useDelivery } from '@/context/DeliveryContext';
 import { api_confirm_pix, api_create_order, api_scheduling } from '@/utils/apis';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Copy, Loader2 } from 'lucide-react';
+import { ChevronDown, Copy, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -42,7 +42,6 @@ export default function ContinueComponent({
   const methodDeliveryTakeat = `@methodDeliveryTakeat:${params}`;
   const useChange = `@useChange:${params}`;
   const [totalPrice, setTotalPrice] = useState<number>(0);
-  const [active, setActive] = useState<number>(0)
   const [openModal, setOpenModal] = useState(false)
   const [confirmPix, setConfirmPix] = useState(false)
   const [modalGen, setModalGen] = useState<{ qrcode: string, zoop_id: string }>()
@@ -134,13 +133,12 @@ export default function ContinueComponent({
       return orderItem;
     });
 
-
     const payload = {
       payment_method: parsedMethodPayment?.keyword, // Método de pagamento
       payment_method_id: parsedMethodPayment?.id || null, // ID do método de pagamento
       payment_token: cardToken ? JSON.parse(cardToken) : null, //  Token do cartão
       restaurant_id: parsedRestaurantId?.id, // ID do restaurante
-      buyer_address_id: parsedAddressClient?.id || null, // Se Delivery ou agendamento de Delivery
+      buyer_address_id: parsedAddressClient?.id ? Number(parsedAddressClient.id) : null, // Se Delivery ou agendamento de Delivery
       with_withdrawal: isMethodDelivery.method === 'Agendamento Retirada' || isMethodDelivery.method === 'retirarBalcao' ? true : false, // Se for agendamento de entrega
       will_receive_sms: true, // Se receber SMS
       details: "", // Detalhes do pedido
@@ -203,10 +201,10 @@ export default function ContinueComponent({
 
   useEffect(() => {
     if (typeof window !== "undefined") {
-      const parsedStorage = localStorage.getItem(storageTakeat);
-      if (parsedStorage) {
-        setActive(Number(parsedStorage));
-      }
+      // const parsedStorage = localStorage.getItem(storageTakeat);
+      // if (parsedStorage) {
+      //   setActive(Number(parsedStorage));
+      // }
 
       const getMethodDelivery = localStorage.getItem(methodDelivery);
       if (getMethodDelivery) {
@@ -304,6 +302,8 @@ export default function ContinueComponent({
 
     return formatPrice(total);
   };
+
+  const [showPixSteps, setShowPixSteps] = useState(false);
 
   return (
     <AddProductsContainer flex_direction={"column"} height={HeightCheckout()}>
@@ -404,47 +404,73 @@ export default function ContinueComponent({
         {!!finishOrder && (
           <AddProductsQuantity style={{ height: 48 }}>
             <TextAddProductsQuantity disabled={loading} onClick={handleCreateOrder}>
-              {
-                !(totalPrice > Number(active)) ? `Pedido mín: ${formatPrice(`${active}`)}`
-                  : <>
-                    {loading ? <Loader2 className='animate-spin flex w-full justify-center items-center' /> : textButon}
-                  </>}
+              {loading ? <Loader2 className='animate-spin flex w-full justify-center items-center' /> : textButon}
             </TextAddProductsQuantity>
           </AddProductsQuantity>
         )
         }
       </ActionProducts>
 
-      <Modal open={openModal} style={{
+      <Modal open={openModal} toggle={() => {
+        setOpenModal(!openModal)
+        setLoading(false)
+      }} style={{
         height: "fit-content"
       }}>
         <Modal.Header className='text-center'>
-          <h2>Copie e cole o código pix</h2>
+          <h2>Pagamento via PIX</h2>
         </Modal.Header>
         <Modal.Body>
-          <div className="flex items-center w-full">
-            <div className="flex items-center justify-center w-full gap-2">
-              <input
-                className='w-full border p-3 rounded-lg cursor-pointer hover:bg-takeat-neutral-lightest'
-                id="link"
-                defaultValue={modalGen?.qrcode}
-                readOnly
-                onClick={() => {
-                  navigator.clipboard.writeText(modalGen?.qrcode || "");
-                  alert("Código copiado com sucesso!");
-                }}
-              />
+          <div className="flex flex-col gap-4">
+            <div className="flex items-center w-full">
+              <div className="flex items-center justify-center w-full gap-2">
+                <input
+                  className='w-full border p-3 rounded-lg cursor-pointer hover:bg-takeat-neutral-lightest'
+                  id="link"
+                  defaultValue={modalGen?.qrcode}
+                  readOnly
+                  onClick={() => {
+                    navigator.clipboard.writeText(modalGen?.qrcode || "");
+                    alert("Código copiado com sucesso!");
+                  }}
+                />
 
-              <button className='border p-3 rounded-lg hover:bg-takeat-neutral-lightest'
-                onClick={() => {
-                  navigator.clipboard.writeText(modalGen?.qrcode || "");
-                  alert("Código copiado com sucesso!");
-                }}><Copy /></button>
+                <button className='border p-3 rounded-lg hover:bg-takeat-neutral-lightest'
+                  onClick={() => {
+                    navigator.clipboard.writeText(modalGen?.qrcode || "");
+                    alert("Código copiado com sucesso!");
+                  }}><Copy /></button>
+              </div>
             </div>
-          </div>
 
-          <div className="flex w-full gap-3 pt-6">
-            <button onClick={() => handleConfirmPix()} className='px-3 py-2 w-full border rounded-lg font-semibold text-white bg-takeat-primary-default hover:bg-takeat-primary-default/80 text-center flex items-center justify-center'>{!confirmPix ? "Confirmar pagamento" : <Loader2 className='animate-spin' />}</button>
+            <div className={`${showPixSteps && 'border rounded-lg'}`}>
+              <button
+                onClick={() => setShowPixSteps(!showPixSteps)}
+                className="w-full flex items-center justify-between p-2 hover:bg-takeat-neutral-lightest rounded-lg"
+              >
+                <span className='text-sm'>Como pagar com PIX</span>
+                <ChevronDown className={`w-4 h-4 transition-transform ${showPixSteps ? 'rotate-180' : ''}`} />
+              </button>
+
+              {showPixSteps && (
+                <div className="p-4 pt-0">
+                  <ol className="list-decimal pl-4 space-y-2 text-sm text-takeat-neutral-darker">
+                    <li>Abra o aplicativo do seu banco</li>
+                    <li>Selecione a opção PIX</li>
+                    <li>Escolha a opção &quot;Pix Copia e Cola&quot;</li>
+                    <li>Cole o código PIX copiado</li>
+                    <li>Confirme os dados e finalize o pagamento</li>
+                    <li>Após o pagamento, clique em &quot;Confirmar pagamento&quot;</li>
+                  </ol>
+                </div>
+              )}
+            </div>
+
+            <div className="flex w-full gap-3 pt-2">
+              <button onClick={() => handleConfirmPix()} className='px-3 py-2 w-full border rounded-lg font-semibold text-white bg-takeat-primary-default hover:bg-takeat-primary-default/80 text-center flex items-center justify-center'>
+                {!confirmPix ? "Confirmar pagamento" : <Loader2 className='animate-spin' />}
+              </button>
+            </div>
           </div>
         </Modal.Body>
       </Modal>

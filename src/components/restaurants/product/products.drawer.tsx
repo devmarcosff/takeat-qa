@@ -8,10 +8,9 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { RiSubtractLine } from "react-icons/ri";
-import { formatPrice, getComplementsPrice, IconAddCircleFilled, IconClose, IconRoundChat, IconTrashFilled } from "takeat-design-system-ui-kit";
+import { formatPrice, IconAddCircleFilled, IconClose, IconRoundChat, IconTrashFilled } from "takeat-design-system-ui-kit";
 import Placeholder from '../../../assets/placeholder.svg';
 import { ProductInternalContainer } from "./products.style";
-import { IComplementCategoryDrawer, IComplementDrawer } from "./types";
 
 interface IDrawerProps {
   openDrawer: boolean;
@@ -38,6 +37,7 @@ export default function ProductDrawer({ openDrawer, setOpenDrawer, products, par
   const [valueProduct, setValueProduct] = useState(products?.delivery_price || 0);
   const [complements, setComplements] = useState<ComplementItem[]>([]);
   const [highlightedCategory, setHighlightedCategory] = useState<string | null>(null);
+  const [finalPrice, setFinalPrice] = useState(0);
   const router = useRouter();
 
   useEffect(() => {
@@ -72,29 +72,29 @@ export default function ProductDrawer({ openDrawer, setOpenDrawer, products, par
     setComplements([]);
   };
 
-  const weightProduct = products.use_weight ? quantityProduct : undefined
+  // const weightProduct = products.use_weight ? quantityProduct : undefined
 
-  const mapToComplement = (categoryId: string): IComplementDrawer[] => {
-    return complements
-      .filter(item => item.categoryId === categoryId)
-      .map(item => ({
-        price: item.price,
-        amount: item.qtd,
-      }));
-  };
+  // const mapToComplement = (categoryId: string): IComplementDrawer[] => {
+  //   return complements
+  //     .filter(item => item.categoryId === categoryId)
+  //     .map(item => ({
+  //       price: item.price,
+  //       amount: item.qtd,
+  //     }));
+  // };
 
-  const mapToComplementCategories = (): IComplementCategoryDrawer[] => {
-    if (!products.complement_categories) return [];
+  // const mapToComplementCategories = (): IComplementCategoryDrawer[] => {
+  //   if (!products.complement_categories) return [];
 
-    return products.complement_categories.map((category) => {
-      return {
-        additional: category.additional,
-        more_expensive_only: category.more_expensive_only,
-        use_average: category.use_average,
-        complements: mapToComplement(`${category.id}`)
-      }
-    })
-  };
+  //   return products.complement_categories.map((category) => {
+  //     return {
+  //       additional: category.additional,
+  //       more_expensive_only: category.more_expensive_only,
+  //       use_average: category.use_average,
+  //       complements: mapToComplement(`${category.id}`)
+  //     }
+  //   })
+  // };
 
   const getCategoryCounts = (
     selectedQuantities: Record<string, { qtd: number; categoryId: string; complementId: string; price: string }>,
@@ -192,12 +192,44 @@ export default function ProductDrawer({ openDrawer, setOpenDrawer, products, par
     setOpenDrawer(false);
   };
 
-  const finishValue = getComplementsPrice({
-    amount: quantityProduct,
-    price: String(products.combo_delivery_price || products.delivery_price_promotion || products.delivery_price || products.price),
-    weight: weightProduct,
-    complement_categories: mapToComplementCategories(),
-  })
+  const calculateAveragePrice = (complements: ComplementItem[]) => {
+    const totalPrice = complements.reduce((sum, complement) => {
+      return sum + (Number(complement.price) * complement.qtd);
+    }, 0);
+
+    const totalQuantity = complements.reduce((sum, complement) => sum + complement.qtd, 0);
+
+    return totalQuantity > 0 ? totalPrice / totalQuantity : 0;
+  };
+
+  useEffect(() => {
+    const hasAveragePriceCategory = products.complement_categories?.some(
+      category => category.use_average
+    );
+
+    // Ordem de prioridade dos preços
+    const basePrice = products.is_combo
+      ? products.delivery_price_promotion || products.delivery_price
+      : products.delivery_price_promotion || products.delivery_price || products.price;
+
+    let calculatedPrice = Number(basePrice);
+
+    if (hasAveragePriceCategory) {
+      const averagePrice = calculateAveragePrice(complements);
+      if (averagePrice > 0) {
+        calculatedPrice += averagePrice;
+      }
+    } else {
+      // Soma os preços dos complementos normalmente
+      const complementsTotal = complements.reduce((sum, complement) =>
+        sum + (Number(complement.price) * complement.qtd), 0
+      );
+      calculatedPrice += complementsTotal;
+    }
+
+    // Multiplicamos pelo quantityProduct aqui
+    setFinalPrice(calculatedPrice * quantityProduct);
+  }, [complements, products, quantityProduct]);
 
   const handleAddToBag = () => {
     if (Number(valueProduct) <= 0 || quantityProduct === 0) return;
@@ -211,15 +243,18 @@ export default function ProductDrawer({ openDrawer, setOpenDrawer, products, par
 
     const image = products.image ? products.image.url_thumb : Placeholder;
 
+    // Calculamos o preço unitário (sem multiplicar pela quantidade)
+    const unitPrice = finalPrice / quantityProduct;
+
     const payloadProduct = {
       name: products.name,
       categoryId: products.id,
-      delivery_price: products.combo_delivery_price || products.delivery_price_promotion || products.delivery_price || products.price,
-      price: finishValue / quantityProduct,
+      delivery_price: unitPrice, // Preço unitário
+      price: unitPrice, // Preço unitário
       img: image,
       observation: observation,
       complements,
-      qtd: quantityProduct,
+      qtd: quantityProduct, // Quantidade será usada para multiplicar o preço no carrinho
       use_weight: products.use_weight
     };
 
@@ -499,13 +534,13 @@ export default function ProductDrawer({ openDrawer, setOpenDrawer, products, par
                 <span>Adicionar </span>
                 <AnimatePresence mode="popLayout">
                   <motion.span
-                    key={Number(valueProduct) * quantityProduct}
+                    key={finalPrice}
                     initial={{ x: -20, opacity: 0 }}
                     animate={{ x: 0, opacity: 1 }}
                     exit={{ x: 20, opacity: 0 }}
                     transition={{ duration: .3, ease: "easeInOut" }}
                   >
-                    {formatPrice(finishValue)}
+                    {formatPrice(finalPrice)}
                   </motion.span>
                 </AnimatePresence>
               </TextAddProductsQuantity>

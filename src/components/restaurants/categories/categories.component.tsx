@@ -2,7 +2,6 @@ import { Category } from "@/types/categories.types";
 import { EmblaOptionsType } from "embla-carousel";
 import useEmblaCarousel from "embla-carousel-react";
 import { useRef, useState } from "react";
-import { Logo } from "../header/header.components";
 import { RestaurantDetails } from "../header/header.style";
 import {
   CarouselContainer,
@@ -63,22 +62,31 @@ export default function CategoriesRestaurant({ categories, scrolling }: Props) {
       <CarouselWrapper ref={categoriesRef}>
         <CarouselViewport ref={emblaRef}>
           <CarouselContainer>
-            {categories?.map((item, index) => (
-              <CategoryItem key={index} onClick={() => handleCategoryClick(item.name)}>
-                <CategoryItem>
-                  <CategoryImageContainer border={checkCategorie === item.name ? true : undefined}>
-                    <CategoryImage
-                      style={scrolling ? { width: 60, height: 60 } : { width: 55, height: 55 }}
-                      src={item?.image?.url || Logo}
-                      width={60}
-                      height={60}
-                      alt={`${item?.id}`}
-                    />
-                  </CategoryImageContainer>
-                  <CategoryName color={checkCategorie === item.name ? "selected" : undefined}>{item.name}</CategoryName>
+            {categories?.filter(category =>
+              category.available_in_delivery &&
+              category.products &&
+              category.products.length > 0
+            ).map((item, index) => {
+              const categoryImageUrl = item?.image?.url ||
+                item.products?.find(product => product.image?.url)?.image?.url
+
+              return (
+                <CategoryItem key={index} onClick={() => handleCategoryClick(item.name)}>
+                  <CategoryItem>
+                    <CategoryImageContainer border={checkCategorie === item.name ? true : undefined}>
+                      <CategoryImage
+                        style={scrolling ? { width: 60, height: 60 } : { width: 55, height: 55 }}
+                        src={categoryImageUrl}
+                        width={60}
+                        height={60}
+                        alt={`${item?.id}`}
+                      />
+                    </CategoryImageContainer>
+                    <CategoryName color={checkCategorie === item.name ? "selected" : undefined}>{item.name}</CategoryName>
+                  </CategoryItem>
                 </CategoryItem>
-              </CategoryItem>
-            ))}
+              );
+            })}
           </CarouselContainer>
         </CarouselViewport>
       </CarouselWrapper>

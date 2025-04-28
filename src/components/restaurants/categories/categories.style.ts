@@ -1,5 +1,5 @@
-import Image from "next/image";
 import styled, { css } from "styled-components";
+import { Image } from "takeat-design-system-ui-kit";
 
 interface CategoryItemProps {
   border?: boolean;

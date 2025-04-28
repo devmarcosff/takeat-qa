@@ -78,6 +78,20 @@ export default function PagamentoPage({ params }: Props) {
     name: "",
     focus: "",
   });
+  const [birthDateError, setBirthDateError] = useState<string>("");
+
+  const validateBirthDate = (date: string) => {
+    const today = new Date();
+    const birthDate = new Date(date);
+    const age = today.getFullYear() - birthDate.getFullYear();
+
+    if (age < 18) {
+      setBirthDateError("Data de nascimento não confere");
+      return false;
+    }
+    setBirthDateError("");
+    return true;
+  };
 
   useEffect(() => {
     const fetchRestaurant = async () => {
@@ -130,7 +144,11 @@ export default function PagamentoPage({ params }: Props) {
   const onlinePayments = sortPaymentMethods(
     methodPayment.filter((method) =>
       allowedOnlineMethods.includes(method.keyword) &&
-      method.restaurant_method.some((restaurantMethod) => restaurantMethod.delivery_accepts === true)
+      method.restaurant_method.some((restaurantMethod) =>
+        methodDelivery.includes("delivery")
+          ? restaurantMethod.delivery_accepts
+          : restaurantMethod.withdrawal_accepts
+      )
     ),
     "pix_auto"
   );
@@ -139,7 +157,11 @@ export default function PagamentoPage({ params }: Props) {
   const offlinePayments = sortPaymentMethods(
     methodPayment.filter((method) =>
       !ignoredKeys.includes(method.keyword) &&
-      method.restaurant_method.some((restaurantMethod) => restaurantMethod.withdrawal_accepts === true)
+      method.restaurant_method.some((restaurantMethod) =>
+        methodDelivery.includes("delivery")
+          ? restaurantMethod.delivery_accepts
+          : restaurantMethod.withdrawal_accepts
+      )
     ),
     "dinheiro"
   );
@@ -311,6 +333,21 @@ export default function PagamentoPage({ params }: Props) {
                   <label htmlFor="cvc" className="font-medium">CVC</label>
                   <input id="cvc" maxLength={3} inputMode="numeric" pattern="[0-9]*" placeholder="591" className="border rounded-lg p-2 w-full" type="text" value={state.cvc} onChange={(e) => setState({ ...state, cvc: e.target.value })} onFocus={handleInputFocus} />
                 </div>
+              </div>
+
+              <div className="flex flex-col gap-1">
+                <label htmlFor="birthDate" className="font-medium">Data de Nascimento</label>
+                <input
+                  id="birthDate"
+                  type="date"
+                  className="border rounded-lg p-2 w-full"
+                  onChange={(e) => {
+                    validateBirthDate(e.target.value);
+                  }}
+                />
+                {birthDateError && (
+                  <span className="text-sm text-takeat-primary-default">{birthDateError}</span>
+                )}
               </div>
 
               <label htmlFor="name" className="font-medium">Nome do titular</label>
