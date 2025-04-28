@@ -1,6 +1,6 @@
 "use client";
 import { ICart } from "@/components/addProducts/addProducts.types";
-import ContinueComponents from "@/components/continue/continue.components";
+import FinishOrderButton from "@/components/continue/finishOrderButton.components";
 import { TakeatApp } from "@/components/theme/ThemeProviderWrapper";
 import InformationButton from "@/components/uiComponents/Buttons/informationButton.component";
 import InternalPages from "@/components/uiComponents/InternalPageHeader/internal_pages.header";
@@ -288,7 +288,7 @@ export default function ConfirmarPedidoPage({ params }: Props) {
         </div>
 
         <div className="pt-3">
-          {TitleMethodPayment(`${methodDelivery?.method === 'retirarBalcao' ? 'Retirada' : methodDelivery?.method === 'delivery' ? 'Delivery' : methodDelivery?.method}`, `${methodDelivery?.method === 'retirarBalcao' || methodDelivery?.method === 'Agendamento Retirada' ? 'entrega' : 'endereco'}`)}
+          {TitleMethodPayment(`${methodDelivery?.method === 'retirarBalcao' ? 'Retirada' : methodDelivery?.method === 'delivery' ? 'Delivery' : methodDelivery?.method}`, `entrega`)}
           {methodDelivery?.method === 'delivery' || methodDelivery?.method === 'Agendamento Delivery' ? (
             <div className="border-b pb-3">
               {!!addressDelivery.city && (
@@ -341,7 +341,7 @@ export default function ConfirmarPedidoPage({ params }: Props) {
         )}
       </div>
 
-      <ContinueComponents params={restaurant} route="pedido-realizado" finishOrder textButon="Enviar Pedido" />
+      <FinishOrderButton params={restaurant} route="pedido-realizado" finishOrder textButon="Enviar Pedido" />
       <CashbackDrawer isClienteTakeat={isClienteTakeat} isClientClube={isClientClube} openDrawer={openDrawer} setOpenDrawer={() => setOpenDrawer(!openDrawer)} />
     </InternalPages>
   );

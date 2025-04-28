@@ -100,4 +100,5 @@ export interface IPedidos {
     pix_payments: PixPayment[];
     restaurant_id: number;
     bills: Bill[];
+    basket: OrderBasket;
 }

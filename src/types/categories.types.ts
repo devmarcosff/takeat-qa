@@ -11,14 +11,13 @@ export interface Product {
     id: number;
     name: string;
     description: string;
-    price: number;
+    price: string;
     price_promotion: string | null;
     sold_off: boolean;
     custom_order: number;
-    promotion: string;
+    promotion: string | null;
     use_weight: boolean;
     has_starting_price: boolean;
-    combo_delivery_price: string;
     is_combo: boolean;
     available: boolean;
     available_in_delivery: boolean;
@@ -31,8 +30,17 @@ export interface Product {
     active_days: string;
     enable_times: boolean;
     available_multistore: boolean;
-    image: Image;
+    image: {
+        url: string;
+        url_thumb: string;
+        id: number;
+        name: string;
+        path: string;
+        path_thumb: string;
+    };
     complement_categories: ComplementCategory[];
+    combo_price: number;
+    combo_delivery_price: number;
 }
 
 export interface Category {

@@ -82,6 +82,7 @@ export default function ContinueComponents({ params, route, clear, textButon, ta
             acc[categoryId] = {
               id: Number(categoryId),
               complements: [],
+              additional: complement.additional
             };
           }
           acc[categoryId].complements.push({

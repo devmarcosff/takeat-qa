@@ -10,6 +10,7 @@ export interface Complement {
 export interface ComplementCategory {
     id: number;
     complements: Complement[];
+    additional: boolean;
 }
 
 // Definição do tipo do pedido (produto no carrinho)
@@ -35,5 +36,6 @@ export interface Product {
         price: string;
         qtd: number;
         categoryId: string;
+        additional: boolean;
     }[];
 }

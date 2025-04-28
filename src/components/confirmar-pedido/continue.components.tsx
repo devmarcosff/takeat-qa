@@ -91,7 +91,7 @@ export default function ContinueComponents({ params, textButon, onClearBag }: Pr
         </PageWrapper>
         <AddProductsQuantity disabled={!(totalPrice >= Number(active))} style={{ height: 48 }}>
           <TextAddProductsQuantity disabled={!(totalPrice >= Number(active))} onClick={() => push(`/${params}/informacao`)}>
-            {!(totalPrice >= Number(active)) ? `Pedido mín: ${formatPrice(`${active}`)}` : `${textButon || 'Continuar Pedido'}`}
+            {!(totalPrice >= Number(active)) ? `Pedido mín: ${formatPrice(active)}` : `${textButon || 'Continuar Pedido'}`}
           </TextAddProductsQuantity>
         </AddProductsQuantity>
       </ActionProducts>

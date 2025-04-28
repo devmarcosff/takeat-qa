@@ -25,7 +25,7 @@ type AddressRef = { id: string; delivery_tax_price: string };
 type CartRef = { products: Product[] };
 type MethodPaymentRef = { keyword: string; id?: number };
 
-export default function ContinueComponent({
+export default function FinishOrderButton({
   params,
   textButon,
   desconto,
@@ -117,7 +117,11 @@ export default function ContinueComponent({
         const complementsByCategory = product.complements.reduce((acc, complement) => {
           const categoryId = complement.categoryId;
           if (!acc[categoryId]) {
-            acc[categoryId] = { id: Number(categoryId), complements: [] };
+            acc[categoryId] = {
+              id: Number(categoryId),
+              complements: [],
+              additional: complement.additional || false
+            };
           }
           acc[categoryId].complements.push({
             id: Number(complement.complementId),
@@ -154,12 +158,16 @@ export default function ContinueComponent({
     if (scheduling.method === 'Agendamento Delivery' || scheduling.method === 'Agendamento Retirada') {
       api_scheduling.post('/orders', payload, config)
         .then(res => {
-          setPaymentOrderId(res.data.data.session.id);
-          setModalGen(res.data.pix_info);
-          if (res.data.pix_info) {
+          if (res.data?.data?.session?.id) {
+            setPaymentOrderId(res.data.data.session.id);
+          }
+          if (res.data?.pix_info) {
+            setModalGen(res.data.pix_info);
             setOpenModal(true);
           } else {
-            push(`/${params}/pedido-realizado`);
+            const orderId = res.data?.data?.id || '';
+            localStorage.setItem(`@scheduledOrderId:${params}`, orderId);
+            push(`/${params}/pedido-realizado/${orderId}`);
             setTimeout(() => {
               localStorage.removeItem(takeatBagKey);
               localStorage.removeItem(MethodPaymentTakeat);
@@ -171,18 +179,21 @@ export default function ContinueComponent({
         })
         .catch(err => {
           setOpenErrorModal(true)
-          setErrorInfo((err.response.data.message))
+          console.log(err)
+          setErrorInfo((err.response?.data?.message || 'Erro ao processar o pedido'))
         });
-
     } else {
       api_create_order.post('/orders', payload, config)
         .then(res => {
-          setPaymentOrderId(res.data.data.session.id);
-          setModalGen(res.data.pix_info);
-          if (res.data.pix_info) {
+          if (res.data?.data?.session?.id) {
+            setPaymentOrderId(res.data.data.session.id);
+          }
+          if (res.data?.pix_info) {
+            setModalGen(res.data.pix_info);
             setOpenModal(true);
           } else {
-            push(`/${params}/pedido-realizado`);
+            const orderId = res.data?.data?.id || '';
+            push(`/${params}/pedido-realizado/${orderId}`);
             setTimeout(() => {
               localStorage.removeItem(takeatBagKey);
               localStorage.removeItem(MethodPaymentTakeat);
@@ -194,7 +205,7 @@ export default function ContinueComponent({
         })
         .catch(err => {
           setOpenErrorModal(true)
-          setErrorInfo((err.response.data.message))
+          setErrorInfo((err.response?.data?.message || 'Erro ao processar o pedido'))
         });
     }
   };

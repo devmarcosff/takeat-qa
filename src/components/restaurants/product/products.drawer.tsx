@@ -207,9 +207,9 @@ export default function ProductDrawer({ openDrawer, setOpenDrawer, products, par
       category => category.use_average
     );
 
-    // Ordem de prioridade dos preços
+    // Ordem de prioridade dos preços para combos
     const basePrice = products.is_combo
-      ? products.delivery_price_promotion || products.delivery_price
+      ? products.combo_delivery_price || products.combo_price
       : products.delivery_price_promotion || products.delivery_price || products.price;
 
     let calculatedPrice = Number(basePrice);
@@ -220,11 +220,33 @@ export default function ProductDrawer({ openDrawer, setOpenDrawer, products, par
         calculatedPrice += averagePrice;
       }
     } else {
-      // Soma os preços dos complementos normalmente
-      const complementsTotal = complements.reduce((sum, complement) =>
-        sum + (Number(complement.price) * complement.qtd), 0
-      );
-      calculatedPrice += complementsTotal;
+      // Agrupa os complementos por categoria
+      const complementsByCategory = complements.reduce((acc, complement) => {
+        if (!acc[complement.categoryId]) {
+          acc[complement.categoryId] = [];
+        }
+        acc[complement.categoryId].push(complement);
+        return acc;
+      }, {} as Record<string, ComplementItem[]>);
+
+      // Para cada categoria, calcula o preço de acordo com more_expensive_only
+      Object.entries(complementsByCategory).forEach(([categoryId, categoryComplements]) => {
+        const category = products.complement_categories?.find(cat => String(cat.id) === categoryId);
+
+        if (category?.more_expensive_only) {
+          // Encontra o complemento mais caro da categoria
+          const mostExpensiveComplement = categoryComplements.reduce((max, current) => {
+            return Number(current.price) > Number(max.price) ? current : max;
+          });
+          calculatedPrice += Number(mostExpensiveComplement.price) * mostExpensiveComplement.qtd;
+        } else {
+          // Soma normalmente todos os complementos da categoria
+          const categoryTotal = categoryComplements.reduce((sum, complement) =>
+            sum + (Number(complement.price) * complement.qtd), 0
+          );
+          calculatedPrice += categoryTotal;
+        }
+      });
     }
 
     // Multiplicamos pelo quantityProduct aqui
@@ -246,6 +268,15 @@ export default function ProductDrawer({ openDrawer, setOpenDrawer, products, par
     // Calculamos o preço unitário (sem multiplicar pela quantidade)
     const unitPrice = finalPrice / quantityProduct;
 
+    // Mapeia os complementos incluindo o additional da categoria
+    const complementsWithAdditional = complements.map(complement => {
+      const category = products.complement_categories?.find(cat => String(cat.id) === complement.categoryId);
+      return {
+        ...complement,
+        additional: category?.additional || false
+      };
+    });
+
     const payloadProduct = {
       name: products.name,
       categoryId: products.id,
@@ -253,7 +284,7 @@ export default function ProductDrawer({ openDrawer, setOpenDrawer, products, par
       price: unitPrice, // Preço unitário
       img: image,
       observation: observation,
-      complements,
+      complements: complementsWithAdditional,
       qtd: quantityProduct, // Quantidade será usada para multiplicar o preço no carrinho
       use_weight: products.use_weight
     };
@@ -341,16 +372,30 @@ export default function ProductDrawer({ openDrawer, setOpenDrawer, products, par
                   <DrawerTitle className="font-semibold text-lg">{products.name}</DrawerTitle>
                   {products.promotion && (
                     <span className="rounded-full border flex items-center justify-center text-nowrap border-takeat-primary-default px-3 py-2 font-semibold text-takeat-primary-default shadow-md">
-                      Contém Glúten
+                      {products.promotion}
                     </span>
                   )}
                 </div>
                 <div>
                   <p className="text-takeat-neutral-dark">{products.description}</p>
                 </div>
-                <div className="flex items-center gap-2">
-                  <p className="text-takeat-green-dark font-semibold">{formatPrice(products.combo_delivery_price || products.delivery_price_promotion || products.delivery_price || products.price)}</p>
-                  <p className="text-takeat-neutral-dark line-through">{products.delivery_price_promotion && formatPrice(products.delivery_price)}</p>
+                <div className="flex flex-col gap-1">
+                  <div className="flex items-center gap-2">
+                    <p className="text-takeat-green-dark font-semibold">
+                      {formatPrice(products.is_combo ? products.combo_delivery_price || products.combo_price : products.delivery_price_promotion || products.delivery_price || products.price)}
+                    </p>
+                    {products.delivery_price_promotion && (
+                      <p className="text-takeat-neutral-dark line-through">
+                        {formatPrice(products.delivery_price)}
+                      </p>
+                    )}
+                  </div>
+                  {products.is_combo && (
+                    <div className="text-sm text-takeat-neutral-dark">
+                      <p>Valor do combo: {formatPrice(products.combo_price)}</p>
+                      <p>Valor com entrega: {formatPrice(products.combo_delivery_price)}</p>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -381,9 +426,21 @@ export default function ProductDrawer({ openDrawer, setOpenDrawer, products, par
                           key={complement.id}
                           className="transition-all flex items-center cursor-pointer justify-between p-2 rounded-lg"
                         >
-                          <div className="flex flex-col">
-                            <span className="text-md font-medium">{complement.name}</span>
-                            <span className={`text-md font-semibold text-sm ${Number(complement.delivery_price) == 0 && 'hidden'}`}>{formatPrice(complement.delivery_price)}</span>
+                          <div className="flex items-center gap-3">
+                            {complement.image?.url_thumb && (
+                              <div className="w-12 h-12 relative rounded-lg overflow-hidden">
+                                <Image
+                                  src={complement.image.url_thumb}
+                                  alt={complement.name}
+                                  fill
+                                  className="object-cover"
+                                />
+                              </div>
+                            )}
+                            <div className="flex flex-col">
+                              <span className="text-md font-medium">{complement.name}</span>
+                              <span className={`text-md font-semibold text-sm ${Number(complement.delivery_price) == 0 && 'hidden'}`}>{formatPrice(complement.delivery_price)}</span>
+                            </div>
                           </div>
                           <input
                             type="radio"
@@ -417,9 +474,21 @@ export default function ProductDrawer({ openDrawer, setOpenDrawer, products, par
                           <div
                             key={complement.id}
                             className="transition-all flex items-center cursor-pointer justify-between p-2 rounded-lg">
-                            <div className="flex flex-col">
-                              <span className="text-md font-medium">{complement.name}</span>
-                              <span className={`text-md font-semibold text-sm ${Number(complement.delivery_price) == 0 && 'hidden'}`}>{formatPrice(complement.delivery_price)}</span>
+                            <div className="flex items-center gap-3">
+                              {complement.image?.url_thumb && (
+                                <div className="w-12 h-12 relative rounded-lg overflow-hidden">
+                                  <Image
+                                    src={complement.image.url_thumb}
+                                    alt={complement.name}
+                                    fill
+                                    className="object-cover"
+                                  />
+                                </div>
+                              )}
+                              <div className="flex flex-col">
+                                <span className="text-md font-medium">{complement.name}</span>
+                                <span className={`text-md font-semibold text-sm ${Number(complement.delivery_price) || Number(complement.price) == 0 && 'hidden'}`}>{formatPrice(complement.delivery_price || complement.price)}</span>
+                              </div>
                             </div>
                             <div className="flex items-center gap-1">
                               <button
@@ -427,7 +496,7 @@ export default function ProductDrawer({ openDrawer, setOpenDrawer, products, par
                                 className={`w-7 h-7 flex items-center justify-center text-takeat-primary-default rounded-full font-bold text-lg transition-all ${quantity === 0 ? "hidden" : ""
                                   }`}
                                 onClick={() => {
-                                  handleQuantityChange(`${complement.delivery_price}`, complement.limit, `${complement.name}`, `${category.id}`, `${complement.id}`, -1)
+                                  handleQuantityChange(`${complement.delivery_price || complement.price}`, complement.limit, `${complement.name}`, `${category.id}`, `${complement.id}`, -1)
                                 }
                                 }
                               >
@@ -451,13 +520,8 @@ export default function ProductDrawer({ openDrawer, setOpenDrawer, products, par
 
                               <button
                                 disabled={isAddDisabled || quantity === complement.limit}
-                                className={`w-7 h-7 flex items-center justify-center rounded-full font-bold text-lg
-                                        ${isAddDisabled ? "opacity-50 cursor-not-allowed" : ""}
-                                        ${quantity === complement.limit ? "opacity-50 cursor-not-allowed" : ""}
-                                      `}
-                                onClick={() =>
-                                  handleQuantityChange(`${complement.delivery_price}`, complement.limit, `${complement.name}`, `${category.id}`, `${complement.id}`, 1)
-                                }
+                                className={`w-7 h-7 flex items-center justify-center rounded-full font-bold text-lg ${isAddDisabled ? "opacity-50 cursor-not-allowed" : ""} ${quantity === complement.limit ? "opacity-50 cursor-not-allowed" : ""} `}
+                                onClick={() => handleQuantityChange(`${Number(complement.delivery_price) || Number(complement.price)}`, complement.limit, `${complement.name}`, `${category.id}`, `${complement.id}`, 1)}
                               >
                                 <IconAddCircleFilled className="fill-takeat-primary-default w-full h-full" />
                               </button>

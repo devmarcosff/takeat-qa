@@ -8,7 +8,7 @@ import { ICart, IProducts } from "./addProducts.types";
 
 export default function AddProductsComponents({ product, cart, params, observation, disabled }: IProducts) {
   const [quantityProduct, setQuantityProduct] = useState(1)
-  const [valueProduct, setValueProduct] = useState(product?.price || 0)
+  const [valueProduct, setValueProduct] = useState(Number(product?.price) || 0)
   const [complements, setComplements] = useState({})
   const { push } = useRouter();
 
@@ -64,7 +64,7 @@ export default function AddProductsComponents({ product, cart, params, observati
 
     setComplements(cartItems)
 
-    const totalPrice = cartItems.map(({ qtd, price }) => qtd * price)
+    const totalPrice = cartItems.map(({ qtd, price }) => Number(qtd) * Number(price))
       .reduce((acc, curr) => acc + curr, Number(product?.price));
 
     setValueProduct(totalPrice)
@@ -100,13 +100,13 @@ export default function AddProductsComponents({ product, cart, params, observati
 
           <AnimatePresence mode="popLayout">
             <motion.span
-              key={valueProduct * quantityProduct}
+              key={`${valueProduct}-${quantityProduct}`}
               initial={{ x: -20, opacity: 0 }}
               animate={{ x: 0, opacity: 1 }}
               exit={{ x: 20, opacity: 0 }}
               transition={{ duration: .3, ease: "easeInOut" }}
             >
-              {formatPrice(valueProduct * quantityProduct)}
+              {formatPrice(Number(valueProduct) * Number(quantityProduct))}
             </motion.span>
           </AnimatePresence>
         </TextAddProductsQuantity>

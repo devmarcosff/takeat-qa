@@ -735,30 +735,18 @@ export default function AddressClientComponent({ params }: Props) {
               />
             </div>
           </Modal.Body>
-          <Modal.Footer className="flex flex-col gap-2">
-            <div className="flex w-full gap-2">
-              <ButtonTakeatModal
-                type="button"
-                className="flex items-center gap-2 w-1/2"
-                width={50}
-                textcolor={DEFAULT_THEME.colors.primary.default}
-                color="white"
-                onClick={handleEditAddress}
-              >
-                <IconPencilFilled className="fill-takeat-primary-default" />
-                Editar
-              </ButtonTakeatModal>
-              {/* <ButtonTakeatModal
-                type="button"
-                className="w-1/2"
-                width={50}
-                textcolor={DEFAULT_THEME.colors.primary.default}
-                color="white"
-                onClick={handleCancelAddress}
-              >
-                Cancelar
-              </ButtonTakeatModal> */}
-            </div>
+          <Modal.Footer className="flex gap-2">
+            <ButtonTakeatModal
+              type="button"
+              className="flex items-center gap-2 w-1/2"
+              width={50}
+              textcolor={DEFAULT_THEME.colors.primary.default}
+              color="white"
+              onClick={handleEditAddress}
+            >
+              <IconPencilFilled className="fill-takeat-primary-default" />
+              Editar
+            </ButtonTakeatModal>
             <ButtonTakeatModal
               type="button"
               onClick={handleSaveAddress}
