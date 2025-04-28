@@ -8,7 +8,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { RiSubtractLine } from "react-icons/ri";
-import { formatPrice, IconAddCircleFilled, IconClose, IconRoundChat, IconTrashFilled } from "takeat-design-system-ui-kit";
+import { formatPrice, getComplementsPrice, IconAddCircleFilled, IconClose, IconRoundChat, IconTrashFilled } from "takeat-design-system-ui-kit";
 import Placeholder from '../../../assets/placeholder.svg';
 import { ProductInternalContainer } from "./products.style";
 
@@ -39,6 +39,7 @@ export default function ProductDrawer({ openDrawer, setOpenDrawer, products, par
   const [highlightedCategory, setHighlightedCategory] = useState<string | null>(null);
   const [finalPrice, setFinalPrice] = useState(0);
   const router = useRouter();
+  const scrollContainerRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     const cartItems = Object.values(selectedQuantities).filter(({ qtd }) => qtd > 0).map(({ name, limit, qtd, price, categoryId, complementId }) => ({
@@ -73,28 +74,6 @@ export default function ProductDrawer({ openDrawer, setOpenDrawer, products, par
   };
 
   // const weightProduct = products.use_weight ? quantityProduct : undefined
-
-  // const mapToComplement = (categoryId: string): IComplementDrawer[] => {
-  //   return complements
-  //     .filter(item => item.categoryId === categoryId)
-  //     .map(item => ({
-  //       price: item.price,
-  //       amount: item.qtd,
-  //     }));
-  // };
-
-  // const mapToComplementCategories = (): IComplementCategoryDrawer[] => {
-  //   if (!products.complement_categories) return [];
-
-  //   return products.complement_categories.map((category) => {
-  //     return {
-  //       additional: category.additional,
-  //       more_expensive_only: category.more_expensive_only,
-  //       use_average: category.use_average,
-  //       complements: mapToComplement(`${category.id}`)
-  //     }
-  //   })
-  // };
 
   const getCategoryCounts = (
     selectedQuantities: Record<string, { qtd: number; categoryId: string; complementId: string; price: string }>,
@@ -138,6 +117,39 @@ export default function ProductDrawer({ openDrawer, setOpenDrawer, products, par
           observation: observation
         },
       };
+
+      // Verifica se atingiu o limite da categoria e faz scroll para a próxima
+      const currentCategory = products.complement_categories?.find(cat => String(cat.id) === categoryId);
+      if (currentCategory) {
+        const totalCategoryQuantity = getCategoryCounts(updatedData, categoryId);
+        const totalCategories = products.complement_categories?.length || 0;
+        const currentIndex = products.complement_categories?.findIndex(cat => String(cat.id) === categoryId) || -1;
+        // Só faz scroll se NÃO for a última categoria
+        if (
+          totalCategoryQuantity >= currentCategory.limit &&
+          currentIndex !== -1 &&
+          currentIndex < totalCategories - 1
+        ) {
+          const nextCategory = products.complement_categories?.[currentIndex + 1];
+          if (nextCategory) {
+            const nextElement = categoryRefs.current[nextCategory.id];
+            if (nextElement) {
+              const scrollContainer = scrollContainerRef.current;
+              if (scrollContainer) {
+                const containerTop = scrollContainer.getBoundingClientRect().top;
+                const elementTop = nextElement.getBoundingClientRect().top;
+                const footerHeight = 65;
+                const scrollOffset = elementTop - containerTop + scrollContainer.scrollTop - 50 - footerHeight;
+
+                scrollContainer.scrollTo({
+                  top: scrollOffset,
+                  behavior: 'smooth'
+                });
+              }
+            }
+          }
+        }
+      }
 
       return updatedData;
     });
@@ -192,20 +204,35 @@ export default function ProductDrawer({ openDrawer, setOpenDrawer, products, par
     setOpenDrawer(false);
   };
 
-  const calculateAveragePrice = (complements: ComplementItem[]) => {
-    const totalPrice = complements.reduce((sum, complement) => {
-      return sum + (Number(complement.price) * complement.qtd);
-    }, 0);
+  // const calculateAveragePrice = (complements: ComplementItem[]) => {
+  //   const totalPrice = complements.reduce((sum, complement) => {
+  //     return sum + (Number(complement.price) * complement.qtd);
+  //   }, 0);
 
-    const totalQuantity = complements.reduce((sum, complement) => sum + complement.qtd, 0);
+  //   const totalQuantity = complements.reduce((sum, complement) => sum + complement.qtd, 0);
 
-    return totalQuantity > 0 ? totalPrice / totalQuantity : 0;
+  //   return totalQuantity > 0 ? totalPrice / totalQuantity : 0;
+  // };
+
+  const mapToComplementFormat = (complements: ComplementItem[], categories: ComplementCategory[]) => {
+    return complements.map(complement => {
+      const category = categories.find(cat => String(cat.id) === complement.categoryId);
+      return {
+        price: String(complement.price),
+        amount: category?.more_expensive_only ? 1 : complement.qtd,
+        category: {
+          additional: category?.additional || false,
+          more_expensive_only: category?.more_expensive_only || false,
+          use_average: category?.use_average || false
+        }
+      };
+    });
   };
 
   useEffect(() => {
-    const hasAveragePriceCategory = products.complement_categories?.some(
-      category => category.use_average
-    );
+    // const hasAveragePriceCategory = products.complement_categories?.some(
+    //   category => category.use_average
+    // );
 
     // Ordem de prioridade dos preços para combos
     const basePrice = products.is_combo
@@ -214,40 +241,26 @@ export default function ProductDrawer({ openDrawer, setOpenDrawer, products, par
 
     let calculatedPrice = Number(basePrice);
 
-    if (hasAveragePriceCategory) {
-      const averagePrice = calculateAveragePrice(complements);
-      if (averagePrice > 0) {
-        calculatedPrice += averagePrice;
-      }
-    } else {
-      // Agrupa os complementos por categoria
-      const complementsByCategory = complements.reduce((acc, complement) => {
-        if (!acc[complement.categoryId]) {
-          acc[complement.categoryId] = [];
-        }
-        acc[complement.categoryId].push(complement);
-        return acc;
-      }, {} as Record<string, ComplementItem[]>);
+    // Usa a função getComplementsPrice para calcular o preço dos complementos
+    const formattedComplements = mapToComplementFormat(complements, products.complement_categories || []);
 
-      // Para cada categoria, calcula o preço de acordo com more_expensive_only
-      Object.entries(complementsByCategory).forEach(([categoryId, categoryComplements]) => {
-        const category = products.complement_categories?.find(cat => String(cat.id) === categoryId);
+    const productData = {
+      price: String(basePrice),
+      amount: 1,
+      complement_categories: products.complement_categories?.map(category => ({
+        additional: category.additional,
+        more_expensive_only: category.more_expensive_only,
+        use_average: category.use_average,
+        complements: formattedComplements.filter(comp =>
+          comp.category.additional === category.additional &&
+          comp.category.more_expensive_only === category.more_expensive_only &&
+          comp.category.use_average === category.use_average
+        )
+      })) || []
+    };
 
-        if (category?.more_expensive_only) {
-          // Encontra o complemento mais caro da categoria
-          const mostExpensiveComplement = categoryComplements.reduce((max, current) => {
-            return Number(current.price) > Number(max.price) ? current : max;
-          });
-          calculatedPrice += Number(mostExpensiveComplement.price) * mostExpensiveComplement.qtd;
-        } else {
-          // Soma normalmente todos os complementos da categoria
-          const categoryTotal = categoryComplements.reduce((sum, complement) =>
-            sum + (Number(complement.price) * complement.qtd), 0
-          );
-          calculatedPrice += categoryTotal;
-        }
-      });
-    }
+    const complementsPrice = getComplementsPrice(productData);
+    calculatedPrice = Number(complementsPrice);
 
     // Multiplicamos pelo quantityProduct aqui
     setFinalPrice(calculatedPrice * quantityProduct);
@@ -352,6 +365,30 @@ export default function ProductDrawer({ openDrawer, setOpenDrawer, products, par
     });
   };
 
+  // Adiciona este useEffect logo após os outros useEffects existentes
+  useEffect(() => {
+    products.complement_categories?.forEach((category, index) => {
+      const totalCategoryQuantity = getCategoryCounts(selectedQuantities, String(category.id));
+      const totalCategories = products.complement_categories?.length || 0;
+      // Só faz scroll se NÃO for a última categoria
+      if (
+        totalCategoryQuantity >= category.limit &&
+        index < totalCategories - 1
+      ) {
+        const nextCategory = products.complement_categories?.[index + 1];
+        if (nextCategory) {
+          const nextElement = categoryRefs.current[nextCategory.id];
+          if (nextElement) {
+            requestAnimationFrame(() => {
+              nextElement.style.scrollMarginBottom = '256px';
+              nextElement.scrollIntoView({ behavior: "smooth", block: "nearest" });
+            });
+          }
+        }
+      }
+    });
+  }, [selectedQuantities, products.complement_categories]);
+
   return (
     <Drawer open={openDrawer} onOpenChange={handleCloseDrawer}>
       <DrawerContent className="h-full w-full flex flex-col overflow-hidden !rounded-none">
@@ -364,7 +401,10 @@ export default function ProductDrawer({ openDrawer, setOpenDrawer, products, par
           <Image src={products.image?.url_thumb || Placeholder} className="!w-full h-full max-h-[330px]" width={100} height={100} alt="Takeat Image" />
         </div>
 
-        <div className="flex-1 overflow-y-auto px-4 pb-64 scroll-smooth [scroll-padding-bottom:10px] !rounded-t-[40px] overflow-hidden">
+        <div
+          ref={scrollContainerRef}
+          className="flex-1 overflow-y-auto px-4 pb-64 scroll-smooth [scroll-padding-bottom:10px] !rounded-t-[40px] overflow-hidden"
+        >
           <ProductInternalContainer>
             <div>
               <div className="flex flex-col gap-3 mb-3 w-full">
@@ -382,7 +422,10 @@ export default function ProductDrawer({ openDrawer, setOpenDrawer, products, par
                 <div className="flex flex-col gap-1">
                   <div className="flex items-center gap-2">
                     <p className="text-takeat-green-dark font-semibold">
-                      {formatPrice(products.is_combo ? products.combo_delivery_price || products.combo_price : products.delivery_price_promotion || products.delivery_price || products.price)}
+                      {
+                        products.is_combo ? formatPrice(products.is_combo ? products.combo_delivery_price : products.combo_price) :
+                          formatPrice(products.delivery_price_promotion || products.delivery_price || products.price_promotion || products.price)
+                      }
                     </p>
                     {products.delivery_price_promotion && (
                       <p className="text-takeat-neutral-dark line-through">
@@ -390,12 +433,6 @@ export default function ProductDrawer({ openDrawer, setOpenDrawer, products, par
                       </p>
                     )}
                   </div>
-                  {products.is_combo && (
-                    <div className="text-sm text-takeat-neutral-dark">
-                      <p>Valor do combo: {formatPrice(products.combo_price)}</p>
-                      <p>Valor com entrega: {formatPrice(products.combo_delivery_price)}</p>
-                    </div>
-                  )}
                 </div>
               </div>
             </div>
@@ -411,6 +448,16 @@ export default function ProductDrawer({ openDrawer, setOpenDrawer, products, par
                       <p className="text-takeat-neutral-dark text-sm">
                         Escolha até {category.limit === 1 ? `${category.limit} opção` : `${category.limit} opções`}
                       </p>
+                      {category.use_average && (
+                        <p className="text-xs text-takeat-primary-default">
+                          Será cobrado a média dos complementos selecionados
+                        </p>
+                      )}
+                      {category.more_expensive_only && (
+                        <p className="text-xs text-takeat-primary-default">
+                          Será cobrado apenas o complemento mais caro
+                        </p>
+                      )}
                     </div>
                     {!category.optional && (
                       <span className="bg-red-600 text-white px-2 py-1 text-sm font-semibold rounded-full">

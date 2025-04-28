@@ -15,8 +15,8 @@ interface Props {
 export default function Restaurant({ params }: Props) {
   const restaurant = React.use(params)?.restaurants;
   const [searchTerm] = useSearch();
-  const { getRestaurants, getCategories, fetchInitialData } = useDelivery();
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const { getRestaurants, getCategories, fetchInitialData } = useDelivery();
 
   useEffect(() => {
     fetchInitialData(restaurant).then(() => setIsLoading(false))

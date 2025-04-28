@@ -1,4 +1,5 @@
 import Analytics from "@/analytics/analytics";
+import PixelFromDelivery from "@/analytics/PixelFromDelivery";
 import ThemeProviderWrapper from "@/components/theme/ThemeProviderWrapper";
 import { DeliveryProvider } from "@/context/DeliveryContext";
 import type { Metadata } from "next";
@@ -24,9 +25,10 @@ export default function RootLayout({
   return (
     <html lang="pt-br">
       <body className={`${poppins.className}`}>
-        <Analytics />
         <ThemeProviderWrapper>
           <DeliveryProvider>
+            <Analytics />
+            <PixelFromDelivery />
             {children}
           </DeliveryProvider>
         </ThemeProviderWrapper>
