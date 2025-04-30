@@ -31,7 +31,7 @@ export default function PromocaoModal({ openModal, setOpenModal, params }: Promo
   const viewProductInDrawer = (product: Product) => {
     const productSlug = encodeURIComponent(product.name);
     // Cria um novo objeto URLSearchParams com os parâmetros atuais
-    const newSearchParams = new URLSearchParams(searchParams.toString());
+    const newSearchParams = new URLSearchParams(searchParams?.toString());
     // Adiciona o parâmetro do produto
     newSearchParams.set('produto', productSlug);
     // Atualiza a URL mantendo o pathname atual
@@ -43,7 +43,7 @@ export default function PromocaoModal({ openModal, setOpenModal, params }: Promo
   // Limpa a URL quando o drawer é fechado
   const handleCloseDrawer = () => {
     // Remove apenas o parâmetro 'produto' mantendo os outros parâmetros
-    const newSearchParams = new URLSearchParams(searchParams.toString());
+    const newSearchParams = new URLSearchParams(searchParams?.toString());
     newSearchParams.delete('produto');
     const newSearch = newSearchParams.toString();
     // Atualiza a URL mantendo o pathname atual

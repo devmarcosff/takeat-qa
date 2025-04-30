@@ -36,7 +36,7 @@ export default function CashbackDrawer({ openDrawer, setOpenDrawer, isClientClub
   const { setCuponValue, setCashbackValue } = useDelivery()
 
   useEffect(() => {
-    const restaurant = `@deliveryTakeatRestaurant:${params.restaurants}`
+    const restaurant = `@deliveryTakeatRestaurant:${params?.restaurants}`
     const getRestaurantId = localStorage.getItem(restaurant)
     if (getRestaurantId) {
       const parsedRestaurant = JSON.parse(getRestaurantId)
@@ -49,7 +49,7 @@ export default function CashbackDrawer({ openDrawer, setOpenDrawer, isClientClub
     }
 
     // Pega o preço total do carrinho
-    const takeatBagKey = `@deliveryTakeat:${params.restaurants}TakeatBag`;
+    const takeatBagKey = `@deliveryTakeat:${params?.restaurants}TakeatBag`;
     const storedBag = localStorage.getItem(takeatBagKey);
     if (storedBag) {
       const parsedBag = JSON.parse(storedBag)?.products || [];

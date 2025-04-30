@@ -14,7 +14,7 @@ import { useEffect, useState } from "react";
 
 export default function PedidosPage() {
   const params = useParams();
-  const restaurant = params.restaurants as string;
+  const restaurant = params?.restaurants as string;
   const [activeTab, setActiveTab] = useState("andamentos");
   const [resumeCart, setResumeCart] = useState<IPedidos[]>([]);
   const [swipeDirection, setSwipeDirection] = useState<'left' | 'right' | null>(null);

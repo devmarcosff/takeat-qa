@@ -46,7 +46,7 @@ interface SavedAddress {
 
 export default function AddressClientComponent() {
   const params = useParams()
-  const restaurant = params.restaurants as string;
+  const restaurant = params?.restaurants as string;
   const addressClientDeliveryTakeat = `@addressClientDeliveryTakeat:${restaurant}`;
   const savedAddressesKey = `@savedAddresses:${restaurant}`;
   const tokenUserTakeat = `@tokenUserTakeat:${restaurant}`;

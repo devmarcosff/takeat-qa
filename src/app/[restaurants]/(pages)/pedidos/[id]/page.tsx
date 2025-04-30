@@ -38,7 +38,7 @@ export interface IAddressRestaurantProps {
 
 export default function InfoPedidos() {
   const restaurantParams = useParams<{ restaurants: string, id?: string }>()
-  const restaurant = restaurantParams.restaurants;
+  const restaurant = restaurantParams?.restaurants;
 
   const [pedidos2, setPedidos2] = useState<IProduct2>()
   const [pedidos, setPedidos] = useState<IPedidos>()
@@ -52,7 +52,7 @@ export default function InfoPedidos() {
       headers: { Authorization: `Bearer ${token}` }
     };
 
-    api_token_card.get(`/session/${restaurantParams.id}`, config).then(res => setPedidos2(res.data)).catch(error => console.log(error));
+    api_token_card.get(`/session/${restaurantParams?.id}`, config).then(res => setPedidos2(res.data)).catch(error => console.log(error));
 
     const addressRestaurant = localStorage.getItem(`@deliveryTakeatRestaurant:${restaurant}`);
     const parsedAddressRestaurant = JSON.parse(addressRestaurant || '');
