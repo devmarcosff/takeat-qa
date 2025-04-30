@@ -2,10 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Drawer, DrawerContent, DrawerTitle } from "@/components/ui/drawer";
 import {
   Table,
-  TableCaption,
-  TableHead,
-  TableHeader,
-  TableRow
+  TableCaption
 } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Restaurant } from "@/types/restaurant.types";
@@ -95,21 +92,15 @@ export function DrawerHeaderComponent({ openDrawer, setOpenDrawer, restaurant }:
           {/* TAB HORÁRIOS */}
           <TabsContent value="horarios">
             <div className="pt-1">
-              <Table>
+              <Table className="flex flex-col w-full">
                 <TableCaption>
                   Não existe horário de atendimento registrado para este restaurante.
                 </TableCaption>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Dias da semana</TableHead>
-                    <TableHead>Horário</TableHead>
-                  </TableRow>
-                </TableHeader>
-                {/* <TableBody>
+                {/* <TableBody className="w-full">
                   {Array.from({ length: 7 }).map((_, index) => (
-                    <TableRow key={index}>
-                      <TableCell className="text-takeat-neutral-darker font-medium">Dia {(index + 1).toString().padStart(2, "0")}</TableCell>
+                    <TableRow key={index} className="flex justify-between items-center w-full border-none my-1">
                       <TableCell className="text-takeat-neutral-darker">Segunda-feira</TableCell>
+                      <TableCell className="text-takeat-neutral-darker font-medium">10:30 às 21:00</TableCell>
                     </TableRow>
                   ))}
                 </TableBody> */}

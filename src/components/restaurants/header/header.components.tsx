@@ -49,7 +49,7 @@ export default function HeaderComponent({ restaurant, categories, searchTerm }: 
           </LogoContainer>
           <RestaurantInfo>
             <div className="flex relative items-center justify-between">
-              <h2>{restaurant?.fantasy_name}</h2>
+              <h2 className="text-takeat-neutral-darker">{restaurant?.fantasy_name}</h2>
               <IconSearchCustom onClick={handleSearchClick} scrolling={scrolling} />
             </div>
 
@@ -59,10 +59,10 @@ export default function HeaderComponent({ restaurant, categories, searchTerm }: 
               </InfoText>
               <div className="flex gap-2 text-sm">
                 {deliveryInfo({ restaurant })}
-                <span>Mais informações</span>
+                <span className="text-takeat-neutral-darker">Mais informações</span>
               </div>
               <LocationText>
-                <IconLocationFilled style={{ fill: "#545454" }} />
+                <IconLocationFilled style={{ fill: "#222222" }} />
                 {restaurant?.adress.city} - {restaurant?.adress.state}
               </LocationText>
             </RestaurantDetails>

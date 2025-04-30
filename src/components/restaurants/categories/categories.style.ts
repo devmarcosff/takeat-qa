@@ -123,5 +123,6 @@ export const CategoryName = styled.h2<CategoryItemProps>`
   text-overflow: ellipsis;
   text-align: center;
   ${({ color, theme }) =>
-    color ? `color: ${theme.colors.primary.default}; font-weight: 600;` : ``}
+    color ? `color: ${theme.colors.primary.default}; font-weight: 600;`
+      : `color: ${theme.colors.neutral.darker};`}
 `;

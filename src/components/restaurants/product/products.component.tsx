@@ -95,6 +95,7 @@ export default function ProductsRestaurant({ categories = [], params, searchTerm
                     <h2>{product.name}</h2>
                     <p className="line-clamp-3">{product.description}</p>
                     <ProductPrice>
+                      {product.has_starting_price && "A partir de "}
                       {formatPrice(product.combo_delivery_price || product.delivery_price_promotion || product.delivery_price || product.price)}
                       {!!product.delivery_price_promotion && (
                         <span>{formatPrice(product.delivery_price || product.price)}</span>
@@ -149,10 +150,10 @@ export default function ProductsRestaurant({ categories = [], params, searchTerm
                       <CategoryTitle>
                         <h2>{item.name}</h2>
                         {!!item.preparation_time && (
-                          <h2>
+                          <div className="flex items-center gap-1 font-normal text-sm">
                             <IconClockFilled style={{ fill: "#FFF" }} />{" "}
-                            {item.preparation_time}
-                          </h2>
+                            {item.preparation_time} <span className="text-sm font-normal">min.</span>
+                          </div>
                         )}
                       </CategoryTitle>
                     </CategoryButton>
@@ -177,6 +178,7 @@ export default function ProductsRestaurant({ categories = [], params, searchTerm
                                 <ProductDetails>
                                   <h2>{product.name}</h2>
                                   <p className="line-clamp-3">{product.description}</p>
+                                  {product.has_starting_price && <span className="text-sm font-medium">A partir de</span>}
                                   <ProductPrice delivery_price={product.delivery_price_promotion ? product.delivery_price_promotion : undefined}>
                                     {formatPrice(product.combo_delivery_price || product.delivery_price_promotion || product.delivery_price || product.price)}
                                     {!!product.delivery_price_promotion && (
