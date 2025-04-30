@@ -8,7 +8,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { RiSubtractLine } from "react-icons/ri";
-import { formatPrice, getComplementsPrice, IconAddCircleFilled, IconClose, IconRoundChat, IconTrashFilled } from "takeat-design-system-ui-kit";
+import { formatPrice, IconAddCircleFilled, IconClose, IconRoundChat, IconTrashFilled } from "takeat-design-system-ui-kit";
 import Placeholder from '../../../assets/placeholder.svg';
 import { ProductInternalContainer } from "./products.style";
 
@@ -230,40 +230,40 @@ export default function ProductDrawer({ openDrawer, setOpenDrawer, products, par
   };
 
   useEffect(() => {
-    // const hasAveragePriceCategory = products.complement_categories?.some(
-    //   category => category.use_average
-    // );
+    // 1. Valor base do combo
+    const comboBase = products.is_combo
+      ? Number(products.combo_delivery_price || products.combo_price)
+      : Number(products.delivery_price_promotion || products.delivery_price || products.price);
 
-    // Ordem de prioridade dos preços para combos
-    const basePrice = products.is_combo
-      ? products.combo_delivery_price || products.combo_price
-      : products.delivery_price_promotion || products.delivery_price || products.price;
+    // 2. Encontrar o mais barato de cada grupo obrigatório
+    const cheapestByCategory: Record<string, number> = {};
+    products.complement_categories?.forEach(category => {
+      if (!category.optional && category.complements.length > 0) {
+        const cheapest = category.complements.reduce((a, b) => {
+          const aPrice = Number(a.delivery_price ?? a.price ?? 0);
+          const bPrice = Number(b.delivery_price ?? b.price ?? 0);
+          return aPrice < bPrice ? a : b;
+        });
+        cheapestByCategory[String(category.id)] = Number(cheapest.delivery_price ?? cheapest.price ?? 0);
+      }
+    });
 
-    let calculatedPrice = Number(basePrice);
+    // 3. Calcular o extra dos complementos selecionados
+    let extra = 0;
+    complements.forEach(comp => {
+      // Se for obrigatório, soma só a diferença
+      if (cheapestByCategory[comp.categoryId] !== undefined) {
+        const diff = Number(comp.price) - cheapestByCategory[comp.categoryId];
+        if (diff > 0) extra += diff * comp.qtd;
+      } else {
+        // Se não for obrigatório, soma tudo normalmente
+        extra += Number(comp.price) * comp.qtd;
+      }
+    });
 
-    // Usa a função getComplementsPrice para calcular o preço dos complementos
-    const formattedComplements = mapToComplementFormat(complements, products.complement_categories || []);
-
-    const productData = {
-      price: String(basePrice),
-      amount: 1,
-      complement_categories: products.complement_categories?.map(category => ({
-        additional: category.additional,
-        more_expensive_only: category.more_expensive_only,
-        use_average: category.use_average,
-        complements: formattedComplements.filter(comp =>
-          comp.category.additional === category.additional &&
-          comp.category.more_expensive_only === category.more_expensive_only &&
-          comp.category.use_average === category.use_average
-        )
-      })) || []
-    };
-
-    const complementsPrice = getComplementsPrice(productData);
-    calculatedPrice = Number(complementsPrice);
-
-    // Multiplicamos pelo quantityProduct aqui
-    setFinalPrice(calculatedPrice * quantityProduct);
+    // 4. Valor final
+    const final = (comboBase + extra) * quantityProduct;
+    setFinalPrice(final);
   }, [complements, products, quantityProduct]);
 
   const handleAddToBag = () => {
