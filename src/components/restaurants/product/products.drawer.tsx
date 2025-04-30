@@ -214,20 +214,20 @@ export default function ProductDrawer({ openDrawer, setOpenDrawer, products, par
   //   return totalQuantity > 0 ? totalPrice / totalQuantity : 0;
   // };
 
-  const mapToComplementFormat = (complements: ComplementItem[], categories: ComplementCategory[]) => {
-    return complements.map(complement => {
-      const category = categories.find(cat => String(cat.id) === complement.categoryId);
-      return {
-        price: String(complement.price),
-        amount: category?.more_expensive_only ? 1 : complement.qtd,
-        category: {
-          additional: category?.additional || false,
-          more_expensive_only: category?.more_expensive_only || false,
-          use_average: category?.use_average || false
-        }
-      };
-    });
-  };
+  // const mapToComplementFormat = (complements: ComplementItem[], categories: ComplementCategory[]) => {
+  //   return complements.map(complement => {
+  //     const category = categories.find(cat => String(cat.id) === complement.categoryId);
+  //     return {
+  //       price: String(complement.price),
+  //       amount: category?.more_expensive_only ? 1 : complement.qtd,
+  //       category: {
+  //         additional: category?.additional || false,
+  //         more_expensive_only: category?.more_expensive_only || false,
+  //         use_average: category?.use_average || false
+  //       }
+  //     };
+  //   });
+  // };
 
   useEffect(() => {
     // 1. Valor base do combo
