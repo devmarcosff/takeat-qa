@@ -197,7 +197,10 @@ export default function AddressClientComponent() {
           push(`/${restaurant}/pagamento`)
         }
       }
-    }).catch(() => setModalOpen(true)).finally(() => setIsDisabled(false))
+    }).catch((err) => {
+      console.log(err)
+      setModalOpen(true)
+    }).finally(() => setIsDisabled(false))
   };
 
   const getAddressWithCep = async (cep: string) => {

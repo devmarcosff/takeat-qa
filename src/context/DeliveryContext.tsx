@@ -34,14 +34,16 @@ export const DeliveryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const fetchInitialData = async (restaurant: string) => {
     try {
       const res = await api_delivery.get(`/${restaurant}`);
+      if (!res.data) {
+        throw new Error("Restaurant not found");
+      }
       setGetRestaurants(res.data);
       localStorage.setItem(`@deliveryTakeatRestaurant:${restaurant}`, JSON.stringify(res.data));
       localStorage.setItem(`@deliveryTakeat:${restaurant}`, res.data.delivery_info.delivery_minimum_price);
       const catRes = await api_categories_delivery.get(`/${res.data.id}?gd=true`);
       setGetCategories(catRes.data);
     } catch (error) {
-      alert("Erro ao buscar restaurante e categorias.");
-      console.error("Erro ao buscar dados:", error);
+      throw error;
     }
   };
 

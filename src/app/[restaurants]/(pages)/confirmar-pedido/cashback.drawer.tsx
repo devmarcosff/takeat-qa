@@ -4,6 +4,7 @@ import { Drawer, DrawerClose, DrawerContent, DrawerFooter, DrawerHeader, DrawerT
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import DiscountAlertModal from "@/components/uiComponents/Modal/discountAlert.modal";
 import { useDelivery } from "@/context/DeliveryContext";
 import { api_Club } from "@/utils/apis";
 import axios from "axios";
@@ -28,6 +29,9 @@ export default function CashbackDrawer({ openDrawer, setOpenDrawer, isClientClub
   const [confirmCashback, setConfirmCashback] = useState<ICashbackDrawer>({} as ICashbackDrawer);
   const [isRescue, setIsRescue] = useState<boolean>(false);
   const [totalPrice, setTotalPrice] = useState<number>(0);
+  const [showDiscountAlert, setShowDiscountAlert] = useState(false);
+  const [discountType, setDiscountType] = useState<'coupon' | 'cashback'>('coupon');
+  const [discountValue, setDiscountValue] = useState('');
 
   const { setCuponValue, setCashbackValue } = useDelivery()
 
@@ -78,7 +82,14 @@ export default function CashbackDrawer({ openDrawer, setOpenDrawer, isClientClub
     setCuponSelect(item);
   };
 
-  const handleCashbackSelect = () => isRescue && setCashbackValue(isClientClube.totalClientCashback)
+  const handleCashbackSelect = () => {
+    if (isRescue) {
+      setCashbackValue(isClientClube.totalClientCashback);
+      setDiscountType('cashback');
+      setDiscountValue(formatPrice(isClientClube.totalClientCashback));
+      setShowDiscountAlert(true);
+    }
+  }
 
   const handleAddCupom = () => {
     if (!cuponSelect.id) return;
@@ -99,6 +110,9 @@ export default function CashbackDrawer({ openDrawer, setOpenDrawer, isClientClub
     }
 
     setCuponValue(cuponSelect);
+    setDiscountType('coupon');
+    setDiscountValue(cuponSelect.code);
+    setShowDiscountAlert(true);
   };
 
   const ViewTab = () => {
@@ -142,146 +156,154 @@ export default function CashbackDrawer({ openDrawer, setOpenDrawer, isClientClub
   }
 
   return (
-    <Drawer open={openDrawer} onOpenChange={setOpenDrawer}>
-      <DrawerContent>
-        <DrawerHeader>
-          <DrawerTitle>Escolha uma opção de desconto</DrawerTitle>
-        </DrawerHeader>
+    <>
+      <Drawer open={openDrawer} onOpenChange={setOpenDrawer}>
+        <DrawerContent>
+          <DrawerHeader>
+            <DrawerTitle>Escolha uma opção de desconto</DrawerTitle>
+          </DrawerHeader>
 
-        <div className="w-full px-4">
-          <Tabs defaultValue={Number(isClientClube.totalClientCashback) != 0 ? 'cashback' : 'cupons'} className="w-full flex flex-col">
+          <div className="w-full px-4">
+            <Tabs defaultValue={Number(isClientClube.totalClientCashback) != 0 ? 'cashback' : 'cupons'} className="w-full flex flex-col">
 
-            <TabsList className="bg-transparent">
-              {ViewTab()}
-            </TabsList>
+              <TabsList className="bg-transparent">
+                {ViewTab()}
+              </TabsList>
 
-            <TabsContent value="cashback">
-              <div className="bg-takeat-neutral-lightest py-5 rounded-xl flex flex-col px-4 gap-2">
-                <span>Saldo de Cashback:</span>
-                <span className="text-takeat-green-default font-semibold">{formatPrice(isClientClube.totalClientCashback)}</span>
-              </div>
-
-              <div>
-                <Label className="text-lg">Data de nascimento:</Label>
-                <input
-                  type="text"
-                  value={birthdate}
-                  onChange={handleInputChange}
-                  maxLength={10}
-                  inputMode="numeric"
-                  pattern="[0-9]*"
-                  placeholder="DD/MM/AAAA"
-                  className="w-full border border-gray-500 rounded-xl py-2 px-4" />
-              </div>
-
-              <DrawerFooter className="flex flex-row w-full justify-between items-center">
-                <DrawerClose asChild>
-                  <Button variant="outline" className="w-2/4 text-[16px]">Cancelar</Button>
-                </DrawerClose>
-                <DrawerClose asChild onClick={handleCashbackSelect} disabled={!isRescue && !cuponSelect.id}>
-                  <Button className="w-full disabled:bg-takeat-neutral-lighter disabled:text-takeat-neutral-darker text-[16px]">Resgatar</Button>
-                </DrawerClose>
-              </DrawerFooter>
-            </TabsContent>
-
-            <TabsContent value="cupons">
-              <div>
-                <span>Cupons disponíveis:</span>
-
-                <div className="flex flex-col gap-1 overflow-y-scroll max-h-[350px] my-2 pt-2 border-t">
-                  {cashbackDrawer.length === 0 ? (
-                    <div className="text-center py-4 text-takeat-neutral-darker">
-                      Não há cupons disponíveis no momento.
-                    </div>
-                  ) : (
-                    cashbackDrawer.map((item, index) => {
-                      const isSelected = cuponSelect.id === item.id;
-                      const isDisabled = item.minimum_price && Number(totalPrice) < Number(item.minimum_price);
-
-                      const DiscountTypes = () => {
-                        if (item.discount_type === 'percentage') {
-                          return `Desconto ${item.discount * 100}%`
-                        } else if (item.discount_type === 'absolute') {
-                          return `Desconto ${formatPrice(item.discount)}`
-                        } else {
-                          return `FRETE GRATIS`
-                        }
-                      }
-
-                      return (
-                        <div
-                          key={index}
-                          className={`bg-takeat-neutral-white p-4 rounded-xl border ${isSelected ? 'border-takeat-primary-default' : 'border-gray-300'
-                            } ${isDisabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
-                        >
-                          <RadioGroup onClick={() => !isDisabled && handleSelect(item)}>
-                            <label htmlFor={`radio-${index}`} className="cursor-pointer">
-                              <div className="flex items-center justify-between">
-                                <div className="flex flex-col">
-                                  <span className="font-semibold">{item.code}</span>
-                                  <span>{DiscountTypes()}</span>
-                                  {isDisabled && (
-                                    <span className="text-sm text-takeat-neutral-darker">
-                                      Pedido mínimo: {formatPrice(item.minimum_price)}
-                                    </span>
-                                  )}
-                                  {item.maximum_discount && (
-                                    <span className="text-sm text-takeat-neutral-darker">
-                                      Desconto máximo: {formatPrice(item.maximum_discount)}
-                                    </span>
-                                  )}
-                                </div>
-                                <div>
-                                  <RadioGroupItem
-                                    id={`radio-${index}`}
-                                    value={item.code}
-                                    checked={isSelected}
-                                    className={isSelected ? 'border-takeat-primary-default text-takeat-primary-default' : 'border-gray-300'}
-                                    aria-readonly
-                                  />
-                                </div>
-                              </div>
-                            </label>
-                          </RadioGroup>
-                          <div className="pt-1 border-t border-gray-300">
-                            <Accordion type="single" collapsible>
-                              <AccordionItem value="rules" className="border-none">
-                                <AccordionTrigger className="py-2 hover:no-underline">
-                                  <span className="flex items-center justify-start gap-2 text-sm text-takeat-neutral-darker">
-                                    Ver regras
-                                  </span>
-                                </AccordionTrigger>
-                                <AccordionContent>
-                                  <div className="text-sm text-takeat-neutral-darker">
-                                    <ul className="list-disc pl-6 space-y-1">
-                                      {item.maximum_discount && <li>Máximo de desconto de {formatPrice(item.maximum_discount)}</li>}
-                                      {item.minimum_price && <li>{`Pedidos a partir de ${formatPrice(item.minimum_price)}`}</li>}
-                                    </ul>
-                                  </div>
-                                </AccordionContent>
-                              </AccordionItem>
-                            </Accordion>
-                          </div>
-                        </div>
-                      )
-                    })
-                  )}
+              <TabsContent value="cashback">
+                <div className="bg-takeat-neutral-lightest py-5 rounded-xl flex flex-col px-4 gap-2">
+                  <span>Saldo de Cashback:</span>
+                  <span className="text-takeat-green-default font-semibold">{formatPrice(isClientClube.totalClientCashback)}</span>
                 </div>
-              </div>
 
-              <DrawerFooter className="flex flex-row w-full justify-between items-center">
-                <DrawerClose asChild>
-                  <Button variant="outline" className="w-2/4 text-[16px]">Cancelar</Button>
-                </DrawerClose>
-                <DrawerClose asChild onClick={handleAddCupom} disabled={!isRescue && !cuponSelect.id}>
-                  <Button className="w-full disabled:bg-takeat-neutral-lighter disabled:text-takeat-neutral-darker text-[16px]">Resgatar</Button>
-                </DrawerClose>
-              </DrawerFooter>
-            </TabsContent>
+                <div>
+                  <Label className="text-lg">Data de nascimento:</Label>
+                  <input
+                    type="text"
+                    value={birthdate}
+                    onChange={handleInputChange}
+                    maxLength={10}
+                    inputMode="numeric"
+                    pattern="[0-9]*"
+                    placeholder="DD/MM/AAAA"
+                    className="w-full border border-gray-500 rounded-xl py-2 px-4" />
+                </div>
 
-          </Tabs>
-        </div>
-      </DrawerContent>
-    </Drawer>
+                <DrawerFooter className="flex flex-row w-full justify-between items-center">
+                  <DrawerClose asChild>
+                    <Button variant="outline" className="w-2/4 text-[16px]">Cancelar</Button>
+                  </DrawerClose>
+                  <DrawerClose asChild onClick={handleCashbackSelect} disabled={!isRescue && !cuponSelect.id}>
+                    <Button className="w-full disabled:bg-takeat-neutral-lighter disabled:text-takeat-neutral-darker text-[16px]">Resgatar</Button>
+                  </DrawerClose>
+                </DrawerFooter>
+              </TabsContent>
+
+              <TabsContent value="cupons">
+                <div>
+                  <span>Cupons disponíveis:</span>
+
+                  <div className="flex flex-col gap-1 overflow-y-scroll max-h-[350px] my-2 pt-2 border-t">
+                    {cashbackDrawer.length === 0 ? (
+                      <div className="text-center py-4 text-takeat-neutral-darker">
+                        Não há cupons disponíveis no momento.
+                      </div>
+                    ) : (
+                      cashbackDrawer.map((item, index) => {
+                        const isSelected = cuponSelect.id === item.id;
+                        const isDisabled = item.minimum_price && Number(totalPrice) < Number(item.minimum_price);
+
+                        const DiscountTypes = () => {
+                          if (item.discount_type === 'percentage') {
+                            return `Desconto ${item.discount * 100}%`
+                          } else if (item.discount_type === 'absolute') {
+                            return `Desconto ${formatPrice(item.discount)}`
+                          } else {
+                            return `FRETE GRATIS`
+                          }
+                        }
+
+                        return (
+                          <div
+                            key={index}
+                            className={`bg-takeat-neutral-white p-4 rounded-xl border ${isSelected ? 'border-takeat-primary-default' : 'border-gray-300'
+                              } ${isDisabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                          >
+                            <RadioGroup onClick={() => !isDisabled && handleSelect(item)}>
+                              <label htmlFor={`radio-${index}`} className="cursor-pointer">
+                                <div className="flex items-center justify-between">
+                                  <div className="flex flex-col">
+                                    <span className="font-semibold">{item.code}</span>
+                                    <span>{DiscountTypes()}</span>
+                                    {isDisabled && (
+                                      <span className="text-sm text-takeat-neutral-darker">
+                                        Pedido mínimo: {formatPrice(item.minimum_price)}
+                                      </span>
+                                    )}
+                                    {item.maximum_discount && (
+                                      <span className="text-sm text-takeat-neutral-darker">
+                                        Desconto máximo: {formatPrice(item.maximum_discount)}
+                                      </span>
+                                    )}
+                                  </div>
+                                  <div>
+                                    <RadioGroupItem
+                                      id={`radio-${index}`}
+                                      value={item.code}
+                                      checked={isSelected}
+                                      className={isSelected ? 'border-takeat-primary-default text-takeat-primary-default' : 'border-gray-300'}
+                                      aria-readonly
+                                    />
+                                  </div>
+                                </div>
+                              </label>
+                            </RadioGroup>
+                            <div className="pt-1 border-t border-gray-300">
+                              <Accordion type="single" collapsible>
+                                <AccordionItem value="rules" className="border-none">
+                                  <AccordionTrigger className="py-2 hover:no-underline">
+                                    <span className="flex items-center justify-start gap-2 text-sm text-takeat-neutral-darker">
+                                      Ver regras
+                                    </span>
+                                  </AccordionTrigger>
+                                  <AccordionContent>
+                                    <div className="text-sm text-takeat-neutral-darker">
+                                      <ul className="list-disc pl-6 space-y-1">
+                                        {item.maximum_discount && <li>Máximo de desconto de {formatPrice(item.maximum_discount)}</li>}
+                                        {item.minimum_price && <li>{`Pedidos a partir de ${formatPrice(item.minimum_price)}`}</li>}
+                                      </ul>
+                                    </div>
+                                  </AccordionContent>
+                                </AccordionItem>
+                              </Accordion>
+                            </div>
+                          </div>
+                        )
+                      })
+                    )}
+                  </div>
+                </div>
+
+                <DrawerFooter className="flex flex-row w-full justify-between items-center">
+                  <DrawerClose asChild>
+                    <Button variant="outline" className="w-2/4 text-[16px]">Cancelar</Button>
+                  </DrawerClose>
+                  <DrawerClose asChild onClick={handleAddCupom} disabled={!isRescue && !cuponSelect.id}>
+                    <Button className="w-full disabled:bg-takeat-neutral-lighter disabled:text-takeat-neutral-darker text-[16px]">Resgatar</Button>
+                  </DrawerClose>
+                </DrawerFooter>
+              </TabsContent>
+
+            </Tabs>
+          </div>
+        </DrawerContent>
+      </Drawer>
+      <DiscountAlertModal
+        openModal={showDiscountAlert}
+        setOpenModal={setShowDiscountAlert}
+        type={discountType}
+        value={discountValue}
+      />
+    </>
   )
 }

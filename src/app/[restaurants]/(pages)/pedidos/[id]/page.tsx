@@ -203,30 +203,19 @@ export default function InfoPedidos() {
                   >
                     {[0, 1, 2].map((step) => {
                       const status = allStatuses[0];
-                      const isActive =
-                        (step === 0 && ['accepted', 'ready', 'finished', 'delivered'].includes(status || '')) ||
-                        (step === 1 && ['accepted', 'ready', 'finished', 'delivered'].includes(status || '')) ||
-                        (step === 2 && ['ready', 'finished', 'delivered'].includes(status || ''));
 
-                      const shouldAnimate =
-                        (status === 'accepted' && step === 1) ||
-                        (status === 'ready' && step === 2) ||
-                        (status === 'delivered' && step === 2);
+                      // Lógica de animação conforme padrão dos tabs
+                      let animateStep = [false, false, false];
+                      if (status === 'pending') {
+                        animateStep = [true, false, false];
+                      } else if (['accepted', 'ongoing'].includes(status)) {
+                        animateStep = [true, true, false];
+                      } else if (['delivered', 'ready'].includes(status)) {
+                        animateStep = [true, true, true];
+                      }
 
-                      const solidBg =
-                        (status === 'accepted' && step < 1) ||
-                        (status === 'ready' && step < 2) ||
-                        (status === 'delivered' && step < 2) ||
-                        (status === 'finished' && step <= 2);
-
-                      const isCanceledOrPending = ['pending', 'canceled'].includes(status || '');
-
-                      const getMotionBg = () => {
-                        if (isCanceledOrPending) return 'bg-gray-200';
-                        if (solidBg) return 'bg-takeat-primary-default';
-                        if (isActive) return 'bg-gradient-to-r from-takeat-primary-default to-transparent';
-                        return 'bg-gray-200';
-                      };
+                      const isActive = animateStep[step];
+                      const lastActiveIndex = animateStep.lastIndexOf(true);
 
                       return (
                         <MotionDiv
@@ -234,14 +223,14 @@ export default function InfoPedidos() {
                           initial={{ opacity: 0.3, scaleX: 0.9 }}
                           animate={{ opacity: 1, scaleX: 1 }}
                           transition={{ duration: 0.4, delay: step * 0.1 }}
-                          className={`h-2 w-1/3 rounded-full relative overflow-hidden mx-${step === 1 ? '1' : '0'} ${getMotionBg()}`}
+                          className={`h-2 w-1/3 rounded-full relative overflow-hidden mx-${step === 1 ? '1' : '0'} ${isActive ? 'bg-takeat-primary-light' : 'bg-gray-200'}`}
                         >
-                          {shouldAnimate && allStatuses[0] !== 'finished' && (
+                          {isActive && step === lastActiveIndex && (
                             <MotionDiv
-                              className='absolute inset-0 bg-gradient-to-r from-transparent via-takeat-primary-default to-transparent'
+                              className='absolute inset-0 bg-gradient-to-r from-transparent via-takeat-red-lightest to-transparent opacity-80 scale-y-150'
                               initial={{ x: '-100%' }}
                               animate={{ x: '100%' }}
-                              transition={{ duration: 2.5, repeat: Infinity, ease: 'linear' }}
+                              transition={{ duration: 3.5, repeat: Infinity, ease: 'linear' }}
                             />
                           )}
                         </MotionDiv>
@@ -264,7 +253,7 @@ export default function InfoPedidos() {
         <ProductInternalWrapper className="shadow-[0_-5px_10px_rgba(0,0,0,0.1)] w-full">
           <div className="flex items-center justify-between w-full my-3">
             <h2 className="font-semibold text-md">Detalhes do Pedido</h2>
-            <h2 className="font-semibold text-md">Senha {pedidos2?.attendance_password}</h2>
+            <h2 className="font-semibold text-md">Senha {pedidos?.bills[0].order_baskets[0].basket_id}</h2>
           </div>
 
           <div className="flex items-center justify-between w-full border-t">

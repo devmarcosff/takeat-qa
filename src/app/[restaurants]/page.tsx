@@ -6,6 +6,7 @@ import { TakeatApp, TakeatPage } from "@/components/theme/ThemeProviderWrapper";
 import { useDelivery } from "@/context/DeliveryContext";
 import PageWrapper from "@/hook/pageWrapper";
 import { useSearch } from "@/hook/useSearch";
+import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
 
 interface Props {
@@ -17,12 +18,17 @@ export default function Restaurant({ params }: Props) {
   const [searchTerm] = useSearch();
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const { getRestaurants, getCategories, fetchInitialData } = useDelivery();
+  const { push } = useRouter();
 
   useEffect(() => {
-    fetchInitialData(restaurant).then(() => setIsLoading(false))
-  }, []);
+    fetchInitialData(restaurant)
+      .then(() => setIsLoading(false))
+      .catch(() => {
+        push("/restaurante-nao-encontrado");
+      });
+  }, [restaurant]);
 
-  if (isLoading) return;
+  if (isLoading) return null;
 
   return (
     <div>
