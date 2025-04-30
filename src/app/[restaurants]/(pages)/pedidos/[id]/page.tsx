@@ -11,7 +11,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { formatPrice, IconCardFront, IconDeliverySchedule, IconLocationFilled, IconMoney, IconPix, IconRoundChat } from "takeat-design-system-ui-kit";
-import { IPedidos } from "../types";
+import { IPedidos } from "../../../../../components/restaurants/pedidos/types";
 import { IProduct2 } from "./types";
 
 const canceled = '../../../../../assets/pedidos/canceled.svg';
@@ -129,7 +129,7 @@ export default function InfoPedidos() {
   return (
     <div>
       <div className="sticky top-0 bg-white w-full h-full z-50">
-        <InternalPages title="" restaurant={restaurant} button help backPage={true} />
+        <InternalPages title="" restaurant={restaurant} button help backPage={false} />
       </div>
 
       <div className="fixed w-full">

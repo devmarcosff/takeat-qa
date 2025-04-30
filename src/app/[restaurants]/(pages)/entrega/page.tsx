@@ -14,9 +14,14 @@ interface Props {
 
 export default function EntregaPage({ params }: Props) {
   const restaurant = React.use(params)?.restaurants;
-  const [openDrawer, setOpenDrawer] = useState(false)
-  const [title, setTitle] = useState<string>('')
-  const [delivery_info, setDelivery_info] = useState<DeliveryInfo>({} as DeliveryInfo)
+  const [openDrawer, setOpenDrawer] = useState(false);
+  const [title, setTitle] = useState<string>('');
+  const [delivery_info, setDelivery_info] = useState<DeliveryInfo>({
+    is_withdrawal_allowed: false,
+    is_delivery_active: false,
+    time_to_delivery: 0,
+    time_to_withdrawal: 0
+  } as DeliveryInfo);
 
   useEffect(() => {
     const fetchRestaurantInfo = async () => {
@@ -33,13 +38,13 @@ export default function EntregaPage({ params }: Props) {
 
   return (
     <InternalPages title="Entrega" button description="Escolha uma opção de entrega">
-      <div style={{ display: 'flex', alignItems: 'center', flexDirection: 'column', gap: 12, marginTop: 20 }}>
+      <div className="flex flex-col items-center gap-3 mt-5" suppressHydrationWarning>
         {delivery_info.is_withdrawal_allowed && (
-          <Link href={`/${restaurant}/endereco`} onClick={() => AddMethodDelivery({ restaurantId: restaurant, method: 'delivery' })}
-            className="
-          flex items-center justify-between w-full h-[60px]
-          border border-takeat-neutral-light rounded-xl px-4
-          ">
+          <Link
+            href={`/${restaurant}/endereco`}
+            onClick={() => AddMethodDelivery({ restaurantId: restaurant, method: 'delivery' })}
+            className="flex items-center justify-between w-full h-[60px] border border-takeat-neutral-light rounded-xl px-4"
+          >
             <div className="flex items-center gap-3">
               <IconMotorcycle className="fill-takeat-primary-default text-2xl" />
               <span>Delivery</span>

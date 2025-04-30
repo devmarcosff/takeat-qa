@@ -6,7 +6,7 @@ import InternalPages from "@/components/uiComponents/InternalPageHeader/internal
 import PageWrapper from "@/hook/pageWrapper";
 import { AnimatePresence, motion } from "framer-motion";
 import Image from "next/image";
-import React, { useEffect, useState } from "react";
+import { use, useEffect, useState } from "react";
 import { RiSubtractLine } from "react-icons/ri";
 import { formatPrice, IconAddCircleFilled, IconRoundChat, IconTrashFilled } from "takeat-design-system-ui-kit";
 
@@ -15,7 +15,7 @@ interface Props {
 }
 
 export default function ProductPage({ params }: Props) {
-  const restaurant = React.use(params).restaurants;
+  const restaurant = use(params).restaurants;
   const [bag, setBag] = useState<ICart[]>([]);
   const [lastQuantities, setLastQuantities] = useState<Record<string, number>>({});
 

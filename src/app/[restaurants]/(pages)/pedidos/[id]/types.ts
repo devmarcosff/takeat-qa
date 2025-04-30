@@ -1,4 +1,4 @@
-import { OrderStatus } from "../types";
+import { OrderStatus } from "../../../../../components/restaurants/pedidos/types";
 
 export interface IProduct2 {
   id: number;

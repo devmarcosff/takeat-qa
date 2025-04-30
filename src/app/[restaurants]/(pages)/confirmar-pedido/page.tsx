@@ -52,7 +52,7 @@ export interface IClientClube {
 }
 
 export default function ConfirmarPedidoPage({ params }: Props) {
-  const restaurant = use(params)?.restaurants;
+  const restaurant = use(params).restaurants;
   const takeatBagKey = `@deliveryTakeat:${restaurant}TakeatBag`;
   const useChange = `@useChange:${restaurant}`;
   const addressClientDeliveryTakeat = `@addressClientDeliveryTakeat:${restaurant}`;

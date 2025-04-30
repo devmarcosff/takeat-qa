@@ -7,8 +7,8 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { LoaderCircle } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import React, { useEffect, useState } from "react";
+import { useParams, useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { MapContainer, Marker, Popup, TileLayer } from 'react-leaflet';
 import Select, { SingleValue } from 'react-select';
@@ -30,10 +30,6 @@ interface SelectStateProps {
   neighborhoods?: Neighborhood[];
 }
 
-interface Props {
-  params: Promise<{ restaurants: string }>;
-}
-
 interface SavedAddress {
   id: string;
   street: string;
@@ -48,8 +44,9 @@ interface SavedAddress {
   longitude: number;
 }
 
-export default function AddressClientComponent({ params }: Props) {
-  const restaurant = React.use(params)?.restaurants;
+export default function AddressClientComponent() {
+  const params = useParams()
+  const restaurant = params.restaurants as string;
   const addressClientDeliveryTakeat = `@addressClientDeliveryTakeat:${restaurant}`;
   const savedAddressesKey = `@savedAddresses:${restaurant}`;
   const tokenUserTakeat = `@tokenUserTakeat:${restaurant}`;

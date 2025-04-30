@@ -2,6 +2,7 @@ import Analytics from "@/analytics/analytics";
 import PixelFromDelivery from "@/analytics/PixelFromDelivery";
 import ThemeProviderWrapper from "@/components/theme/ThemeProviderWrapper";
 import { DeliveryProvider } from "@/context/DeliveryContext";
+import { PaymentProvider } from "@/context/PaymentContext";
 import type { Metadata } from "next";
 import { Poppins } from "next/font/google";
 import "./globals.css";
@@ -27,9 +28,11 @@ export default function RootLayout({
       <body className={`${poppins.className}`}>
         <ThemeProviderWrapper>
           <DeliveryProvider>
-            <Analytics />
-            <PixelFromDelivery />
-            {children}
+            <PaymentProvider>
+              <Analytics />
+              <PixelFromDelivery />
+              {children}
+            </PaymentProvider>
           </DeliveryProvider>
         </ThemeProviderWrapper>
       </body>

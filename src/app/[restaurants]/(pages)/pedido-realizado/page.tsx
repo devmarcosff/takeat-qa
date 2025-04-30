@@ -2,7 +2,7 @@
 import InternalPages from "@/components/uiComponents/InternalPageHeader/internal_pages.header";
 import { useDelivery } from "@/context/DeliveryContext";
 import Image from "next/image";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { use } from "react";
 
 interface Props {
@@ -13,12 +13,15 @@ export default function PedidoRealizadoPage({ params }: Props) {
   const restaurant = use(params)?.restaurants;
   const finalizar_pedido = "/assets/pedido-finalizado.svg"
   const { push } = useRouter()
-  const { paymentOrderId } = useDelivery()
-  const searchParams = useSearchParams()
-  const scheduledOrderId = searchParams.get('orderId')
+  const { orderId } = useDelivery()
 
-  // Get the order ID from either scheduled order or payment order
-  const orderId = scheduledOrderId || paymentOrderId;
+  const handleOrderDetailsClick = () => {
+    if (!orderId) {
+      console.error('Order ID is undefined');
+      return;
+    }
+    push(`/${restaurant}/pedidos/${orderId}`);
+  };
 
   return (
     <InternalPages>
@@ -33,7 +36,7 @@ export default function PedidoRealizadoPage({ params }: Props) {
         </div>
 
         <div className="flex flex-col gap-3 w-full p-4">
-          <button onClick={() => push(`/${restaurant}/pedidos/${orderId}`)} className="bg-takeat-primary-default p-3 shadow-md rounded-lg text-white font-semibold">
+          <button onClick={handleOrderDetailsClick} className="bg-takeat-primary-default p-3 shadow-md rounded-lg text-white font-semibold">
             <span>Detalhes do pedido</span>
           </button>
           <button onClick={() => push(`/${restaurant}`)} className="text-takeat-primary-default font-semibold">

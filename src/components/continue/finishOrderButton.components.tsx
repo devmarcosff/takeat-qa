@@ -1,5 +1,6 @@
 import { IAgendamento } from '@/app/[restaurants]/(pages)/confirmar-pedido/page';
 import { useDelivery } from '@/context/DeliveryContext';
+import { usePayment } from '@/context/PaymentContext';
 import { api_confirm_pix, api_create_order, api_scheduling } from '@/utils/apis';
 import { AnimatePresence, motion } from 'framer-motion';
 import { ChevronDown, Copy, Loader2 } from 'lucide-react';
@@ -53,7 +54,8 @@ export default function FinishOrderButton({
   const [scheduling, setScheduling] = useState<IAgendamento>({})
   const [troco, setTroco] = useState<number>(0)
   const { push } = useRouter();
-  const { cuponValue, cashbackValue, setPaymentOrderId } = useDelivery()
+  const { cuponValue, cashbackValue, setPaymentOrderId, setOrderId } = useDelivery()
+  const { paymentStatus, paymentOrderId, connectWebhook } = usePayment();
 
   const cardTokenRef = useRef<string | null>(null);
   const restaurantIdRef = useRef<RestaurantRef | null>(null);
@@ -158,16 +160,20 @@ export default function FinishOrderButton({
     if (scheduling.method === 'Agendamento Delivery' || scheduling.method === 'Agendamento Retirada') {
       api_scheduling.post('/orders', payload, config)
         .then(res => {
-          if (res.data?.data?.session?.id) {
-            setPaymentOrderId(res.data.data.session.id);
-          }
-          if (res.data?.pix_info) {
+          if (res.data?.data?.session?.id && res.data?.pix_info) {
+            const sessionId = res.data.data.session.id;
+            const zoopId = res.data.pix_info.zoop_id;
+            setPaymentOrderId(sessionId);
+            // Connect to webhook com os IDs específicos do PIX
+            if (token) {
+              connectWebhook(token, sessionId, zoopId);
+            }
             setModalGen(res.data.pix_info);
             setOpenModal(true);
           } else {
-            const orderId = res.data?.data?.id || '';
-            localStorage.setItem(`@scheduledOrderId:${params}`, orderId);
-            push(`/${params}/pedido-realizado/${orderId}`);
+            const orderId = res.data.data.session.id;
+            setOrderId(orderId);
+            push(`/${params}/pedido-realizado`);
             setTimeout(() => {
               localStorage.removeItem(takeatBagKey);
               localStorage.removeItem(MethodPaymentTakeat);
@@ -185,15 +191,20 @@ export default function FinishOrderButton({
     } else {
       api_create_order.post('/orders', payload, config)
         .then(res => {
-          if (res.data?.data?.session?.id) {
-            setPaymentOrderId(res.data.data.session.id);
-          }
-          if (res.data?.pix_info) {
+          if (res.data?.data?.session?.id && res.data?.pix_info) {
+            const sessionId = res.data.data.session.id;
+            const zoopId = res.data.pix_info.zoop_id;
+            setPaymentOrderId(sessionId);
+            // Connect to webhook com os IDs específicos do PIX
+            if (token) {
+              connectWebhook(token, sessionId, zoopId);
+            }
             setModalGen(res.data.pix_info);
             setOpenModal(true);
           } else {
-            const orderId = res.data?.data?.id || '';
-            push(`/${params}/pedido-realizado/${orderId}`);
+            const orderId = res.data.data.session.id;
+            setOrderId(orderId);
+            push(`/${params}/pedido-realizado`);
             setTimeout(() => {
               localStorage.removeItem(takeatBagKey);
               localStorage.removeItem(MethodPaymentTakeat);
@@ -261,6 +272,20 @@ export default function FinishOrderButton({
     updateStorageData,
   ]);
 
+  // Add effect to handle payment status changes
+  useEffect(() => {
+    if (paymentStatus === 'confirmed' && paymentOrderId) {
+      push(`/${params}/pedido-realizado?orderId=${paymentOrderId}`);
+      setTimeout(() => {
+        localStorage.removeItem(takeatBagKey);
+        localStorage.removeItem(MethodPaymentTakeat);
+        localStorage.removeItem(methodDeliveryTakeat);
+        localStorage.removeItem(storageTakeat);
+        localStorage.removeItem(useChange);
+      }, 1000);
+    }
+  }, [paymentStatus, paymentOrderId, params, push]);
+
   const HeightCheckout = () => {
     if (isMethodDelivery.method === 'retirarBalcao' || isMethodDelivery.method === 'Agendamento Retirada') {
       if (cuponValue.code || cashbackValue) return 170;
@@ -283,7 +308,9 @@ export default function FinishOrderButton({
       zoop_id: modalGen?.zoop_id
     }, config).then(res => {
       if (res.data.paid == true) {
-        push(`/${params}/pedido-realizado`)
+        const orderId = res.data.data.session.id;
+        setOrderId(orderId);
+        push(`/${params}/pedido-realizado`);
       } else {
         setConfirmPix(false)
       }
