@@ -1,4 +1,5 @@
 "use client"
+import { statusMap } from "@/components/restaurants/pedidos/statusMap";
 import { ProductInternalWrapper } from "@/components/restaurants/product/products.style";
 import { TakeatApp } from "@/components/theme/ThemeProviderWrapper";
 import InternalPages from "@/components/uiComponents/InternalPageHeader/internal_pages.header";
@@ -13,12 +14,6 @@ import { useEffect, useState } from "react";
 import { formatPrice, IconCardFront, IconDeliverySchedule, IconLocationFilled, IconMoney, IconPix, IconRoundChat } from "takeat-design-system-ui-kit";
 import { IPedidos } from "../../../../../components/restaurants/pedidos/types";
 import { IProduct2 } from "./types";
-
-const canceled = '../../../../../assets/pedidos/canceled.svg';
-const in_delivery = '../../../../../assets/pedidos/in_delivery.svg';
-const preparing = '../../../../../assets/pedidos/preparing.svg';
-const ready_to_withdrawal = '../../../../../assets/pedidos/ready_to_withdrawal.svg';
-const waiting_confirm = '../../../../../assets/pedidos/waiting_confirm.svg';
 
 export interface IAddressRestaurantProps {
   id: number;
@@ -35,6 +30,8 @@ export interface IAddressRestaurantProps {
   createdAt: string;
   updatedAt: string;
 }
+
+type StatusKey = keyof typeof statusMap;
 
 export default function InfoPedidos() {
   const restaurantParams = useParams<{ restaurants: string, id?: string }>()
@@ -108,23 +105,8 @@ export default function InfoPedidos() {
   const allStatuses: string[] =
     pedidos2?.bills?.[0]?.order_baskets?.map(item => item.order_status) ?? []
 
-  const statusMap = {
-    canceled: 'Pedido cancelado',
-    canceled_waiting_payment: 'Tempo de espera excedido',
-    pending: 'Aguardando confirmação da loja',
-    accepted: 'Pedido em preparo',
-    ready: 'Pedido pronto',
-    delivered: 'Pedido está a caminho',
-    finished: 'Pedido finalizado',
-  };
-
-  const statusImage = !!pedidos2?.scheduled_to ? waiting_confirm
-    : allStatuses[0] === 'accepted' ? preparing
-      : allStatuses[0] === 'ready' ? ready_to_withdrawal
-        : allStatuses[0] === 'delivered' ? in_delivery
-          : allStatuses[0] === 'finished' ? ready_to_withdrawal
-            : allStatuses[0] === 'canceled' ? canceled
-              : allStatuses[0] === 'canceled_waiting_payment' ? canceled : preparing
+  const currentStatus = allStatuses[0] || 'default';
+  const statusInfo = statusMap[(currentStatus as StatusKey)] || statusMap['default'];
 
   return (
     <div>
@@ -137,44 +119,35 @@ export default function InfoPedidos() {
           <div>
             <div className="flex items-center gap-2">
               {
-                allStatuses[0] !== 'finished' ? (
+                currentStatus !== 'finished' ? (
                   <>
                     <div className="relative flex size-2.5">
                       <div className={`absolute inline-flex h-full w-full animate-ping rounded-full opacity-75
-                        ${allStatuses[0] !== 'finished' ? 'animate-pulse' : ''}
-                        ${['canceled'].includes(allStatuses[0] ?? '')
-                          ? 'bg-takeat-red-default'
-                          : ['pending', 'delivered'].includes(allStatuses[0] ?? '')
-                            ? 'bg-takeat-orange-default'
-                            : ['accepted', 'ready'].includes(allStatuses[0] ?? '')
-                              ? 'bg-takeat-green-default'
-                              : allStatuses[0] === 'finished'
-                                ? 'hidden'
-                                : 'bg-takeat-red-default'
-                        }`} />
-                      <span className={`relative inline-flex size-2.5 rounded-full
-                        ${allStatuses[0] !== 'finished' ? 'animate-pulse' : ''}
-                        ${['canceled'].includes(allStatuses[0] ?? '')
-                          ? 'bg-takeat-red-default'
-                          : ['pending', 'delivered'].includes(allStatuses[0] ?? '')
-                            ? 'bg-takeat-orange-default'
-                            : ['accepted', 'ready'].includes(allStatuses[0] ?? '')
-                              ? 'bg-takeat-green-default'
-                              : allStatuses[0] === 'finished'
-                                ? 'hidden'
-                                : 'bg-takeat-red-default'
+                        ${['pending'].includes(currentStatus)
+                          ? 'bg-takeat-orange-default'
+                          : ['accepted', 'ready', 'delivered', 'ongoing'].includes(currentStatus)
+                            ? 'bg-takeat-green-default'
+                            : 'hidden'
+                        }`}
+                      />
+                      <span className={`relative inline-flex size-2.5 rounded-full ${currentStatus !== 'finished' ? 'animate-pulse' : ''}
+                        ${['pending'].includes(currentStatus)
+                          ? 'bg-takeat-orange-default'
+                          : ['accepted', 'ready', 'delivered', 'ongoing'].includes(currentStatus)
+                            ? 'bg-takeat-green-default'
+                            : 'hidden'
                         }`}>
                       </span>
                     </div>
                     <p className="font-medium text-gray-800 w-full text-sm truncate">
-                      {statusMap[allStatuses[0] as keyof typeof statusMap] || 'Status desconhecido'}
+                      {statusInfo.label}
                     </p>
                   </>
                 ) : (
                   <>
                     <CheckCircle className="w-6 h-6 text-green-500" />
                     <p className="font-medium text-gray-800 w-full text-sm truncate">
-                      {statusMap[allStatuses[0] as keyof typeof statusMap] || 'Status desconhecido'}
+                      {statusInfo.label}
                     </p>
                   </>
                 )
@@ -183,34 +156,27 @@ export default function InfoPedidos() {
 
             <div>
               <p className="text-takeat-neutral-dark mt-1 w-full text-sm font-medium">
-                {!!pedidos2?.scheduled_to
-                  ? `Agendado para ${dayjs(pedidos2?.start_time).format('DD/MM/YY')}`
-                  : allStatuses[0] === 'accepted' ? 'O restaurante está preparando seu pedido!'
-                    : allStatuses[0] === 'ready' ? 'Seu pedido já está pronto e pode ser retirado!'
-                      : allStatuses[0] === 'delivered' ? 'Seu pedido está a caminho, fique de olho!'
-                        : allStatuses[0] === 'finished' ? ''
-                          : allStatuses[0] === 'canceled' ? 'Motivo: blablabla'
-                            : allStatuses[0] === 'canceled_waiting_payment' ? 'Cancelado por tempo de espera excedido!' : ''}
+                {statusInfo.description}
               </p>
             </div>
 
             <div className="my-5">
               {
-                allStatuses[0] !== 'canceled' && (
+                currentStatus !== 'canceled' && (
                   <div
-                    className={`w-full justify-between gap-1 items-center ${allStatuses[0] !== 'finished' ? 'flex' : 'hidden'
+                    className={`w-full justify-between gap-1 items-center ${currentStatus !== 'finished' ? 'flex' : 'hidden'
                       }`}
                   >
                     {[0, 1, 2].map((step) => {
-                      const status = allStatuses[0];
+                      const status = currentStatus;
 
                       // Lógica de animação conforme padrão dos tabs
                       let animateStep = [false, false, false];
                       if (status === 'pending') {
                         animateStep = [true, false, false];
-                      } else if (['accepted', 'ongoing'].includes(status)) {
+                      } else if (["accepted", "ongoing"].includes(status)) {
                         animateStep = [true, true, false];
-                      } else if (['delivered', 'ready'].includes(status)) {
+                      } else if (["delivered", "ready", "finished"].includes(status)) {
                         animateStep = [true, true, true];
                       }
 
@@ -245,7 +211,7 @@ export default function InfoPedidos() {
         </div>
 
         <div className="px-6 flex justify-center items-center w-full">
-          <Image alt="statusImage" src={`${statusImage}`} width={260} height={260} />
+          <Image alt="statusImage" src={`/assets/pedidos/${statusInfo.image}`} width={260} height={260} />
         </div>
       </div>
 

@@ -49,15 +49,24 @@ export const CardComponent = ({ basket, pedido, restaurant, userChange, pixPayme
         {/* STATUS */}
         <div className="mb-4">
           <div className="flex items-center gap-2">
-            <div
-              className={`h-2.5 w-2.5 rounded-full ${basket.order_status !== 'finished' ? 'animate-pulse' : ''}
+            <div className="relative flex size-2.5">
+              <div className={`absolute inline-flex h-full w-full animate-ping rounded-full opacity-75
                 ${['pending'].includes(basket.order_status ?? '')
                   ? 'bg-takeat-orange-default'
                   : ['accepted', 'ready', 'delivered', 'ongoing'].includes(basket.order_status ?? '')
                     ? 'bg-takeat-green-default'
                     : 'hidden'
                 }`}
-            />
+              />
+              <span className={`relative inline-flex size-2.5 rounded-full ${basket.order_status !== 'finished' ? 'animate-pulse' : ''}
+                ${['pending'].includes(basket.order_status ?? '')
+                  ? 'bg-takeat-orange-default'
+                  : ['accepted', 'ready', 'delivered', 'ongoing'].includes(basket.order_status ?? '')
+                    ? 'bg-takeat-green-default'
+                    : 'hidden'
+                }`}>
+              </span>
+            </div>
 
             {/* Ícone de status finalizado ou cancelado */}
             {basket.order_status === 'finished' && (
