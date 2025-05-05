@@ -111,7 +111,7 @@ export default function InfoPedidos() {
   return (
     <div>
       <div className="sticky top-0 bg-white w-full h-full z-50">
-        <InternalPages title="" restaurant={restaurant} button help backPage={false} />
+        <InternalPages title="" restaurant={restaurant} button help backPage={true} />
       </div>
 
       <div className="fixed w-full">
