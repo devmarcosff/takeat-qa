@@ -219,7 +219,7 @@ export default function InfoPedidos() {
         <ProductInternalWrapper className="shadow-[0_-5px_10px_rgba(0,0,0,0.1)] w-full">
           <div className="flex items-center justify-between w-full my-3">
             <h2 className="font-semibold text-md">Detalhes do Pedido</h2>
-            <h2 className="font-semibold text-md">Senha {pedidos?.bills[0].order_baskets[0].basket_id}</h2>
+            <h2 className="font-semibold text-md">Senha {pedidos?.bills[0].order_baskets[0].attendance_password}</h2>
           </div>
 
           <div className="flex items-center justify-between w-full border-t">

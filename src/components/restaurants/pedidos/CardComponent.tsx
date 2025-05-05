@@ -42,7 +42,7 @@ export const CardComponent = ({ basket, pedido, restaurant, userChange, pixPayme
         <h2 className="font-bold text-gray-800">
           {basket.with_withdrawal ? 'Retirada' : 'Entrega'}
         </h2>
-        <p className="text-sm text-gray-800 font-semibold">Senha {basket.basket_id}</p>
+        <p className="text-sm text-gray-800 font-semibold">Senha {basket.attendance_password}</p>
       </div>
 
       <div className="p-4" onClick={() => localStorage.setItem(`@infoPedidosTakeat:${restaurant}`, JSON.stringify(pedido))}>

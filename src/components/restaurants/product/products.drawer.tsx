@@ -53,11 +53,38 @@ export default function ProductDrawer({ openDrawer, setOpenDrawer, products, par
 
     setComplements(cartItems);
 
-    const totalPrice = cartItems.map(({ qtd, price }) => qtd * Number(price))
-      .reduce((acc, curr) => acc + curr, products.combo_delivery_price ? Number(products.combo_delivery_price) : products.delivery_price ? Number(products.delivery_price) : Number(products.price));
+    // 1. Valor base do combo
+    const comboBase = products.is_combo
+      ? Number(products.combo_delivery_price || products.combo_price)
+      : Number(products.delivery_price_promotion || products.delivery_price || products.price);
 
-    setValueProduct(totalPrice);
-  }, [selectedQuantities, products.combo_delivery_price]);
+    // 2. Calcular o extra dos complementos selecionados
+    const extra = products.complement_categories?.reduce((sum, category) => {
+      const categoryComplements = cartItems.filter(comp => comp.categoryId === String(category.id));
+
+      if (category.more_expensive_only) {
+        // Pega apenas o complemento mais caro
+        const mostExpensive = categoryComplements.reduce((max, comp) =>
+          Math.max(max, Number(comp.price)), 0);
+        return sum + mostExpensive;
+      } else if (category.use_average) {
+        // Calcula a média dos complementos selecionados
+        const totalPrice = categoryComplements.reduce((sum, comp) =>
+          sum + Number(comp.price), 0);
+        const average = categoryComplements.length > 0 ? totalPrice / categoryComplements.length : 0;
+        return sum + average;
+      } else {
+        // Soma normal multiplicada pela quantidade
+        return sum + categoryComplements.reduce((sum, comp) =>
+          sum + (Number(comp.price) * comp.qtd), 0);
+      }
+    }, 0) || 0;
+
+    // 3. Valor final
+    const final = (comboBase + extra) * quantityProduct;
+    setFinalPrice(final);
+    setValueProduct(final);
+  }, [selectedQuantities, products, quantityProduct]);
 
   useEffect(() => {
     resetProductState();
@@ -229,105 +256,6 @@ export default function ProductDrawer({ openDrawer, setOpenDrawer, products, par
   //   });
   // };
 
-  useEffect(() => {
-    // 1. Valor base do combo
-    const comboBase = products.is_combo
-      ? Number(products.combo_delivery_price || products.combo_price)
-      : Number(products.delivery_price_promotion || products.delivery_price || products.price);
-
-    // 2. Encontrar o mais barato de cada grupo obrigatório
-    const cheapestByCategory: Record<string, number> = {};
-    products.complement_categories?.forEach(category => {
-      if (!category.optional && category.complements.length > 0) {
-        const cheapest = category.complements.reduce((a, b) => {
-          const aPrice = Number(a.delivery_price ?? a.price ?? 0);
-          const bPrice = Number(b.delivery_price ?? b.price ?? 0);
-          return aPrice < bPrice ? a : b;
-        });
-        cheapestByCategory[String(category.id)] = Number(cheapest.delivery_price ?? cheapest.price ?? 0);
-      }
-    });
-
-    // 3. Calcular o extra dos complementos selecionados
-    let extra = 0;
-    complements.forEach(comp => {
-      // Se for obrigatório, soma só a diferença
-      if (cheapestByCategory[comp.categoryId] !== undefined) {
-        const diff = Number(comp.price) - cheapestByCategory[comp.categoryId];
-        if (diff > 0) extra += diff * comp.qtd;
-      } else {
-        // Se não for obrigatório, soma tudo normalmente
-        extra += Number(comp.price) * comp.qtd;
-      }
-    });
-
-    // 4. Valor final
-    const final = (comboBase + extra) * quantityProduct;
-    setFinalPrice(final);
-  }, [complements, products, quantityProduct]);
-
-  const handleAddToBag = () => {
-    if (Number(valueProduct) <= 0 || quantityProduct === 0) return;
-
-    const isValid = validateRequiredCategories();
-    if (!isValid) return;
-
-    const takeatBag = `@deliveryTakeat:${params}TakeatBag`;
-    const storedCart = localStorage.getItem(takeatBag);
-    const existingCart = storedCart ? JSON.parse(storedCart) : { products: [] };
-
-    const image = products.image ? products.image.url_thumb : Placeholder;
-
-    // Calculamos o preço unitário (sem multiplicar pela quantidade)
-    const unitPrice = finalPrice / quantityProduct;
-
-    // Mapeia os complementos incluindo o additional da categoria
-    const complementsWithAdditional = complements.map(complement => {
-      const category = products.complement_categories?.find(cat => String(cat.id) === complement.categoryId);
-      return {
-        ...complement,
-        additional: category?.additional || false
-      };
-    });
-
-    const payloadProduct = {
-      name: products.name,
-      categoryId: products.id,
-      delivery_price: unitPrice, // Preço unitário
-      price: unitPrice, // Preço unitário
-      img: image,
-      observation: observation,
-      complements: complementsWithAdditional,
-      qtd: quantityProduct, // Quantidade será usada para multiplicar o preço no carrinho
-      use_weight: products.use_weight
-    };
-
-    let updatedCart;
-
-    const existingProduct = existingCart.products.find(
-      (item: ICart) =>
-        Number(item.categoryId) === payloadProduct.categoryId &&
-        JSON.stringify(item.complements) === JSON.stringify(payloadProduct.complements) &&
-        item.observation === payloadProduct.observation
-    );
-
-    if (existingProduct) {
-      updatedCart = existingCart.products.map((item: ICart) =>
-        Number(item.categoryId) === payloadProduct.categoryId &&
-          JSON.stringify(item.complements) === JSON.stringify(payloadProduct.complements) &&
-          item.observation === payloadProduct.observation
-          ? { ...item, qtd: item.qtd + payloadProduct.qtd }
-          : item
-      );
-    } else {
-      updatedCart = [...existingCart.products, payloadProduct];
-    }
-
-    localStorage.setItem(takeatBag, JSON.stringify({ products: updatedCart }));
-
-    handleCloseDrawer()
-  };
-
   const categoryRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
   const validateRequiredCategories = (): boolean => {
@@ -388,6 +316,67 @@ export default function ProductDrawer({ openDrawer, setOpenDrawer, products, par
     });
   }, [selectedQuantities, products.complement_categories]);
 
+  const handleAddToBag = () => {
+    if (Number(valueProduct) <= 0 || quantityProduct === 0) return;
+
+    const isValid = validateRequiredCategories();
+    if (!isValid) return;
+
+    const takeatBag = `@deliveryTakeat:${params}TakeatBag`;
+    const storedCart = localStorage.getItem(takeatBag);
+    const existingCart = storedCart ? JSON.parse(storedCart) : { products: [] };
+
+    const image = products.image ? products.image.url_thumb : Placeholder;
+
+    // Calculamos o preço unitário (sem multiplicar pela quantidade)
+    const unitPrice = finalPrice / quantityProduct;
+
+    // Mapeia os complementos incluindo o additional da categoria
+    const complementsWithAdditional = complements.map(complement => {
+      const category = products.complement_categories?.find(cat => String(cat.id) === complement.categoryId);
+      return {
+        ...complement,
+        additional: category?.additional || false
+      };
+    });
+
+    const payloadProduct = {
+      name: products.name,
+      categoryId: products.id,
+      delivery_price: unitPrice,
+      price: unitPrice,
+      img: image,
+      observation: observation,
+      complements: complementsWithAdditional,
+      qtd: quantityProduct,
+      use_weight: products.use_weight
+    };
+
+    let updatedCart;
+
+    const existingProduct = existingCart.products.find(
+      (item: ICart) =>
+        Number(item.categoryId) === payloadProduct.categoryId &&
+        JSON.stringify(item.complements) === JSON.stringify(payloadProduct.complements) &&
+        item.observation === payloadProduct.observation
+    );
+
+    if (existingProduct) {
+      updatedCart = existingCart.products.map((item: ICart) =>
+        Number(item.categoryId) === payloadProduct.categoryId &&
+          JSON.stringify(item.complements) === JSON.stringify(payloadProduct.complements) &&
+          item.observation === payloadProduct.observation
+          ? { ...item, qtd: item.qtd + payloadProduct.qtd }
+          : item
+      );
+    } else {
+      updatedCart = [...existingCart.products, payloadProduct];
+    }
+
+    localStorage.setItem(takeatBag, JSON.stringify({ products: updatedCart }));
+    handleCloseDrawer();
+  };
+
   return (
     <Drawer open={openDrawer} onOpenChange={handleCloseDrawer}>
       <DrawerContent className="h-full w-full flex flex-col overflow-hidden !rounded-none">
@@ -436,7 +425,10 @@ export default function ProductDrawer({ openDrawer, setOpenDrawer, products, par
               </div>
             </div>
 
-            {products.complement_categories?.map((category: ComplementCategory) => {
+            {products.complement_categories?.filter(category =>
+              category.available_in_delivery &&
+              category.complements.some(complement => complement.available_in_delivery)
+            ).map((category: ComplementCategory) => {
               return (
                 <div
                   ref={(el) => { categoryRefs.current[category.id] = el }}
@@ -467,7 +459,7 @@ export default function ProductDrawer({ openDrawer, setOpenDrawer, products, par
 
                   {category.limit === 1 ? (
                     <div className="mt-4 space-y-3">
-                      {category.complements.map((complement: Complement) => (
+                      {category.complements.filter(complement => complement.available_in_delivery).map((complement: Complement) => (
                         <label
                           key={complement.id}
                           className="transition-all flex items-center cursor-pointer justify-between p-2 rounded-lg"
@@ -509,7 +501,7 @@ export default function ProductDrawer({ openDrawer, setOpenDrawer, products, par
                     </div>
                   ) : (
                     <div className="mt-4 space-y-3">
-                      {category.complements.map((complement: Complement) => {
+                      {category.complements.filter(complement => complement.available_in_delivery).map((complement: Complement) => {
                         const key = `${category.id}-${complement.name}`;
                         const quantity = selectedQuantities[key]?.qtd || 0;
                         const lastQuantity = lastQuantities[key] || 0;
