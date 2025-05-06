@@ -11,6 +11,8 @@ export interface ComplementCategory {
     id: number;
     complements: Complement[];
     additional: boolean;
+    more_expensive_only?: boolean;
+    use_average?: boolean;
 }
 
 // Definição do tipo do pedido (produto no carrinho)
@@ -37,5 +39,7 @@ export interface Product {
         qtd: number;
         categoryId: string;
         additional: boolean;
+        more_expensive_only?: boolean;
+        use_average?: boolean;
     }[];
 }

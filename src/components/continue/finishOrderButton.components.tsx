@@ -122,7 +122,9 @@ export default function FinishOrderButton({
             acc[categoryId] = {
               id: Number(categoryId),
               complements: [],
-              additional: complement.additional || false
+              additional: complement.additional || false,
+              more_expensive_only: complement.more_expensive_only || false,
+              use_average: complement.use_average || false
             };
           }
           acc[categoryId].complements.push({

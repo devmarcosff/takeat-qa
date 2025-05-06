@@ -345,7 +345,9 @@ export default function ProductDrawer({ openDrawer, setOpenDrawer, products, par
       const category = products.complement_categories?.find(cat => String(cat.id) === complement.categoryId);
       return {
         ...complement,
-        additional: category?.additional || false
+        additional: category?.additional || false,
+        more_expensive_only: category?.more_expensive_only || false,
+        use_average: category?.use_average || false
       };
     });
 

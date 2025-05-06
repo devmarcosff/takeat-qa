@@ -160,24 +160,6 @@ export default function ConfirmarPedidoPage({ params }: Props) {
         const parsedMethodDelivery = JSON.parse(getMethodDelivery);
         setMethodDelivery(parsedMethodDelivery);
       }
-
-      // const getAddressRestaurant = localStorage.getItem(addressRestaurant);
-      // if (getAddressRestaurant) {
-      //   const parsedAddressRestaurant = JSON.parse(getAddressRestaurant);
-      //   setAddressRestaurantState(parsedAddressRestaurant);
-      // }
-
-      // const getRestaurant = localStorage.getItem(restaurant);
-      // if (getRestaurant) {
-      //   const parsedRestaurant = JSON.parse(getRestaurant);
-      //   setRestaurant(parsedRestaurant);
-      // }
-
-      // const getUseChange = localStorage.getItem(useChange);
-      // if (getUseChange) {
-      //   const parsedUseChange = JSON.parse(getUseChange);
-      //   setUseChange(parsedUseChange);
-      // }
     }
   }, [methodDeliveryTakeat, restaurant, useChange]);
 
