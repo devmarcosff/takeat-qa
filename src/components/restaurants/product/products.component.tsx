@@ -22,6 +22,29 @@ import {
   ProductsContainer
 } from "./products.style";
 
+const calculateMinimumPrice = (product: Product): number => {
+  const basePrice = Number(product.combo_delivery_price || product.delivery_price_promotion || product.delivery_price || product.price);
+
+  if (!Array.isArray(product.complement_categories)) {
+    return basePrice;
+  }
+
+  const mandatoryCategories = product.complement_categories.filter(category => !category.optional);
+  let totalMinimumPrice = basePrice;
+
+  for (const category of mandatoryCategories) {
+    if (!Array.isArray(category.complements)) continue;
+
+    const availableComplements = category.complements.filter(complement => complement.available_in_delivery);
+    if (availableComplements.length === 0) continue;
+
+    const minPrice = Math.min(...availableComplements.map(complement => Number(complement.delivery_price)));
+    totalMinimumPrice += minPrice;
+  }
+
+  return totalMinimumPrice;
+};
+
 export default function ProductsRestaurant({ categories = [], params, searchTerm }: CategoriesProps & { searchTerm: string }) {
   const takeatBagKey = `@deliveryTakeat:${params}TakeatBag`;
   // const [_, setOpenIndexes] = useState<number[]>([]);
@@ -97,7 +120,7 @@ export default function ProductsRestaurant({ categories = [], params, searchTerm
                     <p className="line-clamp-3">{product.description}</p>
                     <ProductPrice>
                       {product.has_starting_price && "A partir de "}
-                      {formatPrice(product.combo_delivery_price || product.delivery_price_promotion || product.delivery_price || product.price)}
+                      {formatPrice(calculateMinimumPrice(product))}
                       {!!product.delivery_price_promotion && (
                         <span>{formatPrice(product.delivery_price || product.price)}</span>
                       )}
@@ -183,7 +206,7 @@ export default function ProductsRestaurant({ categories = [], params, searchTerm
                                       <p className="line-clamp-3">{product.description}</p>
                                       {product.has_starting_price && <span className="text-sm font-medium">A partir de</span>}
                                       <ProductPrice delivery_price={product.delivery_price_promotion ? product.delivery_price_promotion : undefined}>
-                                        {formatPrice(product.combo_delivery_price || product.delivery_price_promotion || product.delivery_price || product.price)}
+                                        {formatPrice(calculateMinimumPrice(product))}
                                         {!!product.delivery_price_promotion && (
                                           <span>{formatPrice(product.delivery_price || product.price)}</span>
                                         )}
