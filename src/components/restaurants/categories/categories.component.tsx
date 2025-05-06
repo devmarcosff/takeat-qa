@@ -62,13 +62,13 @@ export default function CategoriesRestaurant({ categories, scrolling }: Props) {
       <CarouselWrapper ref={categoriesRef}>
         <CarouselViewport ref={emblaRef}>
           <CarouselContainer>
-            {categories?.filter(category =>
+            {Array.isArray(categories) ? categories.filter(category =>
               category.available_in_delivery &&
-              category.products &&
+              Array.isArray(category.products) &&
               category.products.length > 0
             ).map((item, index) => {
               const categoryImageUrl = item?.image?.url ||
-                item.products?.find(product => product.image?.url)?.image?.url
+                (Array.isArray(item.products) ? item.products.find(product => product.image?.url)?.image?.url : undefined)
 
               return (
                 <CategoryItem key={index} onClick={() => handleCategoryClick(item.name)}>
@@ -86,7 +86,7 @@ export default function CategoriesRestaurant({ categories, scrolling }: Props) {
                   </CategoryItem>
                 </CategoryItem>
               );
-            })}
+            }) : null}
           </CarouselContainer>
         </CarouselViewport>
       </CarouselWrapper>

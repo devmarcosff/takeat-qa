@@ -68,13 +68,14 @@ export default function ProductsRestaurant({ categories = [], params, searchTerm
 
   const parsedbag = parsedBag;
 
-  const allProducts = categories
-    .filter(category =>
+  const allProducts = Array.isArray(categories)
+    ? categories.filter(category =>
       category.available_in_delivery &&
-      category.products &&
+      Array.isArray(category.products) &&
       category.products.length > 0
     )
-    .flatMap((cat) => cat.products.filter(product => product.available_in_delivery));
+      .flatMap((cat) => Array.isArray(cat.products) ? cat.products.filter(product => product.available_in_delivery) : [])
+    : [];
 
   const filteredProducts = allProducts.filter((product) =>
     product.name.toLowerCase().includes(searchTerm.toLowerCase())
@@ -119,89 +120,93 @@ export default function ProductsRestaurant({ categories = [], params, searchTerm
         </div>
       ) : (
         <div id="accordionExample">
-          {categories
-            .filter(category =>
-              category.available_in_delivery &&
-              category.products &&
-              category.products.length > 0
-            )
-            .map((item, index) => {
-              const isOpen = true;
-              const categoryImageUrl =
-                item?.image?.url ||
-                item.products.find((p) => p.image?.url)?.image?.url;
+          {Array.isArray(categories)
+            ? categories
+              .filter(category =>
+                category.available_in_delivery &&
+                Array.isArray(category.products) &&
+                category.products.length > 0
+              )
+              .map((item, index) => {
+                const isOpen = true;
+                const categoryImageUrl =
+                  item?.image?.url ||
+                  (Array.isArray(item.products) ? item.products.find((p) => p.image?.url)?.image?.url : undefined);
 
-              return (
-                <CategoryContainer key={index}>
-                  <CategoryHeader id={item.name}>
-                    <CategoryImageContainer>
-                      <CategoryImage
-                        src={categoryImageUrl}
-                        width={"100%"}
-                        height={"100%"}
-                        alt="Categoria"
-                      />
-                      <Overlay />
-                    </CategoryImageContainer>
-                    <CategoryButton
-                      aria-expanded={isOpen}
-                      aria-controls={`collapse-${index}`}
-                    >
-                      <CategoryTitle>
-                        <h2>{item.name}</h2>
-                        {!!item.preparation_time && (
-                          <div className="flex items-center gap-1 font-normal text-sm">
-                            <IconClockFilled style={{ fill: "#FFF" }} />{" "}
-                            {item.preparation_time} <span className="text-sm font-normal">min.</span>
-                          </div>
-                        )}
-                      </CategoryTitle>
-                    </CategoryButton>
-                  </CategoryHeader>
-
-                  <AnimatePresence initial={false}>
-                    {isOpen && (
-                      <motion.div
-                        initial={{ height: 0, opacity: 0 }}
-                        animate={{ height: "auto", opacity: 1 }}
-                        exit={{ height: 0, opacity: 0 }}
-                        transition={{ duration: 0.3, ease: "easeInOut" }}
+                return (
+                  <CategoryContainer key={index}>
+                    <CategoryHeader id={item.name}>
+                      <CategoryImageContainer>
+                        <CategoryImage
+                          src={categoryImageUrl}
+                          width={"100%"}
+                          height={"100%"}
+                          alt="Categoria"
+                        />
+                        <Overlay />
+                      </CategoryImageContainer>
+                      <CategoryButton
+                        aria-expanded={isOpen}
+                        aria-controls={`collapse-${index}`}
                       >
-                        <ProductList>
-                          {item.products
-                            .filter(product => product.available_in_delivery)
-                            .map((product, index) => (
-                              <ProductItem
-                                key={index}
-                                onClick={() => viewProductInDrawer(product)}
-                              >
-                                <ProductDetails>
-                                  <h2>{product.name}</h2>
-                                  <p className="line-clamp-3">{product.description}</p>
-                                  {product.has_starting_price && <span className="text-sm font-medium">A partir de</span>}
-                                  <ProductPrice delivery_price={product.delivery_price_promotion ? product.delivery_price_promotion : undefined}>
-                                    {formatPrice(product.combo_delivery_price || product.delivery_price_promotion || product.delivery_price || product.price)}
-                                    {!!product.delivery_price_promotion && (
-                                      <span>{formatPrice(product.delivery_price || product.price)}</span>
-                                    )}
-                                  </ProductPrice>
-                                </ProductDetails>
+                        <CategoryTitle>
+                          <h2>{item.name}</h2>
+                          {!!item.preparation_time && (
+                            <div className="flex items-center gap-1 font-normal text-sm">
+                              <IconClockFilled style={{ fill: "#FFF" }} />{" "}
+                              {item.preparation_time} <span className="text-sm font-normal">min.</span>
+                            </div>
+                          )}
+                        </CategoryTitle>
+                      </CategoryButton>
+                    </CategoryHeader>
 
-                                <ProductImage
-                                  src={product.image?.url}
-                                  width={1000}
-                                  height={1000}
-                                  alt={product.name}
-                                />
-                              </ProductItem>
-                            ))}
-                        </ProductList>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </CategoryContainer>
-              );
-            })}
+                    <AnimatePresence initial={false}>
+                      {isOpen && (
+                        <motion.div
+                          initial={{ height: 0, opacity: 0 }}
+                          animate={{ height: "auto", opacity: 1 }}
+                          exit={{ height: 0, opacity: 0 }}
+                          transition={{ duration: 0.3, ease: "easeInOut" }}
+                        >
+                          <ProductList>
+                            {Array.isArray(item.products)
+                              ? item.products
+                                .filter(product => product.available_in_delivery)
+                                .map((product, index) => (
+                                  <ProductItem
+                                    key={index}
+                                    onClick={() => viewProductInDrawer(product)}
+                                  >
+                                    <ProductDetails>
+                                      <h2>{product.name}</h2>
+                                      <p className="line-clamp-3">{product.description}</p>
+                                      {product.has_starting_price && <span className="text-sm font-medium">A partir de</span>}
+                                      <ProductPrice delivery_price={product.delivery_price_promotion ? product.delivery_price_promotion : undefined}>
+                                        {formatPrice(product.combo_delivery_price || product.delivery_price_promotion || product.delivery_price || product.price)}
+                                        {!!product.delivery_price_promotion && (
+                                          <span>{formatPrice(product.delivery_price || product.price)}</span>
+                                        )}
+                                      </ProductPrice>
+                                    </ProductDetails>
+
+                                    <ProductImage
+                                      src={product.image?.url}
+                                      width={1000}
+                                      height={1000}
+                                      alt={product.name}
+                                    />
+                                  </ProductItem>
+                                ))
+                              : null}
+                          </ProductList>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </CategoryContainer>
+                );
+              })
+            : null}
         </div>
       )}
 

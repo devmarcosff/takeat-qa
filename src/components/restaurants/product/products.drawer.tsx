@@ -259,13 +259,16 @@ export default function ProductDrawer({ openDrawer, setOpenDrawer, products, par
   const categoryRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
   const validateRequiredCategories = (): boolean => {
-    if (!products?.complement_categories) return true;
+    if (!Array.isArray(products?.complement_categories)) return true;
 
     // Filtra apenas categorias disponíveis em delivery
-    const availableCategories = products.complement_categories.filter(category =>
-      category.available_in_delivery &&
-      category.complements.some(complement => complement.available_in_delivery)
-    );
+    const availableCategories = Array.isArray(products.complement_categories)
+      ? products.complement_categories.filter(category =>
+        category.available_in_delivery &&
+        Array.isArray(category.complements) &&
+        category.complements.some(complement => complement.available_in_delivery)
+      )
+      : [];
 
     for (const category of availableCategories) {
       if (!category.optional) {
@@ -431,8 +434,9 @@ export default function ProductDrawer({ openDrawer, setOpenDrawer, products, par
               </div>
             </div>
 
-            {products.complement_categories?.filter(category =>
+            {Array.isArray(products.complement_categories) ? products.complement_categories.filter(category =>
               category.available_in_delivery &&
+              Array.isArray(category.complements) &&
               category.complements.some(complement => complement.available_in_delivery)
             ).map((category: ComplementCategory) => {
               return (
@@ -465,7 +469,7 @@ export default function ProductDrawer({ openDrawer, setOpenDrawer, products, par
 
                   {category.limit === 1 ? (
                     <div className="mt-4 space-y-3">
-                      {category.complements.filter(complement => complement.available_in_delivery).map((complement: Complement) => (
+                      {Array.isArray(category.complements) ? category.complements.filter(complement => complement.available_in_delivery).map((complement: Complement) => (
                         <label
                           key={complement.id}
                           className="transition-all flex items-center cursor-pointer justify-between p-2 rounded-lg"
@@ -503,11 +507,11 @@ export default function ProductDrawer({ openDrawer, setOpenDrawer, products, par
                             )}
                           </span>
                         </label>
-                      ))}
+                      )) : null}
                     </div>
                   ) : (
                     <div className="mt-4 space-y-3">
-                      {category.complements.filter(complement => complement.available_in_delivery).map((complement: Complement) => {
+                      {Array.isArray(category.complements) ? category.complements.filter(complement => complement.available_in_delivery).map((complement: Complement) => {
                         const key = `${category.id}-${complement.name}`;
                         const quantity = selectedQuantities[key]?.qtd || 0;
                         const lastQuantity = lastQuantities[key] || 0;
@@ -537,8 +541,7 @@ export default function ProductDrawer({ openDrawer, setOpenDrawer, products, par
                             <div className="flex items-center gap-1">
                               <button
                                 disabled={quantity === 0}
-                                className={`w-7 h-7 flex items-center justify-center text-takeat-primary-default rounded-full font-bold text-lg transition-all ${quantity === 0 ? "hidden" : ""
-                                  }`}
+                                className={`w-7 h-7 flex items-center justify-center text-takeat-primary-default rounded-full font-bold text-lg transition-all ${quantity === 0 ? "hidden" : ""}`}
                                 onClick={() => {
                                   handleQuantityChange(`${complement.delivery_price || complement.price}`, complement.limit, `${complement.name}`, `${category.id}`, `${complement.id}`, -1)
                                 }
@@ -572,12 +575,12 @@ export default function ProductDrawer({ openDrawer, setOpenDrawer, products, par
                             </div>
                           </div>
                         );
-                      })}
+                      }) : null}
                     </div>
                   )}
                 </div>
               );
-            })}
+            }) : null}
 
             <div className="flex flex-col items-start my-2 gap-2">
               <span className="flex gap-1"><IconRoundChat className="fill-takeat-primary-default text-xl" /> Quer fazer alguma observação?</span>
