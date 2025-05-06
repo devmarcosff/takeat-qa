@@ -261,7 +261,13 @@ export default function ProductDrawer({ openDrawer, setOpenDrawer, products, par
   const validateRequiredCategories = (): boolean => {
     if (!products?.complement_categories) return true;
 
-    for (const category of products.complement_categories) {
+    // Filtra apenas categorias disponíveis em delivery
+    const availableCategories = products.complement_categories.filter(category =>
+      category.available_in_delivery &&
+      category.complements.some(complement => complement.available_in_delivery)
+    );
+
+    for (const category of availableCategories) {
       if (!category.optional) {
         const selectedCount = getCategoryCounts(selectedQuantities, `${category.id}`);
         if (selectedCount < category.limit) {
