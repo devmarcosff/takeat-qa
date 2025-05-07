@@ -142,8 +142,8 @@ export default function FinishOrderButton({
     });
 
     const payload = {
-      payment_method: parsedMethodPayment?.keyword, // Método de pagamento
-      payment_method_id: parsedMethodPayment?.id || null, // ID do método de pagamento
+      payment_method: parsedMethodPayment?.keyword == "credit_card_auto" ? "credito" : parsedMethodPayment?.keyword, // Método de pagamento
+      payment_method_id: parsedMethodPayment?.keyword !== "credit_card_auto" ? parsedMethodPayment?.id : null, // ID do método de pagamento
       payment_token: cardToken ? JSON.parse(cardToken) : null, //  Token do cartão
       restaurant_id: parsedRestaurantId?.id, // ID do restaurante
       buyer_address_id: parsedAddressClient?.id ? Number(parsedAddressClient.id) : null, // Se Delivery ou agendamento de Delivery
@@ -156,6 +156,8 @@ export default function FinishOrderButton({
       user_change: troco || 0, // Se existir troco
       order: orders, // Objeto de produtos
     };
+
+    console.log(payload)
 
     const config = { headers: { Authorization: `Bearer ${token}` } };
 
