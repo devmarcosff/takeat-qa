@@ -27,8 +27,14 @@ export default function PedidosPage() {
 
   useEffect(() => {
     api_create_order.get('/sessions', config)
-      .then(res => setResumeCart(res.data))
-      .catch(error => console.log(error));
+      .then(res => {
+        console.log('Dados recebidos:', res.data);
+        setResumeCart(Array.isArray(res.data) ? res.data : []);
+      })
+      .catch(error => {
+        console.error('Erro ao buscar pedidos:', error);
+        setResumeCart([]);
+      });
   }, []);
 
   // Função para trocar de tab via swipe
@@ -54,13 +60,13 @@ export default function PedidosPage() {
     }
   });
 
-  const andamentoCards = resumeCart
-    .filter(pedido => !pedido.scheduled_to)
+  const andamentoCards = (Array.isArray(resumeCart) ? resumeCart : [])
+    .filter(pedido => pedido && !pedido.scheduled_to)
     .flatMap(pedido =>
-      pedido.bills.flatMap(bill =>
-        bill.order_baskets
+      (Array.isArray(pedido.bills) ? pedido.bills : []).flatMap(bill =>
+        (Array.isArray(bill.order_baskets) ? bill.order_baskets : [])
           .filter(basket =>
-            !['finished', 'canceled', 'canceled_waiting_payment'].includes(basket.order_status)
+            basket && !['finished', 'canceled', 'canceled_waiting_payment'].includes(basket.order_status)
           )
           .map(basket => ({
             pedido,
@@ -71,11 +77,11 @@ export default function PedidosPage() {
       )
     );
 
-  const agendadosCards = resumeCart
-    .filter(pedido => !!pedido.scheduled_to)
+  const agendadosCards = (Array.isArray(resumeCart) ? resumeCart : [])
+    .filter(pedido => pedido && !!pedido.scheduled_to)
     .flatMap(pedido =>
-      pedido.bills.flatMap(bill =>
-        bill.order_baskets.map(basket => ({
+      (Array.isArray(pedido.bills) ? pedido.bills : []).flatMap(bill =>
+        (Array.isArray(bill.order_baskets) ? bill.order_baskets : []).map(basket => ({
           pedido,
           basket,
           pix_payments: pedido.pix_payments,
@@ -84,12 +90,12 @@ export default function PedidosPage() {
       )
     );
 
-  const finalizadosCards = resumeCart
+  const finalizadosCards = (Array.isArray(resumeCart) ? resumeCart : [])
     .flatMap(pedido =>
-      pedido.bills.flatMap(bill =>
-        bill.order_baskets
+      (Array.isArray(pedido.bills) ? pedido.bills : []).flatMap(bill =>
+        (Array.isArray(bill.order_baskets) ? bill.order_baskets : [])
           .filter(basket =>
-            ['finished', 'canceled', 'canceled_waiting_payment'].includes(basket.order_status)
+            basket && ['finished', 'canceled', 'canceled_waiting_payment'].includes(basket.order_status)
           )
           .map(basket => ({
             pedido,
