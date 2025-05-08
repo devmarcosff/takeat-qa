@@ -29,13 +29,99 @@ export default function PedidosPage() {
     api_create_order.get('/sessions', config)
       .then(res => {
         console.log('Dados recebidos:', res.data);
-        setResumeCart(Array.isArray(res.data) ? res.data : []);
+        const safeData = Array.isArray(res.data) ? res.data.map((pedido: IPedidos) => ({
+          ...pedido,
+          bills: Array.isArray(pedido?.bills) ? pedido.bills.map((bill) => ({
+            ...bill,
+            order_baskets: Array.isArray(bill?.order_baskets) ? bill.order_baskets : []
+          })) : []
+        })) : [];
+        console.log('Dados processados:', safeData);
+        setResumeCart(safeData);
       })
       .catch(error => {
         console.error('Erro ao buscar pedidos:', error);
         setResumeCart([]);
       });
-  }, []);
+  }, [config]);
+
+  // Função auxiliar para garantir que temos um array
+  const ensureArray = <T,>(value: T | T[] | null | undefined): T[] => {
+    if (!value) return [];
+    return Array.isArray(value) ? value : [];
+  };
+
+  const andamentoCards = ensureArray(resumeCart)
+    .filter(pedido => pedido && !pedido.scheduled_to)
+    .flatMap(pedido => {
+      try {
+        return ensureArray(pedido.bills).flatMap(bill => {
+          try {
+            return ensureArray(bill.order_baskets)
+              .filter(basket => basket && !['finished', 'canceled', 'canceled_waiting_payment'].includes(basket.order_status))
+              .map(basket => ({
+                pedido,
+                basket,
+                pix_payments: pedido.pix_payments,
+                user_change: pedido.user_change,
+              }));
+          } catch (error) {
+            console.error('Erro ao processar order_baskets:', error);
+            return [];
+          }
+        });
+      } catch (error) {
+        console.error('Erro ao processar bills:', error);
+        return [];
+      }
+    });
+
+  const agendadosCards = ensureArray(resumeCart)
+    .filter(pedido => pedido && !!pedido.scheduled_to)
+    .flatMap(pedido => {
+      try {
+        return ensureArray(pedido.bills).flatMap(bill => {
+          try {
+            return ensureArray(bill.order_baskets).map(basket => ({
+              pedido,
+              basket,
+              pix_payments: pedido.pix_payments,
+              user_change: pedido.user_change,
+            }));
+          } catch (error) {
+            console.error('Erro ao processar order_baskets:', error);
+            return [];
+          }
+        });
+      } catch (error) {
+        console.error('Erro ao processar bills:', error);
+        return [];
+      }
+    });
+
+  const finalizadosCards = ensureArray(resumeCart)
+    .flatMap(pedido => {
+      try {
+        return ensureArray(pedido.bills).flatMap(bill => {
+          try {
+            return ensureArray(bill.order_baskets)
+              .filter(basket => basket && ['finished', 'canceled', 'canceled_waiting_payment'].includes(basket.order_status))
+              .map(basket => ({
+                pedido,
+                basket,
+                pix_payments: pedido.pix_payments,
+                user_change: pedido.user_change,
+              }));
+          } catch (error) {
+            console.error('Erro ao processar order_baskets:', error);
+            return [];
+          }
+        });
+      } catch (error) {
+        console.error('Erro ao processar bills:', error);
+        return [];
+      }
+    });
 
   // Função para trocar de tab via swipe
   const handleSwipe = (direction: 'left' | 'right') => {
@@ -59,52 +145,6 @@ export default function PedidosPage() {
       }
     }
   });
-
-  const andamentoCards = (Array.isArray(resumeCart) ? resumeCart : [])
-    .filter(pedido => pedido && !pedido.scheduled_to)
-    .flatMap(pedido =>
-      (Array.isArray(pedido.bills) ? pedido.bills : []).flatMap(bill =>
-        (Array.isArray(bill.order_baskets) ? bill.order_baskets : [])
-          .filter(basket =>
-            basket && !['finished', 'canceled', 'canceled_waiting_payment'].includes(basket.order_status)
-          )
-          .map(basket => ({
-            pedido,
-            basket,
-            pix_payments: pedido.pix_payments,
-            user_change: pedido.user_change,
-          }))
-      )
-    );
-
-  const agendadosCards = (Array.isArray(resumeCart) ? resumeCart : [])
-    .filter(pedido => pedido && !!pedido.scheduled_to)
-    .flatMap(pedido =>
-      (Array.isArray(pedido.bills) ? pedido.bills : []).flatMap(bill =>
-        (Array.isArray(bill.order_baskets) ? bill.order_baskets : []).map(basket => ({
-          pedido,
-          basket,
-          pix_payments: pedido.pix_payments,
-          user_change: pedido.user_change,
-        }))
-      )
-    );
-
-  const finalizadosCards = (Array.isArray(resumeCart) ? resumeCart : [])
-    .flatMap(pedido =>
-      (Array.isArray(pedido.bills) ? pedido.bills : []).flatMap(bill =>
-        (Array.isArray(bill.order_baskets) ? bill.order_baskets : [])
-          .filter(basket =>
-            basket && ['finished', 'canceled', 'canceled_waiting_payment'].includes(basket.order_status)
-          )
-          .map(basket => ({
-            pedido,
-            basket,
-            pix_payments: pedido.pix_payments,
-            user_change: pedido.user_change,
-          }))
-      )
-    );
 
   // Animação de transição mais suave
   const variants = {
